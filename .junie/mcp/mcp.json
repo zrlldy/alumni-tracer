@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/jeroldnoynay/Library/Application Support/Herd/bin/php84",
+            "args": [
+                "/Users/jeroldnoynay/coding/capstone/alumni-tracker/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
