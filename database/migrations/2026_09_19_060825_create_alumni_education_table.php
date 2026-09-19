@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('alumni_education', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('alumni_id')->constrained('alumnis')->cascadeOnDelete();
+            $table->string('instituion');
+            $table->string('program');
+            $table->string('degree_level');
+            $table->unsignedInteger('units_completed');
+            $table->string('status');
+            $table->date('started_at');
+            $table->date('ended_at');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('alumni_education');
+    }
+};
