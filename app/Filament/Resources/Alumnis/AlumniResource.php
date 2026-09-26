@@ -53,6 +53,8 @@ class AlumniResource extends Resource
         return [
             'index' => ListAlumnis::route('/'),
             'create' => CreateAlumni::route('/create'),
+
+
             'view' => ViewAlumni::route('/{record}'),
             'edit' => EditAlumni::route('/{record}/edit'),
         ];
