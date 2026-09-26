@@ -13,7 +13,13 @@ class ListAlumnis extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make('CreateAlumni')
+                ->label('Create Alumni Record')
+                ->icon('heroicon-o-plus')
+                ->modalHeading('Create Alumni')
+                ->modalDescription('Enter the information of the new alumnus.')
+                ->modalSubmitActionLabel('Create Alumni')
+                ->successNotificationTitle('Alumni created successfully'),
         ];
     }
 }

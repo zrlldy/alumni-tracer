@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Alumnis\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
@@ -19,45 +20,85 @@ class AlumnisTable
         return $table
             ->columns([
                 TextColumn::make('student_number')
-                    ->numeric()
+                    ->label('Student ID')
+                    ->searchable()
                     ->sortable(),
+
                 TextColumn::make('first_name')
-                    ->searchable(),
-                TextColumn::make('middle_name')
-                    ->searchable(),
-                TextColumn::make('last_name')
-                    ->searchable(),
-                TextColumn::make('email')
-                    ->label('Email address')
-                    ->searchable(),
-                TextColumn::make('phone_number')
-                    ->searchable(),
-                TextColumn::make('current_address')
-                    ->searchable(),
-                TextColumn::make('program.id')
-                    ->searchable(),
-                TextColumn::make('graduation_year')
-                    ->searchable(),
-                TextColumn::make('employment_status')
-                    ->badge(),
-                TextColumn::make('remarks')
-                    ->searchable(),
-                TextColumn::make('date_traced')
-                    ->date()
+                    ->label('First Name')
+                    ->searchable()
                     ->sortable(),
+
+                TextColumn::make('middle_name')
+                    ->label('Middle Name')
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('last_name')
+                    ->label('Last Name')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('email')
+                    ->label('Email Address')
+                    ->searchable()
+                    ->copyable(),
+
+                TextColumn::make('phone_number')
+                    ->label('Contact Number')
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('current_address')
+                    ->label('Address')
+                    ->searchable()
+                    ->limit(30)
+                    ->toggleable(),
+
+                TextColumn::make('program.program_name')
+                    ->label('Program/Department')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('graduation_year')
+                    ->label('Graduation Year')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('employment_status')
+                    ->label('Employment Status')
+                    ->badge()
+                    ->formatStateUsing(
+                        fn(?string $state): string => match ($state) {
+                            'employed' => 'Employed',
+                            'unemployed' => 'Unemployed',
+                            'untraced' => 'Untraced',
+                            default => 'Unknown',
+                        }
+                    )
+                    ->color(
+                        fn(?string $state): string => match ($state) {
+                            'employed' => 'success',
+                            'unemployed' => 'warning',
+                            'untraced' => 'gray',
+                            default => 'gray',
+                        }
+                    ),
+
+                TextColumn::make('date_traced')
+                    ->label('Date Traced')
+                    ->date('M d, Y')
+                    ->sortable()
+                    ->toggleable(),
+
                 TextColumn::make('trace_by')
-                    ->searchable(),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
+                    ->label('Traced By')
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('remarks')
+                    ->label('Remarks')
+                    ->limit(30)
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -65,9 +106,12 @@ class AlumnisTable
             ])
             ->recordActions([
                 ViewAction::make(),
+
                 EditAction::make(),
             ])
             ->toolbarActions([
+
+
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
