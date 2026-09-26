@@ -21,8 +21,12 @@ return new class extends Migration
             $table->string('phone_number');
             $table->string('current_address');
             $table->foreignId('program_id')->constrained('programs')->cascadeOnDelete();
-            $table->string('graduation_year');
-            $table->enum('employment_status', ['unemployed,employed', 'untraced'])->nullable();
+            $table->date('graduation_year');
+            $table->enum('employment_status', [
+                'unemployed',
+                'employed',
+                'untraced',
+            ])->nullable();
             $table->string('remarks')->nullable();
             $table->date('date_traced')->nullable();
             $table->string('trace_by')->nullable();
