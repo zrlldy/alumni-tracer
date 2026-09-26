@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('remarks')->nullable();
             $table->date('date_traced')->nullable();
             $table->string('trace_by')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

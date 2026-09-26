@@ -25,6 +25,7 @@ return new class extends Migration
             $table->date('ended_at')->nullable();
             $table->string('supported_documents');
             $table->boolean('is_current');
+            $table->softDeletes();
             $table->timestamps();
         });
     }
