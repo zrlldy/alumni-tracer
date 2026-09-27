@@ -3,15 +3,18 @@
 namespace App\Filament\Resources\Alumnis\Tables;
 
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class AlumnisTable
 {
@@ -69,7 +72,7 @@ class AlumnisTable
                     ->label('Employment Status')
                     ->badge()
                     ->formatStateUsing(
-                        fn(?string $state): string => match ($state) {
+                        fn (?string $state): string => match ($state) {
                             'employed' => 'Employed',
                             'unemployed' => 'Unemployed',
                             'untraced' => 'Untraced',
@@ -77,7 +80,7 @@ class AlumnisTable
                         }
                     )
                     ->color(
-                        fn(?string $state): string => match ($state) {
+                        fn (?string $state): string => match ($state) {
                             'employed' => 'success',
                             'unemployed' => 'warning',
                             'untraced' => 'gray',
@@ -102,15 +105,27 @@ class AlumnisTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('program.program_name')->label('Department')->relationship('program', 'program_name')->multiple(),
+                SelectFilter::make('employment_status')->options(['unemployed' => 'Unemployed', 'employed' => 'Employed', 'untraced' => 'Untraced']),
+
+                Filter::make('graduation_year')
+                    ->schema([
+                        DatePicker::make('graduation_year')
+                            ->label('Graduation Date'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['graduation_year'] ?? null,
+                            fn (Builder $query, $date): Builder => $query->whereDate('graduation_year', $date),
+                        );
+                    }),
                 TrashedFilter::make(),
             ])
             ->recordActions([
                 ViewAction::make(),
-
                 EditAction::make(),
             ])
             ->toolbarActions([
-
 
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
