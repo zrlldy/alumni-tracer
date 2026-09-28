@@ -2,6 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
+use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,10 +31,16 @@ class AlumniPanelProvider extends PanelProvider
             ->default()
             ->id('online')
             ->path('online')
-            ->login()
+            ->brandName('Alumni Tracer')
+            // ->brandLogo(asset('favicon.png'))
+            ->favicon(asset('favicon.ico'))
+            ->profile(isSimple: false)
+            ->login(Login::class)
+            // ->login()
             ->registration()
+            ->passwordReset()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#F77F00'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -55,6 +65,20 @@ class AlumniPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->multiFactorAuthentication([
+                AppAuthentication::make()->recoverable()->recoveryCodeCount(10)->codeWindow(4),
+                EmailAuthentication::make()->codeExpiryMinutes(2),
+            ])
+            ->plugins([
+                AuthUIEnhancerPlugin::make()
+                ->formPanelPosition('left')
+                ->formPanelWidth('45%')
+                // ->formPanelBackgroundColor(Color::Zinc, '300')
+                // ->mobileFormPanelPosition('bottom')
+                ->showEmptyPanelOnMobile(false)
+                ->emptyPanelView('login'),
+            ])
+            ->viteTheme('resources/css/filament/online/theme.css');
     }
 }

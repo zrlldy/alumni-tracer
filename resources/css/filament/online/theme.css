@@ -1,0 +1,745 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+@source '../../../../vendor/diogogpinto/filament-auth-ui-enhancer/resources/**/*.blade.php';
+
+/* =========================================================
+   ALUMNI TRACER THEME
+   Filament v5 + Auth UI Enhancer
+   ========================================================= */
+
+:root {
+    --alumni-navy: #003049;
+    --alumni-red: #D62828;
+    --alumni-orange: #F77F00;
+    --alumni-gold: #FCBF49;
+
+    --alumni-light-bg: #f7f9fb;
+    --alumni-light-card: rgba(255, 255, 255, 0.94);
+    --alumni-light-input: #ffffff;
+    --alumni-light-border: rgba(0, 48, 73, 0.12);
+    --alumni-light-text: #003049;
+    --alumni-light-muted: #64748b;
+
+    --alumni-dark-bg: #071923;
+    --alumni-dark-card: rgba(10, 30, 42, 0.94);
+    --alumni-dark-input: rgba(12, 35, 48, 0.96);
+    --alumni-dark-border: rgba(255, 255, 255, 0.10);
+    --alumni-dark-text: #f8fafc;
+    --alumni-dark-muted: #94a3b8;
+}
+
+/* =========================================================
+   AUTH UI ENHANCER - EMPTY / AD PANEL
+   ========================================================= */
+
+.custom-auth-empty-panel {
+    position: relative !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+.alumni-login-ad {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+    isolation: isolate;
+
+    color: #fff;
+    background-color: var(--alumni-navy);
+    background-image: url('/images/alumni-tracer-login.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: 62% center;
+}
+
+.alumni-login-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0, 48, 73, 0.02) 0%,
+            rgba(0, 48, 73, 0.10) 35%,
+            rgba(0, 48, 73, 0.48) 62%,
+            rgba(0, 48, 73, 0.94) 100%
+        );
+}
+
+.alumni-login-content {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+
+    padding: 34px;
+}
+
+.alumni-login-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+
+    padding: 9px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+
+    background: rgba(0, 48, 73, 0.68);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+}
+
+.alumni-login-main {
+    width: min(100%, 520px);
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.alumni-login-main h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(30px, 3vw, 48px);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.035em;
+}
+
+.alumni-login-main h1 span {
+    color: var(--alumni-gold);
+}
+
+.alumni-login-main p {
+    max-width: 470px;
+    margin: 18px 0 0;
+
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 15px;
+    line-height: 1.65;
+}
+
+.alumni-login-features {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.alumni-feature {
+    min-height: 78px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 15px;
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    color: #fff;
+}
+
+.alumni-feature strong {
+    display: block;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.alumni-feature small {
+    display: block;
+    margin-top: 5px;
+    color: rgba(255, 255, 255, 0.70);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.alumni-feature-navy {
+    background: rgba(0, 48, 73, 0.72);
+}
+
+.alumni-feature-red {
+    background: rgba(214, 40, 40, 0.74);
+}
+
+.alumni-feature-orange {
+    background: rgba(247, 127, 0, 0.78);
+}
+
+.alumni-login-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 10px;
+}
+
+/* =========================================================
+   AUTH FORM PANEL
+   ========================================================= */
+
+.custom-auth-form-panel {
+    container-type: inline-size;
+    container-name: alumni-auth-panel;
+
+    position: relative !important;
+    overflow: hidden !important;
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(252, 191, 73, 0.18),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 90% 90%,
+            rgba(214, 40, 40, 0.11),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 80% 15%,
+            rgba(247, 127, 0, 0.08),
+            transparent 22%
+        ),
+        var(--alumni-light-bg) !important;
+}
+
+.custom-auth-form-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+
+    opacity: 0.45;
+
+    background-image:
+        linear-gradient(
+            rgba(0, 48, 73, 0.025) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(0, 48, 73, 0.025) 1px,
+            transparent 1px
+        );
+    background-size: 32px 32px;
+}
+
+.custom-auth-form-panel::after {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    top: -140px;
+    right: -120px;
+
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(252, 191, 73, 0.25) 0%,
+            rgba(247, 127, 0, 0.08) 45%,
+            transparent 72%
+        );
+}
+
+/* =========================================================
+   AUTH FORM CARD
+   ========================================================= */
+
+.custom-auth-form-wrapper {
+    position: relative;
+    z-index: 2;
+
+    width: min(100%, 470px) !important;
+    max-width: 470px !important;
+
+    padding: 36px !important;
+    border: 1px solid var(--alumni-light-border);
+    border-radius: 26px;
+
+    background: var(--alumni-light-card);
+    box-shadow:
+        0 25px 70px rgba(0, 48, 73, 0.08),
+        0 8px 30px rgba(0, 48, 73, 0.05);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+/* Remove the Filament brand from the authentication form only. */
+.custom-auth-form-wrapper .fi-logo,
+.custom-auth-form-wrapper .fi-brand,
+.custom-auth-form-wrapper [class*='brand'] {
+    display: none !important;
+}
+
+/* =========================================================
+   AUTH TYPOGRAPHY
+   ========================================================= */
+
+.custom-auth-form-wrapper .fi-simple-header-heading {
+    color: var(--alumni-light-text) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.035em;
+}
+
+.custom-auth-form-wrapper .fi-simple-header-subheading {
+    margin-top: 8px;
+    color: var(--alumni-light-muted) !important;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.custom-auth-form-wrapper label {
+    color: var(--alumni-light-text) !important;
+    font-weight: 600;
+}
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+.custom-auth-form-wrapper input[type='text'],
+.custom-auth-form-wrapper input[type='email'],
+.custom-auth-form-wrapper input[type='password'] {
+    min-height: 50px;
+
+    border: 1px solid rgba(0, 48, 73, 0.14) !important;
+    border-radius: 13px !important;
+
+    background: var(--alumni-light-input) !important;
+    color: var(--alumni-light-text) !important;
+
+    box-shadow: 0 2px 8px rgba(0, 48, 73, 0.03) !important;
+
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease,
+        background-color 150ms ease;
+}
+
+.custom-auth-form-wrapper input[type='text']:focus,
+.custom-auth-form-wrapper input[type='email']:focus,
+.custom-auth-form-wrapper input[type='password']:focus {
+    border-color: var(--alumni-orange) !important;
+    box-shadow:
+        0 0 0 3px rgba(247, 127, 0, 0.13),
+        0 5px 15px rgba(247, 127, 0, 0.06) !important;
+}
+
+.custom-auth-form-wrapper input::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* =========================================================
+   REMEMBER ME
+   ========================================================= */
+
+.custom-auth-form-wrapper input[type='checkbox'] {
+    accent-color: var(--alumni-orange);
+}
+
+/* =========================================================
+   PRIMARY ACTION BUTTONS
+   Applies to login, register and password-reset pages.
+   ========================================================= */
+
+.custom-auth-form-wrapper button[type='submit'] {
+    min-height: 50px !important;
+    border: 0 !important;
+    border-radius: 13px !important;
+
+    background: linear-gradient(
+        135deg,
+        var(--alumni-orange) 0%,
+        var(--alumni-gold) 100%
+    ) !important;
+
+    color: var(--alumni-navy) !important;
+    font-weight: 800 !important;
+
+    box-shadow: 0 10px 25px rgba(247, 127, 0, 0.22) !important;
+
+    transition:
+        transform 150ms ease,
+        box-shadow 150ms ease,
+        filter 150ms ease;
+}
+
+.custom-auth-form-wrapper button[type='submit']:hover {
+    filter: brightness(1.02);
+    transform: translateY(-1px);
+    box-shadow: 0 13px 30px rgba(214, 40, 40, 0.22) !important;
+}
+
+.custom-auth-form-wrapper button[type='submit']:active {
+    transform: translateY(0);
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+.custom-auth-form-wrapper a,
+.alumni-auth-footer-link {
+    color: var(--alumni-orange) !important;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.custom-auth-form-wrapper a:hover,
+.alumni-auth-footer-link:hover {
+    color: var(--alumni-red) !important;
+    text-decoration: underline;
+}
+
+/* =========================================================
+   CUSTOM BOTTOM AUTH FOOTER
+   Used by login-footer.blade.php
+   ========================================================= */
+
+.alumni-auth-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+
+    margin-top: 18px;
+    padding: 15px 17px;
+
+    border: 1px solid rgba(0, 48, 73, 0.08);
+    border-radius: 16px;
+
+    background: linear-gradient(
+        135deg,
+        rgba(0, 48, 73, 0.035),
+        rgba(247, 127, 0, 0.045)
+    );
+
+    color: var(--alumni-light-muted);
+    font-size: 0.78rem;
+}
+
+.alumni-auth-register {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.alumni-auth-forgot {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    white-space: normal;
+}
+
+.alumni-auth-footer-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+
+    background: rgba(247, 127, 0, 0.10);
+    color: var(--alumni-orange);
+}
+
+.alumni-auth-footer-icon svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+.dark .custom-auth-form-panel,
+html.dark .custom-auth-form-panel {
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(252, 191, 73, 0.09),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 90% 90%,
+            rgba(214, 40, 40, 0.12),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 80% 15%,
+            rgba(247, 127, 0, 0.08),
+            transparent 22%
+        ),
+        var(--alumni-dark-bg) !important;
+}
+
+.dark .custom-auth-form-panel::before,
+html.dark .custom-auth-form-panel::before {
+    opacity: 0.35;
+
+    background-image:
+        linear-gradient(
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.025) 1px,
+            transparent 1px
+        );
+}
+
+.dark .custom-auth-form-wrapper,
+html.dark .custom-auth-form-wrapper {
+    border-color: var(--alumni-dark-border);
+    background: var(--alumni-dark-card);
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.30),
+        0 8px 30px rgba(0, 0, 0, 0.20);
+}
+
+.dark .custom-auth-form-wrapper .fi-simple-header-heading,
+html.dark .custom-auth-form-wrapper .fi-simple-header-heading {
+    color: var(--alumni-dark-text) !important;
+}
+
+.dark .custom-auth-form-wrapper .fi-simple-header-subheading,
+html.dark .custom-auth-form-wrapper .fi-simple-header-subheading {
+    color: var(--alumni-dark-muted) !important;
+}
+
+.dark .custom-auth-form-wrapper label,
+html.dark .custom-auth-form-wrapper label {
+    color: #e2e8f0 !important;
+}
+
+.dark .custom-auth-form-wrapper input[type='text'],
+.dark .custom-auth-form-wrapper input[type='email'],
+.dark .custom-auth-form-wrapper input[type='password'],
+html.dark .custom-auth-form-wrapper input[type='text'],
+html.dark .custom-auth-form-wrapper input[type='email'],
+html.dark .custom-auth-form-wrapper input[type='password'] {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+    background: var(--alumni-dark-input) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16) !important;
+}
+
+.dark .custom-auth-form-wrapper input[type='text']:focus,
+.dark .custom-auth-form-wrapper input[type='email']:focus,
+.dark .custom-auth-form-wrapper input[type='password']:focus,
+html.dark .custom-auth-form-wrapper input[type='text']:focus,
+html.dark .custom-auth-form-wrapper input[type='email']:focus,
+html.dark .custom-auth-form-wrapper input[type='password']:focus {
+    border-color: var(--alumni-orange) !important;
+    box-shadow:
+        0 0 0 3px rgba(247, 127, 0, 0.17),
+        0 5px 15px rgba(247, 127, 0, 0.08) !important;
+}
+
+.dark .alumni-auth-footer,
+html.dark .alumni-auth-footer {
+    border-color: rgba(255, 255, 255, 0.08);
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.035),
+        rgba(247, 127, 0, 0.06)
+    );
+
+    color: var(--alumni-dark-muted);
+}
+
+/* =========================================================
+   RESPONSIVE / MOBILE
+   ========================================================= */
+
+/*
+ * The form panel can become narrow before the browser viewport
+ * reaches a mobile breakpoint. Container queries handle that case.
+ */
+@container alumni-auth-panel (max-width: 560px) {
+    .custom-auth-form-wrapper {
+        width: calc(100% - 24px) !important;
+        max-width: 440px !important;
+        padding: 26px !important;
+        border-radius: 22px;
+    }
+
+    .alumni-auth-footer {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 10px;
+        text-align: left;
+    }
+
+    .alumni-auth-forgot,
+    .alumni-auth-register {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        white-space: normal;
+    }
+}
+
+@container alumni-auth-panel (max-width: 390px) {
+    .custom-auth-form-wrapper {
+        width: calc(100% - 16px) !important;
+        padding: 20px !important;
+        border-radius: 18px;
+    }
+
+    .custom-auth-form-wrapper .fi-simple-header-heading {
+        font-size: 1.65rem !important;
+    }
+
+    .alumni-auth-footer {
+        padding: 12px 13px;
+        font-size: 0.74rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .alumni-login-content {
+        padding: 28px;
+    }
+
+    .alumni-login-main h1 {
+        font-size: 34px;
+    }
+
+    .alumni-login-main p {
+        font-size: 14px;
+    }
+}
+
+/*
+ * On phones, let Filament/Auth UI Enhancer show the form as the
+ * primary content. The heavy advertising artwork is intentionally
+ * hidden so the login never becomes cramped or vertically broken.
+ */
+@media (max-width: 767px) {
+    .custom-auth-empty-panel {
+        display: none !important;
+    }
+
+    .custom-auth-form-panel {
+        width: 100% !important;
+        min-width: 100% !important;
+        min-height: 100dvh !important;
+
+        padding: 20px 14px !important;
+    }
+
+    .custom-auth-form-wrapper {
+        width: 100% !important;
+        max-width: 440px !important;
+        padding: 22px !important;
+        border-radius: 20px;
+    }
+
+    .alumni-auth-footer {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 9px;
+        margin-top: 16px;
+        padding: 12px 14px;
+        text-align: left;
+    }
+
+    .alumni-auth-forgot,
+    .alumni-auth-register {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        white-space: normal;
+        line-height: 1.45;
+    }
+
+    .alumni-login-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .custom-auth-form-panel {
+        padding: 14px 10px !important;
+    }
+
+    .custom-auth-form-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px !important;
+        border-radius: 18px;
+    }
+
+    .custom-auth-form-wrapper .fi-simple-header-heading {
+        font-size: 1.55rem !important;
+    }
+
+    .custom-auth-form-wrapper .fi-simple-header-subheading {
+        font-size: 0.84rem;
+    }
+
+    .alumni-auth-footer {
+        font-size: 0.72rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .custom-auth-form-panel {
+        padding: 10px 7px !important;
+    }
+
+    .custom-auth-form-wrapper {
+        padding: 17px !important;
+        border-radius: 16px;
+    }
+
+    .custom-auth-form-wrapper .fi-simple-header-heading {
+        font-size: 1.4rem !important;
+    }
+
+    .custom-auth-form-wrapper input[type='text'],
+    .custom-auth-form-wrapper input[type='email'],
+    .custom-auth-form-wrapper input[type='password'] {
+        min-height: 46px;
+    }
+
+    .custom-auth-form-wrapper button[type='submit'] {
+        min-height: 46px !important;
+    }
+}
+

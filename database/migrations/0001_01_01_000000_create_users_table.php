@@ -20,7 +20,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->timestamp('password_reset_at')->nullable();
             $table->rememberToken();
+            $table->foreignId('user_allocation_id')->nullable()->constrained('user_allocations')->nullOnDelete();
+            $table->text('image')->nullable();
+            $table->text('app_authentication_secret')->nullable();
+            $table->text('app_authentication_recovery_codes')->nullable();
+            $table->boolean('has_email_authentication')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });
