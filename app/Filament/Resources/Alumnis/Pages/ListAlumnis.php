@@ -9,6 +9,7 @@ use Filament\Resources\Pages\ListRecords;
 class ListAlumnis extends ListRecords
 {
     protected static string $resource = AlumniResource::class;
+    protected ?string $heading = 'Alumni';
 
     protected function getHeaderActions(): array
     {
