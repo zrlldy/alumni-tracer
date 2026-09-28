@@ -11,16 +11,16 @@ class ListAlumnis extends ListRecords
     protected static string $resource = AlumniResource::class;
     protected ?string $heading = 'Alumni';
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            CreateAction::make('CreateAlumni')
-                ->label('Create Alumni Record')
-                ->icon('heroicon-o-plus')
-                ->modalHeading('Create Alumni')
-                ->modalDescription('Enter the information of the new alumnus.')
-                ->modalSubmitActionLabel('Create Alumni')
-                ->successNotificationTitle('Alumni created successfully'),
-        ];
-    }
+    // protected function getHeaderActions(): array
+    // {
+    //     return [
+    //         // CreateAction::make('CreateAlumni')
+    //         //     ->label('Create Alumni Record')
+    //         //     ->icon('heroicon-o-plus')
+    //         //     ->modalHeading('Create Alumni')
+    //         //     ->modalDescription('Enter the information of the new alumnus.')
+    //         //     ->modalSubmitActionLabel('Create Alumni')
+    //         //     ->successNotificationTitle('Alumni created successfully'),
+    //     ];
+    // }
 }
