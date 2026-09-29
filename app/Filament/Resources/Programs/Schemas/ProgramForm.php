@@ -12,10 +12,16 @@ class ProgramForm
     {
         return $schema
             ->components([
+
                 TextInput::make('program_name')
+                    ->label('Program Name')
+                    ->placeholder('E.g. Bachelor of Science in Computer Science')
                     ->required(),
                 Toggle::make('is_active')
-                    ->required(),
+                    ->label('Status')
+                    ->required()
+                    ->inline(false),
             ]);
+
     }
 }
