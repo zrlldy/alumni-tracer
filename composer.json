@@ -12,11 +12,9 @@
         "johnrivera7/filament-custom-dashboard-widgets": "^1.0",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-<<<<<<< HEAD
-        "sudiptpa/filament-turnstile": "^1.1"
-=======
+
+        "sudiptpa/filament-turnstile": "^1.1",
         "maatwebsite/excel": "^4.0"
->>>>>>> joy
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
