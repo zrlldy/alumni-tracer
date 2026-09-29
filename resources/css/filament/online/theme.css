@@ -50,10 +50,12 @@
 
     color: #fff;
     background-color: var(--alumni-navy);
-    background-image: url('/images/alumni-tracer-login.png');
+
+    /* The final artwork is square. The panel itself handles the crop. */
+    background-image: var(--alumni-login-bg);
     background-repeat: no-repeat;
     background-size: cover;
-    background-position: 62% center;
+    background-position: center center;
 }
 
 .alumni-login-overlay {
@@ -62,13 +64,20 @@
     z-index: 1;
     pointer-events: none;
 
+    /* The artwork already has a dark-blue text area on the left, so keep
+       the overlay subtle and let the CSS/Blade content remain readable. */
     background:
+        linear-gradient(
+            90deg,
+            rgba(0, 48, 73, 0.30) 0%,
+            rgba(0, 48, 73, 0.12) 42%,
+            rgba(0, 48, 73, 0.00) 72%
+        ),
         linear-gradient(
             180deg,
             rgba(0, 48, 73, 0.02) 0%,
-            rgba(0, 48, 73, 0.10) 35%,
-            rgba(0, 48, 73, 0.48) 62%,
-            rgba(0, 48, 73, 0.94) 100%
+            rgba(0, 48, 73, 0.04) 58%,
+            rgba(0, 48, 73, 0.24) 100%
         );
 }
 
@@ -78,13 +87,13 @@
 
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
 
     width: 100%;
     height: 100%;
     min-height: 100%;
 
-    padding: 34px;
+    padding: 32px 32px 24px;
 }
 
 .alumni-login-badge {
@@ -107,18 +116,21 @@
 }
 
 .alumni-login-main {
-    width: min(100%, 520px);
-    margin-top: auto;
-    margin-bottom: auto;
+    width: min(100%, 500px);
+    margin-top: 54px;
+    margin-bottom: 0;
+    padding: 0;
 }
 
 .alumni-login-main h1 {
+    max-width: 480px;
     margin: 0;
     color: #fff;
-    font-size: clamp(30px, 3vw, 48px);
+    font-size: clamp(30px, 3vw, 46px);
     font-weight: 800;
-    line-height: 1.06;
+    line-height: 1.04;
     letter-spacing: -0.035em;
+    text-shadow: 0 3px 18px rgba(0, 0, 0, 0.18);
 }
 
 .alumni-login-main h1 span {
@@ -126,31 +138,35 @@
 }
 
 .alumni-login-main p {
-    max-width: 470px;
-    margin: 18px 0 0;
+    max-width: 450px;
+    margin: 14px 0 0;
 
-    color: rgba(255, 255, 255, 0.78);
-    font-size: 15px;
-    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.84);
+    font-size: 14px;
+    line-height: 1.6;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
 }
 
 .alumni-login-features {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 24px;
+    gap: 9px;
+    width: min(100%, 520px);
+    margin-top: auto;
+    margin-bottom: 28px;
 }
 
 .alumni-feature {
-    min-height: 78px;
-    padding: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 15px;
+    min-height: 70px;
+    padding: 12px 13px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
 
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 
     color: #fff;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
 }
 
 .alumni-feature strong {
@@ -187,8 +203,9 @@
     justify-content: space-between;
     gap: 15px;
 
-    color: rgba(255, 255, 255, 0.48);
+    color: rgba(255, 255, 255, 0.58);
     font-size: 10px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
 }
 
 /* =========================================================
@@ -289,7 +306,6 @@
     -webkit-backdrop-filter: blur(18px);
 }
 
-/* Remove the Filament brand from the authentication form only. */
 .custom-auth-form-wrapper .fi-logo,
 .custom-auth-form-wrapper .fi-brand,
 .custom-auth-form-wrapper [class*='brand'] {
@@ -327,8 +343,8 @@
 .custom-auth-form-wrapper input[type='password'] {
     min-height: 50px;
 
-    border: 1px solid rgba(0, 48, 73, 0.14) !important;
-    border-radius: 13px !important;
+    /* border: 1px solid rgba(0, 48, 73, 0.14) !important; */
+    /* border-radius: 13px !important; */
 
     background: var(--alumni-light-input) !important;
     color: var(--alumni-light-text) !important;
@@ -584,10 +600,6 @@ html.dark .alumni-auth-footer {
    RESPONSIVE / MOBILE
    ========================================================= */
 
-/*
- * The form panel can become narrow before the browser viewport
- * reaches a mobile breakpoint. Container queries handle that case.
- */
 @container alumni-auth-panel (max-width: 560px) {
     .custom-auth-form-wrapper {
         width: calc(100% - 24px) !important;
@@ -631,8 +643,16 @@ html.dark .alumni-auth-footer {
 }
 
 @media (max-width: 1024px) {
+    .alumni-login-ad {
+        background-position: center center;
+    }
+
     .alumni-login-content {
-        padding: 28px;
+        padding: 26px;
+    }
+
+    .alumni-login-main {
+        width: min(100%, 470px);
     }
 
     .alumni-login-main h1 {
@@ -640,15 +660,21 @@ html.dark .alumni-auth-footer {
     }
 
     .alumni-login-main p {
-        font-size: 14px;
+        font-size: 13.5px;
+    }
+
+    .alumni-login-features {
+        gap: 8px;
     }
 }
 
-/*
- * On phones, let Filament/Auth UI Enhancer show the form as the
- * primary content. The heavy advertising artwork is intentionally
- * hidden so the login never becomes cramped or vertically broken.
- */
+@container alumni-auth-panel (min-width: 561px) {
+    .alumni-login-main {
+        padding-right: 4px;
+    }
+}
+
+/* On smaller screens, keep the form full-width and hide the artwork. */
 @media (max-width: 767px) {
     .custom-auth-empty-panel {
         display: none !important;
@@ -658,7 +684,6 @@ html.dark .alumni-auth-footer {
         width: 100% !important;
         min-width: 100% !important;
         min-height: 100dvh !important;
-
         padding: 20px 14px !important;
     }
 
@@ -742,4 +767,3 @@ html.dark .alumni-auth-footer {
         min-height: 46px !important;
     }
 }
-

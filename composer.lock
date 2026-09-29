@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a4150c25e572bc7658ef5ef1f408609",
+    "content-hash": "ca4a275250b996c77712e08207f18706",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -5329,6 +5329,75 @@
                 }
             ],
             "time": "2026-04-27T14:27:52+00:00"
+        },
+        {
+            "name": "sudiptpa/filament-turnstile",
+            "version": "v1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sudiptpa/filament-turnstile.git",
+                "reference": "556eb9809499738fc6668acf32d0e0157f894740"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sudiptpa/filament-turnstile/zipball/556eb9809499738fc6668acf32d0e0157f894740",
+                "reference": "556eb9809499738fc6668acf32d0e0157f894740",
+                "shasum": ""
+            },
+            "require": {
+                "filament/forms": "^5.0",
+                "illuminate/contracts": "^12.0|^13.0",
+                "illuminate/http": "^12.0|^13.0",
+                "illuminate/support": "^12.0|^13.0",
+                "php": ">=8.2,<8.6"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0|^11.0",
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Sujip\\Filament\\Turnstile\\FilamentTurnstileServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Sujip\\Filament\\Turnstile\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sujip Thapa",
+                    "email": "sudiptpa@gmail.com",
+                    "homepage": "https://sujipthapa.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Cloudflare Turnstile form field for Filament v5. Protect any Filament form with a bot-resistant challenge widget.",
+            "keywords": [
+                "bot-protection",
+                "captcha",
+                "cloudflare",
+                "cloudflare-turnstile",
+                "filament",
+                "filament-plugin",
+                "form-field",
+                "laravel",
+                "turnstile"
+            ],
+            "support": {
+                "issues": "https://github.com/sudiptpa/filament-turnstile/issues",
+                "source": "https://github.com/sudiptpa/filament-turnstile/tree/v1.1"
+            },
+            "time": "2026-04-30T10:34:30+00:00"
         },
         {
             "name": "symfony/clock",
