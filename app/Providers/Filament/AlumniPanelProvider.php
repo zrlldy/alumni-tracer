@@ -24,6 +24,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
+use JohnRivera7\FilamentWidgetGrid\FilamentWidgetGridPlugin;
 
 class AlumniPanelProvider extends PanelProvider
 {
@@ -53,9 +54,9 @@ class AlumniPanelProvider extends PanelProvider
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
+            // ->pages([
+            //     Dashboard::class,
+            // ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             // ->widgets([
             //     AccountWidget::class,
@@ -81,12 +82,22 @@ class AlumniPanelProvider extends PanelProvider
             ])
             ->plugins([
                 AuthUIEnhancerPlugin::make()
-                ->formPanelPosition('left')
-                ->formPanelWidth('45%')
+                    ->formPanelPosition('left')
+                    ->formPanelWidth('45%')
                 // ->formPanelBackgroundColor(Color::Zinc, '300')
                 // ->mobileFormPanelPosition('bottom')
-                ->showEmptyPanelOnMobile(false)
-                ->emptyPanelView('login'),
+                    ->showEmptyPanelOnMobile(false)
+                    ->emptyPanelView('login'),
+                FilamentWidgetGridPlugin::make('online')
+                    ->columns(24)
+                    ->cellHeight(45)
+                    ->maxHeight(60)
+                    ->density('comfortable') // or 'compact'
+                    ->float(true)
+                    ->templates(true)
+                    ->canViewWidget(fn (string $widget): bool => true)
+                    ->canCustomize(fn (): bool => auth()->check())
+                    ->canManageDefaults(fn (): bool => false),
             ])
             ->viteTheme('resources/css/filament/online/theme.css');
     }
