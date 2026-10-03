@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Alumnis\Tables;
 
 use App\Filament\Imports\AlumniImporter;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -23,6 +24,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Throwable;
+
+use function Symfony\Component\Clock\now;
 
 class AlumnisTable
 {
@@ -52,6 +55,15 @@ class AlumnisTable
                     ->modalDescription(
                         'Upload an XLSX file containing alumni information.'
                     )
+                    ->extraModalFooterActions([
+                        Action::make('downloadTemplate')
+                            ->label('Download Template')
+                            ->icon('heroicon-o-arrow-down-tray')
+                            ->color('gray')
+                            //missing the url path for the Download template for importing the alumnis
+                            ->url('')
+                            ->openUrlInNewTab(false)
+                    ])
                     ->schema([
                         FileUpload::make('file')
                             ->label('Excel File')
@@ -80,7 +92,6 @@ class AlumnisTable
                                 )
                                 ->success()
                                 ->send();
-
                         } catch (ValidationException $e) {
 
                             $messages = collect(
@@ -109,7 +120,6 @@ class AlumnisTable
                                 ->danger()
                                 ->persistent()
                                 ->send();
-
                         } catch (Throwable $e) {
 
                             Notification::make()
@@ -174,7 +184,7 @@ class AlumnisTable
                     ->limit(35)
                     ->wrap()
                     ->tooltip(
-                        fn ($state): ?string => $state
+                        fn($state): ?string => $state
                     )
                     ->toggleable(
                         isToggledHiddenByDefault: true
@@ -197,7 +207,7 @@ class AlumnisTable
                     ->label('Status')
                     ->badge()
                     ->formatStateUsing(
-                        fn (?string $state): string => match ($state) {
+                        fn(?string $state): string => match ($state) {
                             'employed' => 'Employed',
                             'unemployed' => 'Unemployed',
                             'untraced' => 'Untraced',
@@ -205,7 +215,7 @@ class AlumnisTable
                         }
                     )
                     ->icon(
-                        fn (?string $state): string => match ($state) {
+                        fn(?string $state): string => match ($state) {
                             'employed' => 'heroicon-m-briefcase',
                             'unemployed' => 'heroicon-m-clock',
                             'untraced' => 'heroicon-m-question-mark-circle',
@@ -213,7 +223,7 @@ class AlumnisTable
                         }
                     )
                     ->color(
-                        fn (?string $state): string => match ($state) {
+                        fn(?string $state): string => match ($state) {
                             'employed' => 'success',
                             'unemployed' => 'warning',
                             'untraced' => 'gray',
@@ -232,7 +242,6 @@ class AlumnisTable
 
                 TextColumn::make('trace_by')
                     ->label('Traced By')
-                    // ->icon('heroicon-m-user-circle')
                     ->searchable()
                     ->toggleable(
                         isToggledHiddenByDefault: true
@@ -240,11 +249,11 @@ class AlumnisTable
 
                 TextColumn::make('remarks')
                     ->label('Remarks')
-                        // ->icon('heroicon-m-chat-bubble-left-ellipsis')
+
                     ->limit(35)
                     ->wrap()
                     ->tooltip(
-                        fn ($state): ?string => $state
+                        fn($state): ?string => $state
                     )
                     ->toggleable(
                         isToggledHiddenByDefault: true
@@ -271,7 +280,10 @@ class AlumnisTable
                 Filter::make('graduation_year')
                     ->schema([
                         DatePicker::make('graduation_year')
-                            ->label('Graduation Date'),
+                            ->label('Graduation Date')
+                            ->placeholder(Carbon::now())
+                            ->closeOnDateSelection(true)
+                            ->native(false)
                     ])
                     ->query(
                         function (
@@ -281,7 +293,7 @@ class AlumnisTable
                             return $query->when(
                                 $data['graduation_year'] ?? null,
 
-                                fn (
+                                fn(
                                     Builder $query,
                                     $date
                                 ): Builder => $query
