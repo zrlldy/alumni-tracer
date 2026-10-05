@@ -437,7 +437,7 @@
    Used by login-footer.blade.php
    ========================================================= */
 
-.alumni-auth-footer {
+/* .alumni-auth-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -457,7 +457,7 @@
 
     color: var(--alumni-light-muted);
     font-size: 0.78rem;
-}
+} */
 
 .alumni-auth-register {
     display: flex;
@@ -583,7 +583,7 @@ html.dark .custom-auth-form-wrapper input[type='password']:focus {
         0 5px 15px rgba(247, 127, 0, 0.08) !important;
 }
 
-.dark .alumni-auth-footer,
+/* .dark .alumni-auth-footer,
 html.dark .alumni-auth-footer {
     border-color: rgba(255, 255, 255, 0.08);
 
@@ -594,7 +594,7 @@ html.dark .alumni-auth-footer {
     );
 
     color: var(--alumni-dark-muted);
-}
+} */
 
 /* =========================================================
    RESPONSIVE / MOBILE
@@ -767,3 +767,5 @@ html.dark .alumni-auth-footer {
         min-height: 46px !important;
     }
 }
+
+
