@@ -34,23 +34,35 @@ class AlumniPanelProvider extends PanelProvider
             ->default()
             ->id('online')
             ->path('online')
+            ->brandLogo(asset('images/at1L.svg'))
+            ->darkModeBrandLogo(asset('images/ATv1D.svg'))
+            ->brandLogoHeight('3rem')
             ->brandName('Alumni Tracer')
             // ->brandLogo(asset('favicon.png'))
-            ->favicon(asset('favicon.ico'))
+            // ->favicon(asset('favicon.ico'))
+
             ->profile(isSimple: false)
             ->login(Login::class)
             // ->login()
             ->registration()
             ->passwordReset()
             ->colors([
-                'primary' => Color::hex('#F77F00'),
+                'primary' => Color::hex('#D62828'), // Brand red
+                'success' => Color::Green,          // Successful actions
+                'warning' => Color::hex('#FCBF49'), // Golden yellow
+                'danger'  => Color::hex('#D62828'), // Errors and delete actions
+                'info'    => Color::hex('#003049'), // Navy for information
+                'gray'    => Color::Zinc,           // Neutral backgrounds and text
+
+                // Extra brand color for selected components
+                'accent'  => Color::hex('#F77F00'), // Orange
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn(): string => view('filament.vite-assets')->render()
-                . (app(TurnstileClientContract::class)->isConfigured()
-                ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>'
-                : ''),
+                    . (app(TurnstileClientContract::class)->isConfigured()
+                        ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>'
+                        : ''),
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -84,8 +96,8 @@ class AlumniPanelProvider extends PanelProvider
                 AuthUIEnhancerPlugin::make()
                     ->formPanelPosition('left')
                     ->formPanelWidth('45%')
-                // ->formPanelBackgroundColor(Color::Zinc, '300')
-                // ->mobileFormPanelPosition('bottom')
+                    // ->formPanelBackgroundColor(Color::Zinc, '300')
+                    // ->mobileFormPanelPosition('bottom')
                     ->showEmptyPanelOnMobile(false)
                     ->emptyPanelView('login'),
                 FilamentWidgetGridPlugin::make('online')
@@ -95,9 +107,9 @@ class AlumniPanelProvider extends PanelProvider
                     ->density('comfortable') // or 'compact'
                     ->float(true)
                     ->templates(true)
-                    ->canViewWidget(fn (string $widget): bool => true)
-                    ->canCustomize(fn (): bool => auth()->check())
-                    ->canManageDefaults(fn (): bool => false),
+                    ->canViewWidget(fn(string $widget): bool => true)
+                    ->canCustomize(fn(): bool => auth()->check())
+                    ->canManageDefaults(fn(): bool => false),
             ])
             ->viteTheme('resources/css/filament/online/theme.css');
     }
