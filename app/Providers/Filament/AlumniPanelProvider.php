@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Register;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
@@ -17,11 +18,13 @@ use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use HTMLMin\HTMLMin\Http\Middleware\MinifyMiddleware;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
 use JohnRivera7\FilamentWidgetGrid\FilamentWidgetGridPlugin;
@@ -44,7 +47,8 @@ class AlumniPanelProvider extends PanelProvider
             ->profile(isSimple: false)
             ->login(Login::class)
             // ->login()
-            ->registration()
+            // ->registration()
+            ->registration(Register::class)
             ->passwordReset()
             ->colors([
                 'primary' => Color::hex('#D62828'), // Brand red
@@ -84,6 +88,7 @@ class AlumniPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                MinifyMiddleware::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
@@ -107,9 +112,9 @@ class AlumniPanelProvider extends PanelProvider
                     ->density('comfortable') // or 'compact'
                     ->float(true)
                     ->templates(true)
-                    ->canViewWidget(fn(string $widget): bool => true)
-                    ->canCustomize(fn(): bool => auth()->check())
-                    ->canManageDefaults(fn(): bool => false),
+                    ->canViewWidget(fn (string $widget): bool => true)
+                    ->canCustomize(fn (): bool => Auth::check())
+                    ->canManageDefaults(fn (): bool => false),
             ])
             ->viteTheme('resources/css/filament/online/theme.css');
     }

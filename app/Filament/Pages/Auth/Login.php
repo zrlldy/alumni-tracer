@@ -15,6 +15,8 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Illuminate\Htmlable;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
 use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
 use Sujip\Filament\Turnstile\Exceptions\TurnstileException;
@@ -90,18 +92,30 @@ class Login extends BaseLogin
     /**
      * Password field
      */
+    // protected function getPasswordFormComponent(): Component
+    // {
+    //     return TextInput::make('password')
+    //         ->label('Password')
+    //         ->placeholder('Enter your password')
+    //         ->password()
+    //         ->revealable(filament()->arePasswordsRevealable())
+    //         ->autocomplete('current-password')
+    //         ->required()
+    //         ->extraInputAttributes([
+    //             'class' => 'alumni-auth-input',
+    //         ]);
+    // }
+
     protected function getPasswordFormComponent(): Component
     {
         return TextInput::make('password')
-            ->label('Password')
-            ->placeholder('Enter your password')
+            ->label(__('filament-panels::auth/pages/login.form.password.label'))
+            ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="-1"> {{ __(\'filament-panels::auth/pages/login.actions.request_password_reset.label\') }}</x-filament::link>')) : null)
             ->password()
             ->revealable(filament()->arePasswordsRevealable())
             ->autocomplete('current-password')
             ->required()
-            ->extraInputAttributes([
-                'class' => 'alumni-auth-input',
-            ]);
+            ->prefixIcon('heroicon-o-lock-closed');
     }
 
     /**
