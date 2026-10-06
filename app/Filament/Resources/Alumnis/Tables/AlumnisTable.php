@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Alumnis\Tables;
 
+use App\Exports\AlumniImportTemplateExport;
 use App\Filament\Imports\AlumniImporter;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -24,8 +25,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Throwable;
-
-use function Symfony\Component\Clock\now;
 
 class AlumnisTable
 {
@@ -60,9 +59,11 @@ class AlumnisTable
                             ->label('Download Template')
                             ->icon('heroicon-o-arrow-down-tray')
                             ->color('gray')
-                            //missing the url path for the Download template for importing the alumnis
-                            ->url('')
-                            ->openUrlInNewTab(false)
+                            // missing the url path for the Download template for importing the alumnis
+                            ->action(
+                                fn() => Excel::download(new AlumniImportTemplateExport, 'alumni-template.xlsx')
+                            )
+                            ->openUrlInNewTab(false),
                     ])
                     ->schema([
                         FileUpload::make('file')
@@ -93,7 +94,6 @@ class AlumnisTable
                                 ->success()
                                 ->send();
                         } catch (ValidationException $e) {
-
                             $messages = collect(
                                 $e->failures()
                             )
@@ -283,7 +283,7 @@ class AlumnisTable
                             ->label('Graduation Date')
                             ->placeholder(Carbon::now())
                             ->closeOnDateSelection(true)
-                            ->native(false)
+                            ->native(false),
                     ])
                     ->query(
                         function (
