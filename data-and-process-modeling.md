@@ -85,47 +85,50 @@ have different permissions even though they use the same underlying application.
 
 ```mermaid
 flowchart LR
-    alumni[Alumnus]
+    alumnus[Alumnus]
     admin[Authorized admin]
     auth[Authentication provider]
+    authenticate([1 Authenticate and authorize])
+    self_service([2 Maintain self-service data])
+    administer([3 Administer and trace alumni])
+    import_file([4 Import alumni data])
+    reporting([5 Generate analytics and reports])
+    users[(D1 Users roles and allocations)]
+    alumni_data[(D2 Alumni and programs)]
+    history[(D3 Education and employment history)]
 
-    p1([1.0 Authenticate and authorize])
-    p2([2.0 Maintain alumni self-service data])
-    p3([3.0 Administer and trace alumni])
-    p4([4.0 Import alumni data])
-    p5([5.0 Generate analytics and reports])
+    alumnus -->|Credentials| authenticate
+    admin -->|Credentials| authenticate
+    authenticate -->|Identity challenge| auth
+    auth -->|Identity result| authenticate
+    authenticate -->|Read account and access data| users
+    users -->|Account and access data| authenticate
+    authenticate -->|Session and allowed actions| alumnus
+    authenticate -->|Session and allowed actions| admin
 
-    d1[(D1 Users, roles, and allocations)]
-    d2[(D2 Alumni and programs)]
-    d3[(D3 Education and employment history)]
+    alumnus -->|Profile education and employment changes| self_service
+    self_service -->|Validation result and current status| alumnus
+    self_service -->|Read or write owned alumni profile| alumni_data
+    alumni_data -->|Alumni profile data| self_service
+    self_service -->|Read or write history| history
+    history -->|Education and employment entries| self_service
 
-    alumni -->|Credentials| p1
-    admin -->|Credentials| p1
-    p1 -->|Identity challenge| auth
-    auth -->|Identity result| p1
-    p1 <--> |Accounts and access scope| d1
-    p1 -->|Authenticated session and allowed actions| alumni
-    p1 -->|Authenticated session and allowed actions| admin
+    admin -->|Record tracing and administration changes| administer
+    administer -->|Saved record or validation feedback| admin
+    administer -->|Read or write alumni data| alumni_data
+    alumni_data -->|Alumni and program data| administer
+    administer -->|Read or write history| history
+    history -->|Education and employment entries| administer
+    administer -->|Read user access data| users
 
-    alumni -->|Own profile, education, and employment changes| p2
-    p2 -->|Validation result and current status| alumni
-    p2 <--> |Owned alumni profile [P]| d2
-    p2 <--> |Education and employment entries| d3
+    admin -->|XLSX file and import request| import_file
+    import_file -->|Import result and row errors| admin
+    import_file -->|Validated alumni rows| alumni_data
 
-    admin -->|Record, tracing, program, user, and allocation changes| p3
-    p3 -->|Saved record or access/validation feedback| admin
-    p3 <--> |Alumni and programs| d2
-    p3 <--> |Education and employment entries| d3
-    p3 <--> |User access data| d1
-
-    admin -->|XLSX file and import request| p4
-    p4 -->|Import result and row errors| admin
-    p4 -->|Validated alumni rows| d2
-
-    admin -->|Dashboard/report request and filters| p5
-    p5 -->|Aggregated statistics, charts, and filtered records| admin
-    p5 -->|Read alumni/program data| d2
-    p5 -->|Read education/employment data| d3
+    admin -->|Dashboard or report request| reporting
+    reporting -->|Statistics charts and filtered records| admin
+    alumni_data -->|Alumni and program data| reporting
+    history -->|Education and employment data| reporting
 ```
 
 ### ASCII drawing
@@ -169,7 +172,7 @@ flowchart TD
     alumniAuth -->|No| accessError[Show authentication error or recovery option]
     adminAuth -->|No| accessError
 
-    alumniAuth -->|Yes| binding{Account bound to an alumni record? [P]}
+    alumniAuth -->|Yes| binding{Account bound to alumni record?}
     binding -->|No| bindError[Show account-linking support message]
     binding -->|Yes| alumniAction[View or update own profile, education, or employment]
 
