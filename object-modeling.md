@@ -26,55 +26,54 @@ currently represented by a foreign key.
 
 ```mermaid
 flowchart LR
-    alumni[Alumnus]
+    alumnus[Alumnus]
     admin[Authorized admin]
     google[Google OAuth]
-    authenticator[Passkey or MFA authenticator]
+    authenticator[Passkey or MFA]
 
-    subgraph AC[Alumni client]
-        loginA([Register / sign in])
-        profile([View own profile])
-        updateProfile([Update own personal and contact details])
-        education([Maintain own education history])
-        employment([Maintain own employment history])
-        status([View own employment/tracing status])
+    subgraph alumni_client[Alumni client]
+        alumni_login([Register and sign in])
+        alumni_profile([View own profile])
+        alumni_update([Update own profile])
+        alumni_education([Maintain education history])
+        alumni_employment([Maintain employment history])
+        alumni_status([View own employment status])
     end
 
-    subgraph MC[Admin client]
-        loginM([Sign in])
-        dashboard([View dashboard analytics])
-        manageAlumni([Create, search, view, edit, restore alumni])
-        trace([Trace alumni and update employment status])
-        import([Import alumni spreadsheet / download template])
-        programs([Manage programs])
-        users([Manage users, roles, and allocations])
-        reports([Filter records and view reports])
+    subgraph admin_client[Admin client]
+        admin_login([Sign in])
+        admin_dashboard([View dashboard analytics])
+        admin_alumni([Manage alumni records])
+        admin_trace([Trace alumni])
+        admin_import([Import alumni spreadsheet])
+        admin_programs([Manage programs])
+        admin_users([Manage users and roles])
+        admin_reports([View reports])
     end
 
-    alumni --> loginA
-    alumni --> profile
-    alumni --> updateProfile
-    alumni --> education
-    alumni --> employment
-    alumni --> status
-    admin --> loginM
-    admin --> dashboard
-    admin --> manageAlumni
-    admin --> trace
-    admin --> import
-    admin --> programs
-    admin --> users
-    admin --> reports
-    google --> loginA
-    google --> loginM
-    authenticator --> loginA
-    authenticator --> loginM
-
-    updateProfile -. uses .-> profile
-    education -. updates .-> profile
-    employment -. updates .-> status
-    trace -. updates .-> manageAlumni
-    dashboard -. reads .-> reports
+    alumnus --> alumni_login
+    alumnus --> alumni_profile
+    alumnus --> alumni_update
+    alumnus --> alumni_education
+    alumnus --> alumni_employment
+    alumnus --> alumni_status
+    admin --> admin_login
+    admin --> admin_dashboard
+    admin --> admin_alumni
+    admin --> admin_trace
+    admin --> admin_import
+    admin --> admin_programs
+    admin --> admin_users
+    admin --> admin_reports
+    google --> alumni_login
+    google --> admin_login
+    authenticator --> alumni_login
+    authenticator --> admin_login
+    alumni_update --> alumni_profile
+    alumni_education --> alumni_profile
+    alumni_employment --> alumni_status
+    admin_trace --> admin_alumni
+    admin_dashboard --> admin_reports
 ```
 
 ### ASCII drawing
@@ -162,31 +161,32 @@ availability of current data to the admin dashboard.
 
 ```mermaid
 sequenceDiagram
-    actor Alumni as Alumnus
-    participant Client as Alumni client
+    actor Alumnus
+    participant AlumniClient as Alumni client
     participant Auth as Authentication service
-    participant API as Laravel application
-    participant DB as Shared database
-    participant Admin as Admin client
+    participant App as Laravel application
+    participant Database as Shared database
+    participant AdminClient as Admin client
 
-    Alumni->>Client: Sign in and submit employment update
-    Client->>Auth: Authenticate (password, Google, passkey, or MFA)
-    Auth-->>Client: Authenticated session
-    Client->>API: Update own employment data
-    API->>API: Verify session, account-to-alumni binding, and validation
-    alt Request is unauthorized or invalid
-        API-->>Client: Access or field-level errors
-        Client-->>Alumni: Show corrective feedback
-    else Request is valid
-        API->>DB: Create/update AlumniEmployment
-        API->>DB: Update Alumni employment status and timestamps
-        DB-->>API: Persisted records
-        API-->>Client: Success and current status
-        Client-->>Alumni: Display confirmation
-        Admin->>API: Request dashboard analytics
-        API->>DB: Aggregate current alumni data
-        DB-->>API: Aggregate results
-        API-->>Admin: Updated statistics and charts
+    Alumnus->>AlumniClient: Sign in
+    AlumniClient->>Auth: Authenticate
+    Auth-->>AlumniClient: Authenticated session
+    Alumnus->>AlumniClient: Submit employment update
+    AlumniClient->>App: Update own employment data
+    App->>App: Check ownership and validation
+    alt Valid and authorized request
+        App->>Database: Save employment data
+        App->>Database: Update alumni status
+        Database-->>App: Persisted records
+        App-->>AlumniClient: Success and current status
+        AlumniClient-->>Alumnus: Display confirmation
+        AdminClient->>App: Request dashboard analytics
+        App->>Database: Aggregate alumni data
+        Database-->>App: Aggregate results
+        App-->>AdminClient: Updated statistics and charts
+    else Invalid or unauthorized request
+        App-->>AlumniClient: Access or field errors
+        AlumniClient-->>Alumnus: Display corrective feedback
     end
 ```
 
@@ -214,83 +214,64 @@ sequenceDiagram
 ```mermaid
 classDiagram
     class User {
-        +id: bigint
-        +student_id: string?
-        +google_id: string?
-        +name: string
-        +email: string
-        +password: string
-        +user_allocation_id: bigint?
-        +email_verified_at: datetime?
+        id
+        student_id
+        google_id
+        name
+        email
+        password
+        user_allocation_id
     }
-
     class UserAllocation {
-        +id: bigint
-        +role_id: bigint
-        +management_scope: string
-        +code: string
-        +max_users: integer
+        id
+        role_id
+        management_scope
+        code
+        max_users
     }
-
     class Role {
-        +id: bigint
-        +name: string
-        +action: json?
-        +access_page: json?
-        +access_subpage: json?
-        +access_widget: json?
-        +description: text?
+        id
+        name
+        action
+        access_page
+        access_subpage
+        access_widget
     }
-
     class Alumni {
-        +id: bigint
-        +student_number: integer
-        +first_name: string
-        +middle_name: string
-        +last_name: string
-        +email: string
-        +phone_number: string
-        +current_address: string
-        +program_id: bigint
-        +graduation_year: date
-        +employment_status: enum?
-        +remarks: string?
-        +date_traced: date?
-        +trace_by: string?
+        id
+        student_number
+        first_name
+        last_name
+        email
+        phone_number
+        program_id
+        graduation_year
+        employment_status
+        date_traced
+        trace_by
     }
-
     class Program {
-        +id: bigint
-        +program_name: string
-        +is_active: boolean
+        id
+        program_name
+        is_active
     }
-
     class AlumniEmployment {
-        +id: bigint
-        +alumni_id: bigint
-        +company_name: string
-        +position: string?
-        +company_address: string
-        +industry: string?
-        +employment_type: string
-        +is_course_related: boolean?
-        +date_hired: date
-        +starting_date: date?
-        +ended_at: date?
-        +supported_documents: string
-        +is_current: boolean
+        id
+        alumni_id
+        company_name
+        position
+        employment_type
+        date_hired
+        is_current
     }
-
     class AlumniEducation {
-        +id: bigint
-        +alumni_id: bigint
-        +instituion: string
-        +program: string
-        +degree_level: string
-        +units_completed: integer
-        +status: string
-        +started_at: date
-        +ended_at: date
+        id
+        alumni_id
+        instituion
+        degree_level
+        status
+        started_at
+        ended_at
     }
 
     Role "1" --> "0..*" UserAllocation : grants
@@ -298,7 +279,7 @@ classDiagram
     Program "1" --> "0..*" Alumni : contains
     Alumni "1" --> "0..*" AlumniEmployment : has
     Alumni "1" --> "0..*" AlumniEducation : has
-    User ..> Alumni : self-service identity mapping [P; add explicit FK]
+    User ..> Alumni : maps to
 ```
 
 ### ASCII drawing
