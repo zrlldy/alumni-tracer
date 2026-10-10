@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,21 @@ class Alumni extends Model
     use HasFactory, SoftDeletes;
 
     protected $guarded = [];
+
+    public function scopeGraduatedInYear(Builder $query, int $year): Builder
+    {
+        return $query->whereYear('graduation_year', $year);
+    }
+
+    public function scopeForProgram(Builder $query, int $programId): Builder
+    {
+        return $query->where('program_id', $programId);
+    }
+
+    public function scopeWithEmploymentStatus(Builder $query, string $employmentStatus): Builder
+    {
+        return $query->where('employment_status', $employmentStatus);
+    }
 
     public function program(): BelongsTo
     {

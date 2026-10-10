@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Alumnis\Tables;
 
 use App\Exports\AlumniImportTemplateExport;
 use App\Filament\Imports\AlumniImporter;
+use App\Models\Alumni;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -61,7 +62,7 @@ class AlumnisTable
                             ->color('gray')
                             // missing the url path for the Download template for importing the alumnis
                             ->action(
-                                fn() => Excel::download(new AlumniImportTemplateExport, 'alumni-template.xlsx')
+                                fn () => Excel::download(new AlumniImportTemplateExport, 'alumni-template.xlsx')
                             )
                             ->openUrlInNewTab(false),
                     ])
@@ -131,9 +132,11 @@ class AlumnisTable
                         }
                     }),
             ])
+            ->heading('Alumni records')
+            ->description('Open a record for complete information, or use search and filters to narrow the directory.')
 
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('program'))
             ->columns([
-
                 TextColumn::make('student_number')
                     ->label('Student ID')
                     ->icon('heroicon-m-identification')
@@ -142,72 +145,39 @@ class AlumnisTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('first_name')
-                    ->label('First Name')
+                TextColumn::make('name')
+                    ->label('Alumni')
                     ->icon('heroicon-m-user')
-                    ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('middle_name')
-                    ->label('Middle Name')
-                    ->searchable()
-                    ->toggleable(
-                        isToggledHiddenByDefault: true
-                    ),
-
-                TextColumn::make('last_name')
-                    ->label('Last Name')
-                    ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('email')
-                    ->label('Email')
-                    ->icon('heroicon-m-envelope')
-                    ->searchable()
-                    ->copyable()
-                    ->copyMessage('Email copied')
-                    ->copyMessageDuration(1500),
-
-                TextColumn::make('phone_number')
-                    ->label('Contact')
-                    ->icon('heroicon-m-phone')
-                    ->searchable()
-                    ->copyable()
-                    ->toggleable(
-                        isToggledHiddenByDefault: true
-                    ),
-
-                TextColumn::make('current_address')
-                    ->label('Address')
-                    // ->icon('heroicon-m-map-pin')
-                    ->searchable()
-                    ->limit(35)
-                    ->wrap()
-                    ->tooltip(
-                        fn($state): ?string => $state
-                    )
-                    ->toggleable(
-                        isToggledHiddenByDefault: true
-                    ),
+                    ->state(fn (Alumni $record): string => collect([
+                        $record->first_name,
+                        $record->middle_name,
+                        $record->last_name,
+                    ])->filter()->implode(' '))
+                    ->description(fn (Alumni $record): ?string => $record->email)
+                    ->searchable(['first_name', 'middle_name', 'last_name', 'email', 'phone_number'])
+                    ->sortable(['first_name', 'last_name'])
+                    ->weight('medium'),
 
                 TextColumn::make('program.program_name')
-                    ->label('Program')
-                    // ->icon('heroicon-m-academic-cap')
+                    ->label('Department')
+                    ->badge()
+                    ->color('gray')
                     ->searchable()
                     ->sortable()
-                    ->wrap(),
+                    ->limit(28)
+                    ->tooltip(fn (?string $state): ?string => $state),
 
                 TextColumn::make('graduation_year')
                     ->label('Graduated')
                     ->icon('heroicon-m-calendar-days')
-                    ->date('M d, Y')
+                    ->date('Y')
                     ->sortable(),
 
                 TextColumn::make('employment_status')
                     ->label('Status')
                     ->badge()
                     ->formatStateUsing(
-                        fn(?string $state): string => match ($state) {
+                        fn (?string $state): string => match ($state) {
                             'employed' => 'Employed',
                             'unemployed' => 'Unemployed',
                             'untraced' => 'Untraced',
@@ -215,7 +185,7 @@ class AlumnisTable
                         }
                     )
                     ->icon(
-                        fn(?string $state): string => match ($state) {
+                        fn (?string $state): string => match ($state) {
                             'employed' => 'heroicon-m-briefcase',
                             'unemployed' => 'heroicon-m-clock',
                             'untraced' => 'heroicon-m-question-mark-circle',
@@ -223,7 +193,7 @@ class AlumnisTable
                         }
                     )
                     ->color(
-                        fn(?string $state): string => match ($state) {
+                        fn (?string $state): string => match ($state) {
                             'employed' => 'success',
                             'unemployed' => 'warning',
                             'untraced' => 'gray',
@@ -232,32 +202,12 @@ class AlumnisTable
                     ),
 
                 TextColumn::make('date_traced')
-                    ->label('Date Traced')
+                    ->label('Last Traced')
                     ->icon('heroicon-m-calendar')
                     ->date('M d, Y')
-                    ->sortable()
-                    ->toggleable(
-                        isToggledHiddenByDefault: true
-                    ),
-
-                TextColumn::make('trace_by')
-                    ->label('Traced By')
-                    ->searchable()
-                    ->toggleable(
-                        isToggledHiddenByDefault: true
-                    ),
-
-                TextColumn::make('remarks')
-                    ->label('Remarks')
-
-                    ->limit(35)
-                    ->wrap()
-                    ->tooltip(
-                        fn($state): ?string => $state
-                    )
-                    ->toggleable(
-                        isToggledHiddenByDefault: true
-                    ),
+                    ->description(fn (Alumni $record): string => $record->trace_by ?? 'Not traced')
+                    ->placeholder('Not traced')
+                    ->sortable(),
             ])
 
             ->filters([
@@ -272,8 +222,8 @@ class AlumnisTable
                 SelectFilter::make('employment_status')
                     ->label('Employment Status')
                     ->options([
-                        'unemployed' => 'Unemployed',
                         'employed' => 'Employed',
+                        'unemployed' => 'Unemployed',
                         'untraced' => 'Untraced',
                     ]),
 
@@ -293,7 +243,7 @@ class AlumnisTable
                             return $query->when(
                                 $data['graduation_year'] ?? null,
 
-                                fn(
+                                fn (
                                     Builder $query,
                                     $date
                                 ): Builder => $query

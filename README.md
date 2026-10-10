@@ -1,58 +1,133 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Alumni Tracer
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel and Filament application for managing alumni records, tracing
+employment outcomes, maintaining academic programs, and generating reports.
 
-## About Laravel
+This README reflects the current working tree, including the Alumni Data Report
+and XLSX export. The application currently uses one Filament panel at
+`/online`; the root path redirects there. Separate alumni self-service and
+staff permission boundaries remain planned.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Current features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Alumni Directory with create/view/edit actions, search, program and employment
+  filters, exact graduation-date filtering, soft deletion, restoration, and
+  permanent deletion.
+- Manual employment/tracing fields: employment status, date traced, tracer name,
+  and remarks.
+- XLSX alumni imports with an import template and row-level validation messages.
+- Alumni Data Report filtered by graduation year, department/program, and
+  employment status, with a complete-record details modal.
+- XLSX export of alumni, program, tracing, education, and employment data.
+- Program management with active/inactive filters and summary statistics.
+- User account resource and shared registration/login/password-reset flows.
+- Dashboard statistics, status charts, alumni by program, tracing progress,
+  recent traces, and customizable widget layouts.
+- Configured app/email MFA support; Google OAuth and passkey integration
+  routes/UI are present. Turnstile challenges are enabled when configured.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Technology
 
-## Learning Laravel
+Installed direct dependencies include Laravel 13, Filament 5, Laravel Excel 4,
+Socialite 5, Spatie Laravel Passkeys 1, and Pest 5. Frontend assets use Vite 8
+and Tailwind CSS 4. Refer to `composer.lock` and `package-lock.json` for
+resolved dependency versions.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Use PHP 8.4 for this project, Composer, Node.js/npm compatible with the installed
+Vite version, and the PHP extensions required by Composer dependencies.
+`.env.example` defaults to SQLite and database-backed sessions/cache/queues.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Local setup
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+The repository provides a setup script:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer run setup
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+It installs Composer dependencies, creates `.env` if absent, generates the
+application key, runs migrations, installs npm dependencies, and builds assets.
+Configure your intended database/environment before running it if the defaults
+are unsuitable. The script does not seed alumni or staff accounts.
 
-## Contributing
+Start the development services:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer run dev
+```
 
-## Code of Conduct
+Set `APP_NAME` and `APP_URL` for your environment. Use the configured local
+application origin with the `/online` path.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Optional integrations require additional configuration:
 
-## Security Vulnerabilities
+- Google OAuth reads `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and
+  `GOOGLE_REDIRECT_URI` from `config/services.php`.
+- Password-reset and email MFA delivery use the mail configuration; the example
+  environment uses the log mailer.
+- Turnstile depends on the installed integration's configuration.
+- Passkey authentication depends on compatible browser/device support and its
+  package storage/configuration.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Google OAuth and passkey availability in the UI does not establish that those
+flows have been verified end to end.
 
-## License
+## Import and reporting behavior
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Download `alumni-template.xlsx` from **Import Excel** in the Alumni Directory.
+It contains nine headings: student number, first/middle/last name, email, phone,
+program, graduation date, and address. Program choices use active programs.
+Use Excel date values for imported graduation/tracing dates. Imports create
+records and reject duplicate student numbers; they do not update existing
+records or import education/employment histories.
+
+Under **Reports > Alumni Data Report**, select graduation year, department,
+and employment status as needed, then use **Export Alumni Data**.
+Department is the related program, not a separate entity. Export uses the
+three report filters; table search, sorting, pagination, and row selection
+do not affect the workbook.
+
+The workbook contains one row per non-deleted alumnus and 15 fixed columns:
+student number, names, contact details, program, graduation date, employment
+status, remarks, trace date/tracer, and education/employment histories.
+History entries are combined into multiline cells. Unemployed rows are yellow;
+untraced rows are light red. The filename is `alumni-data-report.xlsx`, or
+`alumni-data-report-{year}.xlsx` when a graduation year is selected.
+
+## Current limitations and planned work
+
+- No separate alumni self-service client or User-to-Alumni ownership binding.
+- Roles, permissions, management scopes, and user allocations exist in the
+  schema but are not enforced by current report/export queries.
+- History records can be read/exported, but education/employment editors are
+  not present in the Alumni resource.
+- Tracer names/dates are manually entered; export/change auditing is not present.
+- Student-number uniqueness is checked by the importer, not by a database
+  unique constraint or equivalent alumni-form rule.
+- Import/form validation does not fully match required schema columns or
+  active-program rules.
+- Panel email-verification enforcement is not configured.
+
+## Verification
+
+Run existing report/export tests:
+
+```bash
+php artisan test --compact tests/Feature/Exports/AlumniDataExportTest.php tests/Feature/Filament/Pages/AlumniDataReportTest.php
+```
+
+Run the full suite and build frontend assets:
+
+```bash
+php artisan test --compact
+npm run build
+```
+
+## System modeling documents
+
+- [Requirements modeling](requirements-modeling.md): IPO, workflows, controls,
+  and current versus planned acceptance criteria.
+- [Data and process modeling](data-and-process-modeling.md): context diagram,
+  DFD, flowchart, stores, and analytics definitions.
+- [Object modeling](object-modeling.md): use cases, report/export activity and
+  sequence, classes, and planned two-client extension.
