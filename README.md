@@ -125,6 +125,8 @@ npm run build
 
 ## System modeling documents
 
+- [Entity relationship diagram](entity-relationship-diagram.md): current tables,
+  columns, keys, cardinalities, and database versus application relationships.
 - [Requirements modeling](requirements-modeling.md): IPO, workflows, controls,
   and current versus planned acceptance criteria.
 - [Data and process modeling](data-and-process-modeling.md): context diagram,
