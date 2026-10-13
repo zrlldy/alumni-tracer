@@ -2,214 +2,180 @@
 
 ## Scope and notation
 
-These diagrams model the required split between the **Alumni client** and the
-**Admin client** on top of the existing shared alumni data. The solid class
-relationships reflect the current database/model structure. The dashed
-`User`-to-`Alumni` link is an intended self-service identity binding and is not
-currently represented by a foreign key.
+These diagrams reflect the current working tree: one Filament `online` panel
+with alumni/program/user resources, dashboard widgets, Alumni Data Report,
+XLSX import, and XLSX export.
+
+**[E]** means implemented, **[D]** means data model only, and **[P]** means
+planned. An authenticated **panel user** performs the current staff-oriented
+workflows. A separate alumni client, user-to-alumni binding, and role/scope
+enforcement are planned rather than implemented interactions.
 
 ## Diagram shapes used
 
 | Shape | Mermaid notation | ASCII notation | Meaning |
 | --- | --- | --- | --- |
-| Actor | `[Alumnus]` / `[Authorized admin]` | `ALUMNUS` / `ADMIN` | A person or external service that initiates a use case. |
-| Use case | `([Use case])` | `(Use case)` | A user-visible capability offered by one of the clients. |
-| Activity | `[Activity]` | `[Activity]` | A processing step in the activity diagram. |
-| Start/end | `([Start])` / `([End])` | `[Start]` / `[End]` | The entry or exit point of an activity flow. |
-| Decision | `{Question?}` | `{Question?}` | A condition that selects a branch in an activity flow. |
-| Lifeline | `participant` / vertical sequence line | `\|` | A participant's timeline in the sequence diagram. |
-| Class | `class ClassName` | `[ClassName]` | A data/object type and its attributes. |
-| Association | `"1" --> "0..*"` | `1 ---- 0..*` | A relationship and its multiplicity. |
-| Dependency | `..>` / `-.->` | `. . .>` | A non-owning use or proposed relationship. |
+| Actor | `[Panel user]` | `PANEL USER` | Person initiating a use case. |
+| Use case | `([Use case])` | `(Use case)` | User-visible capability. |
+| Activity | `[Activity]` | `[Activity]` | Processing step. |
+| Start/end | `([Start])` / `([End])` | `[Start]` / `[End]` | Activity boundary. |
+| Decision | `{Question?}` | `{Question?}` | Branch condition. |
+| Lifeline | `participant` | Vertical line | Sequence participant. |
+| Class | `class ClassName` | `[ClassName]` | Object attributes/methods. |
+| Association | `"1" --> "0..*"` | `1 ---- 0..*` | Relationship and multiplicity. |
+| Dependency | `..>` | `. . .>` | A class uses another class. |
 
 ## 1. Use case diagram
 
 ```mermaid
 flowchart LR
-    alumnus[Alumnus]
-    admin[Authorized admin]
-    google[Google OAuth]
-    authenticator[Passkey or MFA]
-
-    subgraph alumni_client[Alumni client]
-        alumni_login([Register and sign in])
-        alumni_profile([View own profile])
-        alumni_update([Update own profile])
-        alumni_education([Maintain education history])
-        alumni_employment([Maintain employment history])
-        alumni_status([View own employment status])
+    U[Panel user]
+    G[Google OAuth provider]
+    subgraph P[Current online panel]
+        A([Register, sign in, recover account])
+        D([View and customize dashboard])
+        C([Manage alumni profile and tracing fields])
+        I([Import alumni XLSX and download template])
+        R([Filter report and view complete details])
+        X([Export alumni and histories to XLSX])
+        PR([Manage programs])
+        US([Manage user accounts])
     end
-
-    subgraph admin_client[Admin client]
-        admin_login([Sign in])
-        admin_dashboard([View dashboard analytics])
-        admin_alumni([Manage alumni records])
-        admin_trace([Trace alumni])
-        admin_import([Import alumni spreadsheet])
-        admin_programs([Manage programs])
-        admin_users([Manage users and roles])
-        admin_reports([View reports])
-    end
-
-    alumnus --> alumni_login
-    alumnus --> alumni_profile
-    alumnus --> alumni_update
-    alumnus --> alumni_education
-    alumnus --> alumni_employment
-    alumnus --> alumni_status
-    admin --> admin_login
-    admin --> admin_dashboard
-    admin --> admin_alumni
-    admin --> admin_trace
-    admin --> admin_import
-    admin --> admin_programs
-    admin --> admin_users
-    admin --> admin_reports
-    google --> alumni_login
-    google --> admin_login
-    authenticator --> alumni_login
-    authenticator --> admin_login
-    alumni_update --> alumni_profile
-    alumni_education --> alumni_profile
-    alumni_employment --> alumni_status
-    admin_trace --> admin_alumni
-    admin_dashboard --> admin_reports
+    U --> A
+    U --> D
+    U --> C
+    U --> I
+    U --> R
+    U --> X
+    U --> PR
+    U --> US
+    G --> A
 ```
 
 ### ASCII drawing
 
 ```text
- ALUMNUS                                  ADMIN
-    |                                       |
-    +--> (Register / sign in)               +--> (Sign in)
-    +--> (View own profile)                 +--> (View dashboard analytics)
-    +--> (Update own profile)               +--> (Manage alumni records)
-    +--> (Maintain education history)       +--> (Trace alumni)
-    +--> (Maintain employment history)      +--> (Import alumni spreadsheet)
-    +--> (View own status)                  +--> (Manage programs)
-                                            +--> (Manage users, roles, allocations)
-                                            +--> (Filter records / reports)
+PANEL USER
+  +-> (Register / sign in / reset password / profile / configured MFA)
+  +-> (View and customize dashboard)
+  +-> (Create / view / edit alumni and tracing fields)
+  +-> (Import XLSX / download import template)
+  +-> (Filter report / view histories in details modal)
+  +-> (Export XLSX using report year / program / status filters)
+  +-> (Manage programs and user accounts)
 
- Google OAuth ----------------------------> (Register / sign in)
- Passkey or MFA authenticator ------------> (Register / sign in and Sign in)
+Google OAuth -> (Account access integration)
+Browser/device passkey -> (Sign-in integration)
 ```
+
+Google OAuth and passkey routes/UI are present; end-to-end readiness needs
+verification. Education/employment maintenance and role/allocation administration
+are not current use cases. History viewing/export is implemented.
 
 ## 2. Activity diagram
 
-The activity diagram focuses on the shared profile/employment-update flow while
-showing the different authorization paths for each client.
+This activity follows the implemented Alumni Data Report workflow.
 
 ```mermaid
 flowchart TD
-    start([Start]) --> client{Client selected}
-    client -->|Alumni| alumnusLogin[Alumnus signs in]
-    client -->|Admin| adminLogin[Admin signs in]
-    alumnusLogin --> ownRecord[Load bound alumni record]
-    adminLogin --> permissions[Load role and management scope]
-    ownRecord --> actionA[Choose profile, education, or employment update]
-    permissions --> actionM[Choose administration or tracing action]
-    actionA --> enterData[Enter data]
-    actionM --> enterData
-    enterData --> valid{Fields valid?}
-    valid -->|No| correct[Show validation messages]
-    correct --> enterData
-    valid -->|Yes| permitted{Actor owns record or has scope?}
-    permitted -->|No| denied[Show access-denied message]
-    denied --> finish([End])
-    permitted -->|Yes| save[Save alumni and related records]
-    save --> tracing{Employment/tracing affected?}
-    tracing -->|Yes| updateStatus[Update employment status and trace metadata]
-    tracing -->|No| confirmation[Show confirmation]
-    updateStatus --> refresh[Refresh admin aggregates]
-    refresh --> confirmation
-    confirmation --> finish
+    S([Start]) --> A[Sign in to online panel]
+    A --> R[Open Alumni Data Report]
+    R --> F[Optionally select year, department, employment status]
+    F --> T[Display matching alumni]
+    T --> O{Choose action}
+    O -->|View details| D[Load program, education, employment]
+    D --> M[Display complete record in modal]
+    M --> T
+    O -->|Export Alumni Data| X[Pass three filters to AlumniDataExport]
+    X --> Q[Query non-deleted alumni and related histories]
+    Q --> W[Map 15 columns and style workbook]
+    W --> L[Download XLSX]
+    L --> Z([End])
+    O -->|Finish| Z
 ```
 
 ### ASCII drawing
 
 ```text
- [Start]
-    |
-    v
- {Alumni client or Admin client?}
-    | Alumni                         | Admin
-    v                                v
- [Sign in]                    [Sign in]
-    |                                |
- [Load owned record]          [Load role and scope]
-    |                                |
-    +------------> [Choose / enter update or tracing data] <---+
-                                  |
-                                  v
-                         {Fields valid?}
-                          | No       | Yes
-                          v          v
-                    [Show errors]  {Own record or permitted scope?}
-                                      | No          | Yes
-                                      v             v
-                               [Access denied]   [Save data]
-                                                       |
-                                                [Refresh status / analytics]
-                                                       |
-                                                     [End]
+[Sign in] -> [Open report] -> [Year / department / status filters]
+                                      |
+                                      v
+                              [Matching alumni table]
+                                | View details
+                                +-> [Load program + histories] -> [Modal] -> [Table]
+                                | Export
+                                +-> [Three filters] -> [Query + map + style] -> [XLSX]
+                                +-> [Finish]
 ```
+
+The report/export do not currently resolve ownership or management scope.
+Table search, sorting, pagination, and row selection do not constrain XLSX.
+Alumni employment status and tracing values are separately edited through
+the alumni form, not recalculated during reporting.
 
 ## 3. Sequence diagram
 
-This sequence models an alumni self-service employment update and the resulting
-availability of current data to the admin dashboard.
-
 ```mermaid
 sequenceDiagram
-    actor Alumnus
-    participant AlumniClient as Alumni client
-    participant Auth as Authentication service
-    participant App as Laravel application
-    participant Database as Shared database
-    participant AdminClient as Admin client
+    actor U as Panel user
+    participant P as AlumniDataReport
+    participant A as Alumni model
+    participant DB as Database
+    participant X as AlumniDataExport
+    participant E as Excel service
 
-    Alumnus->>AlumniClient: Sign in
-    AlumniClient->>Auth: Authenticate
-    Auth-->>AlumniClient: Authenticated session
-    Alumnus->>AlumniClient: Submit employment update
-    AlumniClient->>App: Update own employment data
-    App->>App: Check ownership and validation
-    alt Valid and authorized request
-        App->>Database: Save employment data
-        App->>Database: Update alumni status
-        Database-->>App: Persisted records
-        App-->>AlumniClient: Success and current status
-        AlumniClient-->>Alumnus: Display confirmation
-        AdminClient->>App: Request dashboard analytics
-        App->>Database: Aggregate alumni data
-        Database-->>App: Aggregate results
-        App-->>AdminClient: Updated statistics and charts
-    else Invalid or unauthorized request
-        App-->>AlumniClient: Access or field errors
-        AlumniClient-->>Alumnus: Display corrective feedback
+    U->>P: Open report and select filters
+    P->>A: Query with year, program, status scopes
+    A->>DB: Read non-deleted alumni and programs
+    DB-->>A: Matching records
+    A-->>P: Report rows
+    P-->>U: Display compact table
+    opt View details
+        U->>P: Open viewDetails for record
+        P->>A: Load missing program and histories
+        A->>DB: Read education and employment records
+        DB-->>A: Related data
+        A-->>P: Complete record
+        P-->>U: Details modal
+    end
+    opt Export XLSX
+        U->>P: Export Alumni Data
+        P->>X: Construct with three selected filters
+        P->>E: Download export with filename
+        E->>X: Get query, headings, mapping, styles
+        X->>A: Filter alumni and eager-load histories
+        A->>DB: Read matching records ordered by ID
+        DB-->>A: Alumni, program, histories
+        A-->>X: Export records
+        X-->>E: Mapped rows and formatting
+        E-->>P: XLSX download response
+        P-->>U: alumni-data-report.xlsx or year filename
     end
 ```
 
 ### ASCII drawing
 
 ```text
- Alumnus       Alumni client       Auth service       Laravel app        Database       Admin client
-    |                 |                  |                 |                 |                |
-    |-- sign in ----->|-- authenticate ->|                 |                 |                |
-    |                 |<-- session ------|                 |                 |                |
-    |-- update ------>|-------------------------------> verify ownership     |                |
-    |                 |                                 and validate         |                |
-    |                 |              invalid / unauthorized --> field errors |                |
-    |                 |<------------------------------------ errors --------- |                |
-    |                 |                                 |-- save employment ->|
-    |                 |                                 |-- update status --->|
-    |<-- confirmation-|<-------------------------------- success ------------|
-    |                 |                                 |<-- dashboard request--|
-    |                 |                                 |-- aggregate ------->|
-    |                 |                                 |---- analytics ------>|
+User -> Report -> Alumni -> Database
+User <- Report <- Alumni <- Matching rows
+
+Details:
+User -> Report -> Alumni -> Database (program / histories)
+User <- Report <- Alumni <- Complete record
+
+Export:
+User -> Report -> AlumniDataExport (year / program / status)
+        Report -> Excel service -> Export -> Alumni -> Database
+User <- Report <- Excel service <- mapped rows / workbook formatting
 ```
 
+No export-audit write or permission/scope lookup occurs in this sequence.
+
 ## 4. Class diagram
+
+The domain classes show selected schema attributes and implemented relationship
+methods. Role/allocation associations reflect database foreign keys; the
+corresponding Eloquent relationship methods are not defined.
 
 ```mermaid
 classDiagram
@@ -217,17 +183,12 @@ classDiagram
         id
         student_id
         google_id
+        avatar_img
         name
         email
         password
         user_allocation_id
-    }
-    class UserAllocation {
-        id
-        role_id
-        management_scope
-        code
-        max_users
+        email_verified_at
     }
     class Role {
         id
@@ -236,77 +197,158 @@ classDiagram
         access_page
         access_subpage
         access_widget
+        description
     }
-    class Alumni {
+    class UserAllocation {
         id
-        student_number
-        first_name
-        last_name
-        email
-        phone_number
-        program_id
-        graduation_year
-        employment_status
-        date_traced
-        trace_by
+        role_id
+        management_scope
+        code
+        max_users
     }
     class Program {
         id
         program_name
         is_active
+        alumni()
+    }
+    class Alumni {
+        id
+        student_number
+        first_name
+        middle_name
+        last_name
+        email
+        phone_number
+        current_address
+        program_id
+        graduation_year
+        employment_status
+        date_traced
+        trace_by
+        remarks
+        program()
+        alumniEducation()
+        alumniEmployment()
+        scopeGraduatedInYear(query, year)
+        scopeForProgram(query, programId)
+        scopeWithEmploymentStatus(query, employmentStatus)
+    }
+    class AlumniEducation {
+        id
+        alumni_id
+        instituion
+        program
+        degree_level
+        units_completed
+        status
+        started_at
+        ended_at
+        alumni()
     }
     class AlumniEmployment {
         id
         alumni_id
         company_name
         position
+        company_address
+        industry
         employment_type
+        is_course_related
         date_hired
-        is_current
-    }
-    class AlumniEducation {
-        id
-        alumni_id
-        instituion
-        degree_level
-        status
-        started_at
+        starting_date
         ended_at
+        supported_documents
+        is_current
+        alumni()
+    }
+    class AlumniDataReport {
+        table(table)
+        getHeaderActions()
+    }
+    class AlumniDataExport {
+        graduationYear
+        programId
+        employmentStatus
+        query()
+        headings()
+        map(row)
+        columnWidths()
+        styles(sheet)
+        registerEvents()
+    }
+    class AlumniImporter {
+        model(row)
+        rules()
+        customValidationMessages()
+    }
+    class AlumniImportTemplateExport {
+        array()
+        headings()
+        styles(sheet)
     }
 
-    Role "1" --> "0..*" UserAllocation : grants
-    UserAllocation "1" --> "0..*" User : allocates
-    Program "1" --> "0..*" Alumni : contains
-    Alumni "1" --> "0..*" AlumniEmployment : has
-    Alumni "1" --> "0..*" AlumniEducation : has
-    User ..> Alumni : maps to
+    Role "1" --> "0..*" UserAllocation : schema FK
+    UserAllocation "0..1" --> "0..*" User : optional schema FK
+    Program "1" --> "0..*" Alumni : has many
+    Alumni "1" --> "0..*" AlumniEducation : has many
+    Alumni "1" --> "0..*" AlumniEmployment : has many
+    AlumniDataReport ..> Alumni : queries
+    AlumniDataReport ..> AlumniDataExport : constructs
+    AlumniDataExport ..> Alumni : queries and maps
+    AlumniDataExport ..> AlumniEducation : formats
+    AlumniDataExport ..> AlumniEmployment : formats
+    AlumniImporter ..> Alumni : creates
+    AlumniImporter ..> Program : resolves active program
+    AlumniImportTemplateExport ..> Program : active choices
 ```
 
 ### ASCII drawing
 
 ```text
- [Role] 1 -------------------- 0..* [UserAllocation] 1 -------------------- 0..* [User]
-   |                                      |                                      |
-   | name, permission JSON                 | management scope, code, max users    | account identity
-   |                                      |                                      |
-   +--------------------------------------+                                      |
-                                                                          [P] maps one account
-                                                                              to one alumni record
-                                                                                  . . . . . . . .
-                                                                                  .             .
- [Program] 1 ------------------ 0..* [Alumni] 1 ------------------- 0..* [AlumniEmployment]
-                                         |
-                                         +-------------------------- 0..* [AlumniEducation]
+[Role] 1 ---- 0..* [UserAllocation] 0..1 ---- 0..* [User]
+        schema FK                   optional schema FK
 
- Program: catalog data                 Alumni: identity, contact, tracing status
- Employment: company and current-job   Education: institution, degree, dates
+[Program] 1 ---- 0..* [Alumni] 1 ---- 0..* [AlumniEducation]
+                         |
+                         +---- 0..* [AlumniEmployment]
+
+[AlumniDataReport] . . .> [AlumniDataExport] . . .> [Alumni + histories]
+        |                        year / program / status
+        + . . .> [Alumni]
+
+[AlumniImporter] . . .> [Alumni] and [Program]
+[AlumniImportTemplateExport] . . .> [Program]
 ```
 
-## Implementation note
+## Implementation notes
 
-The current codebase has the `User`, `UserAllocation`, `Role`, `Alumni`,
-`Program`, `AlumniEmployment`, and `AlumniEducation` data structures modeled
-above. The `instituion` spelling mirrors the current database column. Before
-exposing the Alumni client, add an explicit relationship between the
-authenticated user and exactly one alumni record, then enforce that
-relationship in every profile, education, and employment request.
+- `AlumniDataExport` is implemented in `app/Exports/AlumniDataExport.php`.
+  It uses Laravel Excel query/mapping/formatting concerns; there is no
+  `generateXlsx()`, `selected_fields`, or `generated_at` member.
+- Its 15 headings are Student Number, First Name, Middle Name, Last Name,
+  Email, Phone Number, Current Address, Program, Graduation Date, Employment
+  Status, Remarks, Date Traced, Traced By, Education History, Employment History.
+- `graduation_year` stores a date; `instituion` matches the schema spelling.
+  `supported_documents` is a stored reference string.
+- User, Alumni, and Program implement soft deletes. History tables, roles, and
+  allocations also contain deletion timestamps, but their models do not use
+  `SoftDeletes`.
+- Alumni Education and Employment have no resource relation managers/editors.
+  Existing history data is displayed in report details and exported.
+- Role/allocation classes are currently placeholders without relationship or
+  authorization logic. Report/export queries do not use their permissions.
+- Framework, authentication-package, and widget-grid support classes are omitted
+  from the domain diagram for readability.
+
+## Planned two-client extension [P]
+
+The intended alumni client must bind each account to exactly one alumni record
+and authorize every profile/history request against that binding.
+`users.student_id` and `alumnis.student_number` do not provide an implemented
+foreign key or model relationship between User and Alumni.
+
+The staff client must enforce roles/scopes for record management, reports, and
+exports. History maintenance, allocation limits, automatic tracer attribution,
+and export/change auditing also remain planned. They are not dependencies or
+methods in the implemented class/sequence diagrams.

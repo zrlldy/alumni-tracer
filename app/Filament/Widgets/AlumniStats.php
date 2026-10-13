@@ -8,6 +8,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class AlumniStats extends StatsOverviewWidget
 {
+    protected ?string $heading = 'Employment & tracing snapshot';
+
     protected function getStats(): array
     {
         $total = Alumni::count();
@@ -17,12 +19,12 @@ class AlumniStats extends StatsOverviewWidget
             ->groupBy('employment_status')
             ->pluck('total', 'employment_status');
 
-        $employed = (int)($statusCounts['employed'] ?? 0);
-        $unemployed = (int)($statusCounts['unemployed'] ?? 0);
-        $untraced = (int)($statusCounts['untraced'] ?? 0);
+        $employed = (int) ($statusCounts['employed'] ?? 0);
+        $unemployed = (int) ($statusCounts['unemployed'] ?? 0);
+        $untraced = (int) ($statusCounts['untraced'] ?? 0);
 
-        $percentage = fn(int $count): string => $total > 0
-            ? number_format(($count / $total) * 100, 1) . '% of alumni'
+        $percentage = fn (int $count): string => $total > 0
+            ? number_format(($count / $total) * 100, 1).'% of alumni'
             : 'No alumni records';
 
         return [

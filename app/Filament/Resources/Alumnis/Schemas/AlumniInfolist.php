@@ -70,8 +70,8 @@ class AlumniInfolist
                     ->columns(2)
                     ->schema([
 
-                        TextEntry::make('program.id')
-                            ->label('Program')
+                        TextEntry::make('program.program_name')
+                            ->label('Department')
                             ->icon('heroicon-m-building-library')
                             ->placeholder('-'),
 
