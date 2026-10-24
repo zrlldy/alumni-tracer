@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Register;
+use App\Http\Middleware\RepairFilamentAlpineExpressions;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
@@ -37,12 +38,16 @@ class AlumniPanelProvider extends PanelProvider
             ->default()
             ->id('online')
             ->path('online')
-            ->brandLogo(asset('images/at1L.svg'))
-            ->darkModeBrandLogo(asset('images/ATv1D.svg'))
-            ->brandLogoHeight('3rem')
+            ->brandLogo(asset('images/alumni-darklogo.svg'))
+            ->darkModeBrandLogo(asset('images/alumni-whitelogo.svg'))
+            ->brandLogoHeight('3.5rem')
             ->brandName('Alumni Tracer')
-            // ->brandLogo(asset('favicon.png'))
-            // ->favicon(asset('favicon.ico'))
+            ->favicon(asset('favicon.ico'))
+            // ->sidebarCollapsibleOnDesktop()
+            // ->sidebarFullyCollapsibleOnDesktop()
+            ->sidebarWidth('10rem')
+            ->topNavigation()
+
 
             ->profile(isSimple: false)
             ->login(Login::class)
@@ -88,6 +93,7 @@ class AlumniPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                RepairFilamentAlpineExpressions::class,
                 MinifyMiddleware::class,
             ])
             ->authMiddleware([
