@@ -14,7 +14,6 @@ class AlumniForm
     {
         return $schema
             ->components([
-
                 Section::make('Personal Information')
                     ->description('Basic information about the alumnus.')
                     ->icon('heroicon-o-user')

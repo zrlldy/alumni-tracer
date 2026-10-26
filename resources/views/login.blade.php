@@ -1,6 +1,8 @@
-<div class="alumni-login-ad">
-
-    <div class="alumni-login-overlay"></div>
+<div
+    class="alumni-login-ad"
+    style="--alumni-login-bg: url('{{ asset('images/alumni-tracer-login.png') }}');"
+>
+    <div class="alumni-login-overlay" aria-hidden="true"></div>
 
     <div class="alumni-login-content">
 
@@ -21,23 +23,23 @@
                 and build meaningful connections with fellow alumni.
             </p>
 
-            <div class="alumni-login-features">
+        </div>
 
-                <div class="alumni-feature alumni-feature-navy">
-                    <strong>Connect</strong>
-                    <small>Alumni network</small>
-                </div>
+        <div class="alumni-login-features">
 
-                <div class="alumni-feature alumni-feature-red">
-                    <strong>Grow</strong>
-                    <small>Career journey</small>
-                </div>
+            <div class="alumni-feature alumni-feature-navy">
+                <strong>Connect</strong>
+                <small>Alumni network</small>
+            </div>
 
-                <div class="alumni-feature alumni-feature-orange">
-                    <strong>Engage</strong>
-                    <small>Community</small>
-                </div>
+            <div class="alumni-feature alumni-feature-red">
+                <strong>Grow</strong>
+                <small>Career journey</small>
+            </div>
 
+            <div class="alumni-feature alumni-feature-orange">
+                <strong>Engage</strong>
+                <small>Community</small>
             </div>
 
         </div>

@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Auth;
 
 use DiogoGPinto\AuthUIEnhancer\Pages\Auth\Concerns\HasCustomLayout;
 use Filament\Actions\Action;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\TextInput;
@@ -13,10 +14,21 @@ use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Illuminate\Htmlable;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
+use Illuminate\Validation\ValidationException;
+use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
+use Sujip\Filament\Turnstile\Exceptions\TurnstileException;
 
 class Login extends BaseLogin
 {
     use HasCustomLayout;
+
+    /**
+     * Turnstile token returned by Cloudflare.
+     */
+    public string $turnstileToken = '';
 
     public function getTitle(): string
     {
@@ -31,12 +43,33 @@ class Login extends BaseLogin
     /**
      * Remove Filament's default:
      * "or sign up for an account"
-     *
-     * We will render the registration link at the bottom instead.
      */
     public function getSubheading(): ?string
     {
         return 'Sign in to continue to Alumni Tracer.';
+    }
+
+    /**
+     * Add Turnstile to the login form.
+     */
+    public function form(Schema $schema): Schema
+    {
+        $client = app(TurnstileClientContract::class);
+
+        $components = [
+            $this->getEmailFormComponent(),
+            $this->getPasswordFormComponent(),
+            $this->getRememberFormComponent(),
+        ];
+
+        if ($client->isConfigured()) {
+            $components[] = View::make('filament-turnstile::turnstile-raw')
+                ->viewData([
+                    'siteKey' => $client->siteKey(),
+                ]);
+        }
+
+        return $schema->components($components);
     }
 
     /**
@@ -58,22 +91,31 @@ class Login extends BaseLogin
 
     /**
      * Password field
-     *
-     * We intentionally remove the default "Forgot password?"
-     * hint because it will be moved to the bottom.
      */
+    // protected function getPasswordFormComponent(): Component
+    // {
+    //     return TextInput::make('password')
+    //         ->label('Password')
+    //         ->placeholder('Enter your password')
+    //         ->password()
+    //         ->revealable(filament()->arePasswordsRevealable())
+    //         ->autocomplete('current-password')
+    //         ->required()
+    //         ->extraInputAttributes([
+    //             'class' => 'alumni-auth-input',
+    //         ]);
+    // }
+
     protected function getPasswordFormComponent(): Component
     {
         return TextInput::make('password')
-            ->label('Password')
-            ->placeholder('Enter your password')
+            ->label(__('filament-panels::auth/pages/login.form.password.label'))
+            ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="-1"> {{ __(\'filament-panels::auth/pages/login.actions.request_password_reset.label\') }}</x-filament::link>')) : null)
             ->password()
             ->revealable(filament()->arePasswordsRevealable())
             ->autocomplete('current-password')
             ->required()
-            ->extraInputAttributes([
-                'class' => 'alumni-auth-input',
-            ]);
+            ->prefixIcon('heroicon-o-lock-closed');
     }
 
     /**
@@ -98,6 +140,62 @@ class Login extends BaseLogin
             ->extraAttributes([
                 'class' => 'alumni-auth-submit',
             ]);
+    }
+
+    /**
+     * Verify Turnstile before normal Filament authentication.
+     */
+    public function authenticate(): ?LoginResponse
+    {
+        $client = app(TurnstileClientContract::class);
+
+        if ($client->isConfigured()) {
+            $this->verifyTurnstileToken($client);
+        }
+
+        return parent::authenticate();
+    }
+
+    /**
+     * Verify Cloudflare Turnstile token.
+     */
+    private function verifyTurnstileToken(TurnstileClientContract $client): void
+    {
+        if ($this->turnstileToken === '') {
+            $this->resetTurnstile();
+
+            throw ValidationException::withMessages([
+                'turnstileToken' => 'Please complete the security challenge.',
+            ]);
+        }
+
+        try {
+            $result = $client->verify($this->turnstileToken);
+        } catch (TurnstileException) {
+            $this->resetTurnstile();
+
+            throw ValidationException::withMessages([
+                'turnstileToken' => 'The security challenge could not be verified. Please try again.',
+            ]);
+        }
+
+        if (! $result->isSuccessful()) {
+            $this->resetTurnstile();
+
+            throw ValidationException::withMessages([
+                'turnstileToken' => 'The security challenge failed. Please try again.',
+            ]);
+        }
+    }
+
+    /**
+     * Reset the Turnstile widget after failure.
+     */
+    private function resetTurnstile(): void
+    {
+        $this->turnstileToken = '';
+
+        $this->dispatch('turnstile.reset');
     }
 
     /**
