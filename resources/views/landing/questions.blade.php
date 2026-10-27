@@ -1,4 +1,4 @@
-<section id="questions" class="landing-container landing-questions-section" aria-labelledby="landing-questions-title" tabindex="-1">
+<section id="questions" class="landing-container landing-questions-section" data-sc-act="flow" aria-labelledby="landing-questions-title" tabindex="-1">
     <h2 id="landing-questions-title">Before you sign in.</h2>
     <div class="landing-faqs">
         <details open>
