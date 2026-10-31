@@ -5,10 +5,12 @@ namespace App\Filament\Pages;
 use App\Exports\AlumniDataExport;
 use App\Models\Alumni;
 use App\Models\Program;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Page;
 use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -17,7 +19,6 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Facades\Excel;
-use UnitEnum;
 
 class AlumniDataReport extends Page implements HasTable
 {
@@ -27,7 +28,7 @@ class AlumniDataReport extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Alumni Data Report';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Reports';
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentChartBar;
 
     protected static ?int $navigationSort = 1;
 
@@ -42,7 +43,6 @@ class AlumniDataReport extends Page implements HasTable
                 ->color('success')
                 ->action(function () {
                     $graduationYear = $this->selectedGraduationYear();
-
                     return Excel::download(
                         new AlumniDataExport(
                             graduationYear: $graduationYear,
@@ -72,7 +72,7 @@ class AlumniDataReport extends Page implements HasTable
                     ->schema([
                         Select::make('year')
                             ->label('Graduation Year')
-                            ->options(fn(): array => $this->graduationYearOptions())
+                            ->options(fn (): array => $this->graduationYearOptions())
                             ->placeholder('All years'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
@@ -89,7 +89,7 @@ class AlumniDataReport extends Page implements HasTable
                     ->schema([
                         Select::make('program_id')
                             ->label('Department')
-                            ->options(fn(): array => $this->departmentOptions())
+                            ->options(fn (): array => $this->departmentOptions())
                             ->searchable()
                             ->placeholder('All departments'),
                     ])
@@ -107,7 +107,7 @@ class AlumniDataReport extends Page implements HasTable
                     ->schema([
                         Select::make('status')
                             ->label('Employment Status')
-                            ->options(fn(): array => $this->employmentStatusOptions())
+                            ->options(fn (): array => $this->employmentStatusOptions())
                             ->placeholder('All employment statuses'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
@@ -129,8 +129,8 @@ class AlumniDataReport extends Page implements HasTable
                     ->sortable(),
                 TextColumn::make('name')
                     ->label('Alumni')
-                    ->state(fn(Alumni $record): string => $this->alumniName($record))
-                    ->description(fn(Alumni $record): ?string => $record->email)
+                    ->state(fn (Alumni $record): string => $this->alumniName($record))
+                    ->description(fn (Alumni $record): ?string => $record->email)
                     ->searchable(['first_name', 'middle_name', 'last_name'])
                     ->sortable(['first_name', 'last_name'])
                     ->weight('medium'),
@@ -141,7 +141,7 @@ class AlumniDataReport extends Page implements HasTable
                     ->searchable()
                     ->sortable()
                     ->limit(28)
-                    ->tooltip(fn(?string $state): ?string => $state),
+                    ->tooltip(fn (?string $state): ?string => $state),
                 TextColumn::make('graduation_year')
                     ->label('Graduated')
                     ->date('Y')
@@ -149,13 +149,13 @@ class AlumniDataReport extends Page implements HasTable
                 TextColumn::make('employment_status')
                     ->label('Employment Status')
                     ->badge()
-                    ->formatStateUsing(fn(?string $state): string => match ($state) {
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'employed' => 'Employed',
                         'unemployed' => 'Unemployed',
                         'untraced' => 'Untraced',
                         default => 'Not specified',
                     })
-                    ->color(fn(?string $state): string => match ($state) {
+                    ->color(fn (?string $state): string => match ($state) {
                         'employed' => 'success',
                         'unemployed' => 'warning',
                         default => 'gray',
@@ -163,7 +163,7 @@ class AlumniDataReport extends Page implements HasTable
                 TextColumn::make('date_traced')
                     ->label('Last Traced')
                     ->date('M d, Y')
-                    ->description(fn(Alumni $record): string => $record->trace_by ?? 'Not traced')
+                    ->description(fn (Alumni $record): string => $record->trace_by ?? 'Not traced')
                     ->placeholder('Not traced'),
             ])
             ->recordActions([
@@ -172,7 +172,7 @@ class AlumniDataReport extends Page implements HasTable
                     ->icon('heroicon-o-eye')
                     ->iconButton()
                     ->tooltip('View complete alumni record')
-                    ->modalHeading(fn(Alumni $record): string => "Alumni details: {$this->alumniName($record)}")
+                    ->modalHeading(fn (Alumni $record): string => "Alumni details: {$this->alumniName($record)}")
                     ->modalWidth(Width::FourExtraLarge)
                     ->modal()
                     ->modalSubmitAction(false)
@@ -198,9 +198,9 @@ class AlumniDataReport extends Page implements HasTable
         return Alumni::query()
             ->orderByDesc('graduation_year')
             ->pluck('graduation_year')
-            ->map(fn(string $graduationDate): string => str($graduationDate)->before('-')->toString())
+            ->map(fn (string $graduationDate): string => str($graduationDate)->before('-')->toString())
             ->unique()
-            ->mapWithKeys(fn(string $year): array => [$year => $year])
+            ->mapWithKeys(fn (string $year): array => [$year => $year])
             ->all();
     }
 

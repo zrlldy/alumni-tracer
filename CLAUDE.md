@@ -1,3 +1,11 @@
+## Required session context recovery
+
+Read [AI_MASTER_GUIDELINES.md](AI_MASTER_GUIDELINES.md) and [AGENTS.md](AGENTS.md)
+before implementation. Follow their repository-based context recovery, actual
+Ponytail/Superpowers discovery, task verification, safety and session-handoff
+requirements. Current `/online` behavior must not be confused with the required
+`/admin` target; the controlled transition belongs to AT-F01.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
