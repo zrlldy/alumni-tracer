@@ -38,10 +38,9 @@ class AlumniDataExport implements
 
     public function query(): Builder
     {
-        Gate::authorize('reports.export');
+        
 
         $query = Alumni::query()
-            ->visibleTo(auth()->user())
             ->with([
                 'program',
                 'alumniEmployment',
