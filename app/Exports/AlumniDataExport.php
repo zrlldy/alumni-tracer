@@ -3,12 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Alumni;
-use App\Models\AlumniEducation;
-use App\Models\AlumniEmployment;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use LogicException;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -19,18 +17,38 @@ use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class AlumniDataExport implements FromQuery, ShouldAutoSize, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles
+class AlumniDataExport implements
+    FromQuery,
+    WithColumnWidths,
+    WithEvents,
+    WithHeadings,
+    WithMapping,
+    WithStyles
 {
+    private int $rowNumber = 0;
+
+    private ?int $lastProgramId = null;
+
     public function __construct(
         private readonly ?int $graduationYear = null,
         private readonly ?int $programId = null,
         private readonly ?string $employmentStatus = null,
-    ) {}
+    ) {
+    }
 
     public function query(): Builder
     {
+        Gate::authorize('reports.export');
+
         $query = Alumni::query()
-            ->with(['program', 'alumniEducation', 'alumniEmployment'])
+            ->visibleTo(auth()->user())
+            ->with([
+                'program',
+                'alumniEmployment',
+            ])
+            ->orderBy('program_id')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
             ->orderBy('id');
 
         if ($this->graduationYear !== null) {
@@ -42,7 +60,9 @@ class AlumniDataExport implements FromQuery, ShouldAutoSize, WithColumnWidths, W
         }
 
         if ($this->employmentStatus !== null) {
-            $query->withEmploymentStatus($this->employmentStatus);
+            $query->withEmploymentStatus(
+                $this->employmentStatus
+            );
         }
 
         return $query;
@@ -51,74 +71,168 @@ class AlumniDataExport implements FromQuery, ShouldAutoSize, WithColumnWidths, W
     public function headings(): array
     {
         return [
-            'Student Number',
-            'First Name',
-            'Middle Name',
-            'Last Name',
-            'Email',
-            'Phone Number',
-            'Current Address',
-            'Program',
-            'Graduation Date',
-            'Employment Status',
-            'Remarks',
-            'Date Traced',
-            'Traced By',
-            'Education History',
-            'Employment History',
+            [
+                'CTU DAANBANTAYAN- Tabogon Extension Campus',
+            ],
+            [
+                '',
+                'NO.',
+                'Lastname',
+                'Firstname',
+                'STATUS',
+                '',
+                '',
+                'Supporting Documents',
+                'Remarks (e.g. Deceased)',
+                'Name of Company',
+                'Address of the Company',
+                'Date Hired',
+                'DATE OF GRADUATION',
+                'STUDENT ID NUMBER',
+                'CLASSIFICATION (PT, FT, J.O)',
+                'DATE TRACED',
+                'PHONE NUMBER',
+                'TRACER',
+            ],
         ];
     }
 
-    public function map(mixed $row): array
+    public function map($row): array
     {
-        if (! $row instanceof Alumni) {
-            throw new LogicException('Alumni data exports may only map alumni records.');
+        if (!$row instanceof Alumni) {
+            throw new LogicException(
+                'Alumni data exports may only map alumni records.'
+            );
+        }
+
+        $this->rowNumber++;
+
+        $programId = $row->program_id;
+
+        $programName = '';
+
+        if ($this->lastProgramId !== $programId) {
+            $programName = $row->program?->program_name ?? '';
+            $this->lastProgramId = $programId;
+        }
+
+        // Prefer the current employment record.
+        // Otherwise use the most recent available record.
+        $employment = $row->alumniEmployment
+            ->sortByDesc(
+                fn($item) =>
+                    (string) ($item->date_hired ?? '')
+            )
+            ->firstWhere('is_current', true);
+
+        if ($employment === null) {
+            $employment = $row->alumniEmployment
+                ->sortByDesc(
+                    fn($item) =>
+                        (string) ($item->date_hired ?? '')
+                )
+                ->first();
         }
 
         return [
-            $row->student_number,
-            $row->first_name,
-            $row->middle_name,
+            // A - Program group
+            $programName,
+
+            // B - Sequential number
+            $this->rowNumber,
+
+            // C - Lastname
             $row->last_name,
-            $row->email,
-            $row->phone_number,
-            $row->current_address,
-            $row->program?->program_name,
-            $row->graduation_year,
-            $row->employment_status,
+
+            // D - Firstname
+            $row->first_name,
+
+            // E - Employment status
+            ucfirst((string) $row->employment_status),
+
+            // F-G - Reserved columns
+            '',
+            '',
+
+            // H - Supporting documents
+            $employment?->supported_documents,
+
+            // I - Remarks
             $row->remarks,
+
+            // J - Company name
+            $employment?->company_name,
+
+            // K - Company address
+            $employment?->company_address,
+
+            // L - Date hired
+            $employment?->date_hired,
+
+            // M - Graduation year fallback
+            $row->graduation_year,
+
+            // N - Student number
+            $row->student_number,
+
+            // O - Classification
+            $employment?->employment_type,
+
+            // P - Date traced
             $row->date_traced,
+
+            // Q - Phone number
+            $row->phone_number,
+
+            // R - Traced by
             $row->trace_by,
-            implode(PHP_EOL, $row->alumniEducation->map($this->formatEducation(...))->all()),
-            implode(PHP_EOL, $row->alumniEmployment->map($this->formatEmployment(...))->all()),
         ];
     }
 
     public function columnWidths(): array
     {
         return [
-            'A' => 18,
-            'B' => 18,
-            'C' => 18,
-            'D' => 18,
-            'E' => 28,
-            'F' => 18,
-            'G' => 35,
-            'H' => 28,
-            'I' => 18,
-            'J' => 18,
-            'K' => 35,
+            'A' => 48,
+            'B' => 10,
+            'C' => 22,
+            'D' => 24,
+            'E' => 18,
+            'F' => 12,
+            'G' => 12,
+            'H' => 45,
+            'I' => 35,
+            'J' => 35,
+            'K' => 50,
             'L' => 18,
-            'M' => 22,
-            'N' => 60,
-            'O' => 75,
+            'M' => 23,
+            'N' => 22,
+            'O' => 32,
+            'P' => 20,
+            'Q' => 20,
+            'R' => 25,
         ];
     }
 
-    public function styles(Worksheet $sheet): ?array
+    public function styles(Worksheet $sheet): array
     {
         return [
-            'A1:O1' => [
+            1 => [
+                'font' => [
+                    'bold' => true,
+                    'size' => 16,
+                    'color' => ['rgb' => 'FFFFFF'],
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '800000'],
+                ],
+                'alignment' => [
+                    'horizontal' => 'center',
+                    'vertical' => 'center',
+                ],
+            ],
+
+            2 => [
                 'font' => [
                     'bold' => true,
                     'color' => ['rgb' => 'FFFFFF'],
@@ -127,11 +241,10 @@ class AlumniDataExport implements FromQuery, ShouldAutoSize, WithColumnWidths, W
                     'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['rgb' => '800000'],
                 ],
-            ],
-            'N:O' => [
                 'alignment' => [
+                    'horizontal' => 'center',
+                    'vertical' => 'center',
                     'wrapText' => true,
-                    'vertical' => 'top',
                 ],
             ],
         ];
@@ -141,69 +254,85 @@ class AlumniDataExport implements FromQuery, ShouldAutoSize, WithColumnWidths, W
     {
         return [
             AfterSheet::class => function (AfterSheet $event): void {
-                $worksheet = $event->sheet->getDelegate();
-                $lastDataRow = $worksheet->getHighestDataRow();
+                $sheet = $event->sheet->getDelegate();
 
-                if ($lastDataRow < 2) {
+                // Report title
+                $sheet->mergeCells('A1:R1');
+
+                $sheet->getRowDimension(1)
+                    ->setRowHeight(32);
+
+                $sheet->getRowDimension(2)
+                    ->setRowHeight(42);
+
+                // Keep headers visible when scrolling.
+                $sheet->freezePane('A3');
+
+                // Filters across all template columns.
+                $lastRow = $sheet->getHighestDataRow();
+
+                $sheet->setAutoFilter(
+                    "A2:R{$lastRow}"
+                );
+
+                if ($lastRow < 3) {
                     return;
                 }
 
-                $worksheet
-                    ->getStyle("A2:O{$lastDataRow}")
+                // Wrap long text.
+                $sheet->getStyle("A3:R{$lastRow}")
+                    ->getAlignment()
+                    ->setWrapText(true);
+
+                $sheet->getStyle("A3:R{$lastRow}")
+                    ->getAlignment()
+                    ->setVertical('top');
+
+                // Preserve IDs and phone numbers as text.
+                $sheet->getStyle("N3:N{$lastRow}")
+                    ->getNumberFormat()
+                    ->setFormatCode('@');
+
+                $sheet->getStyle("Q3:Q{$lastRow}")
+                    ->getNumberFormat()
+                    ->setFormatCode('@');
+
+                // Highlight employment status.
+                $sheet->getStyle("A3:R{$lastRow}")
                     ->setConditionalStyles([
-                        $this->statusHighlight('$J2="unemployed"', 'FFF2CC'),
-                        $this->statusHighlight('$J2="untraced"', 'F4CCCC'),
+                        $this->statusHighlight(
+                            '$E3="Unemployed"',
+                            'FFF2CC'
+                        ),
+                        $this->statusHighlight(
+                            '$E3="Untraced"',
+                            'F4CCCC'
+                        ),
                     ]);
             },
         ];
     }
 
-    private function formatEducation(AlumniEducation $education): string
-    {
-        return sprintf(
-            'Institution: %s | Program: %s | Degree Level: %s | Units Completed: %s | Status: %s | Started: %s | Ended: %s',
-            $education->instituion,
-            $education->program,
-            $education->degree_level,
-            $education->units_completed,
-            $education->status,
-            $education->started_at,
-            $education->ended_at,
-        );
-    }
-
-    private function statusHighlight(string $condition, string $color): Conditional
-    {
-        $conditional = new Conditional;
+    private function statusHighlight(
+        string $condition,
+        string $color
+    ): Conditional {
+        $conditional = new Conditional();
 
         $conditional
-            ->setConditionType(Conditional::CONDITION_EXPRESSION)
+            ->setConditionType(
+                Conditional::CONDITION_EXPRESSION
+            )
             ->addCondition($condition);
 
-        $fill = $conditional->getStyle()->getFill();
+        $fill = $conditional
+            ->getStyle()
+            ->getFill();
 
         $fill->setFillType(Fill::FILL_SOLID);
         $fill->getStartColor()->setRGB($color);
         $fill->getEndColor()->setRGB($color);
 
         return $conditional;
-    }
-
-    private function formatEmployment(AlumniEmployment $employment): string
-    {
-        return sprintf(
-            'Company: %s | Position: %s | Address: %s | Industry: %s | Type: %s | Course Related: %s | Date Hired: %s | Starting Date: %s | Ended: %s | Documents: %s | Current: %s',
-            $employment->company_name,
-            $employment->position ?? '-',
-            $employment->company_address,
-            $employment->industry ?? '-',
-            $employment->employment_type,
-            $employment->is_course_related === null ? 'Not specified' : ($employment->is_course_related ? 'Yes' : 'No'),
-            $employment->date_hired,
-            $employment->starting_date ?? '-',
-            $employment->ended_at ?? '-',
-            $employment->supported_documents,
-            $employment->is_current ? 'Yes' : 'No',
-        );
     }
 }
