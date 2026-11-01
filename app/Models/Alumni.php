@@ -44,4 +44,11 @@ class Alumni extends Model
     {
         return $this->hasMany(AlumniEducation::class);
     }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    
 }
