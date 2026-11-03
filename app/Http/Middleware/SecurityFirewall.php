@@ -27,7 +27,7 @@ class SecurityFirewall
 
         $score = (int) Cache::get("security:score:{$ip}", 0);
 
-        $path = '/' . ltrim($request->path(), '/');
+        $path = '/'.ltrim($request->path(), '/');
         $query = $request->getQueryString() ?? '';
         $userAgent = strtolower($request->userAgent() ?? '');
 
@@ -128,9 +128,6 @@ class SecurityFirewall
                 'ip' => $ip,
                 'score' => $score,
                 'method' => $request->method(),
-                'path' => $path,
-                'query' => $query,
-                'user_agent' => $request->userAgent(),
             ]);
         }
 

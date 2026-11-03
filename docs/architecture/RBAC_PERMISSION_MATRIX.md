@@ -1,0 +1,67 @@
+# RBAC permission matrix
+
+Date: 2026-11-01. **Proposed grants; school approval pending.** Existing roles/allocations store data but do not enforce these permissions. No accounts are assigned or promoted by this document. DEC-02/03 in [requirements](../requirements/REQUIREMENTS.md) govern rollout.
+
+## Grants
+
+`All` means institutional scope, `Scoped` means explicitly assigned program/alumni, `Own` means the linked registry record or its assignment, `Deny` is the default. School Administrator privileges marked conditional remain denied until approved. Super Administrator is a set of explicit grants, not a blanket Gate bypass over safety/retention or ownership invariants.
+
+| Permission | Super Administrator | School Administrator | Tracer / staff | Alumni |
+| --- | --- | --- | --- | --- |
+| `admin.access` | All | All | Scoped | Deny |
+| `alumni.view` | All | All | Scoped | Own |
+| `alumni.create` | All | All | Deny | Deny |
+| `alumni.update` (official fields) | All | All | Deny | Deny |
+| `alumni.profile.update` (permitted fields) | All | All | Scoped if approved | Own |
+| `alumni.delete` (archive) | All | Conditional | Deny | Deny |
+| `alumni.restore` | All | Conditional | Deny | Deny |
+| `alumni.forceDelete` | Deny pending retention procedure | Deny | Deny | Deny |
+| `alumni.verify` | All | All | Deny | Deny |
+| `alumni.activate` (approve/issue invite) | All | Conditional DEC-01 | Deny | Deny |
+| `employment.view` / `education.view` | All | All | Scoped | Own |
+| `employment.update` / `education.update` (reported data) | All | All | Scoped | Own |
+| `employment.verify` / `education.verify` | All | All | Conditional | Deny |
+| `tracing.manage` | All | All | Scoped | Deny |
+| `programs.view` | All | All | Scoped reference | Own reference |
+| `programs.manage` / `batches.manage` | All | All | Deny | Deny |
+| `surveys.view` (definitions for staff) | All | All | Scoped if assigned | Deny |
+| `surveys.create` / `surveys.update` (draft) | All | All | Deny | Deny |
+| `surveys.publish` / `surveys.close` | All | All | Deny | Deny |
+| `surveys.respond` | Deny unless independently eligible alumnus | Deny unless independently eligible alumnus | Deny unless independently eligible alumnus | Own eligible assignment |
+| `surveys.results.view` | All | All | Conditional scoped aggregates | Own submission only |
+| `surveys.notify` / `surveys.testMail` | All | Conditional | Deny | Deny |
+| `reports.view` | All | All | Scoped aggregates | Own dashboard only |
+| `reports.export` | All | Conditional scoped fields | Deny | Deny |
+| `imports.preview` / `imports.apply` | All | Conditional | Deny | Deny |
+| `users.manage` | All | Deny | Deny | Deny |
+| `roles.manage` | All | Deny | Deny | Deny |
+| `audit.view` | All | Conditional | Deny | Deny |
+| `settings.manage` | All | Deny | Deny | Deny |
+| `account.security.manage` | Own | Own | Own | Own |
+| `notifications.view` | Own | Own | Own | Own |
+
+No generic admin permission can answer an alumni survey on someone else's behalf. Staff corrections/reviews are distinct audited actions; do not impersonate a respondent. No role can erase history or bypass immutable publication/submission rules.
+
+## Enforcement mapping
+
+| Entry point | Required checks |
+| --- | --- |
+| Required target `/admin/**`; current `/online/**` during controlled transition | FilamentUser, internal panel ID `online`, active/verified account and explicit `admin.access`; all supported authentication paths; no unprotected legacy handler |
+| Alumni/Program/User resources | Complete Laravel policies for viewAny/view/create/update/delete/deleteAny/restore/restoreAny/forceDelete/forceDeleteAny; scoped query for records; strict authorization after coverage |
+| Dashboard/widgets | canAccess/canView plus same reporting scope; saved grid class names do not grant visibility |
+| AlumniDataReport/details/export | `reports.view`, record scope and view policy; `reports.export` at action execution, minimized export scope and audit |
+| Import template/upload/preview/apply | Explicit preview/apply permissions at action and domain boundary; private per-import ownership/scope; no arbitrary uploaded-path trust |
+| `/alumni/**` and Livewire methods | Auth/verified/active linkage; resolve current owner; never use caller-supplied alumni ID as authority |
+| Histories/documents | Query via owned/scoped alumni; separate permission for verification; private authorized downloads |
+| Survey builder/publication | Draft management/publish permission and allowed state; version immutability and audience approval |
+| Survey responses/results | Own eligible assignment/response; staff results grant and cohort privacy; no foreign answer enumeration |
+| Workers/scheduled tasks | Approved persisted work, eligibility/preferences and current account state, safe audit; no reliance on worker being a super administrator |
+| Role/allocation changes | Authorized grant set; no self-escalation; capacity/assignment lock; invalidate cached grants immediately |
+
+Permission lists use closed known identifiers. A missing/deleted allocation/role, malformed JSON, unknown grant or unassigned scope denies. An empty scope never means all. No broad `Gate::before` superuser override. Management scope needs explicit approved semantics; free-text values and allocation codes are not authorization credentials.
+
+Foundation provisioning creates a dedicated Alumni role/allocation with `management_scope=self` and only the Own grants above. The compatible schema makes `max_users` nullable; NULL explicitly means no seat cap for this allocation. ClaimAlumniAccount assigns this allocation atomically with account/link creation and fails if it is missing/revoked; a registry link never replaces RBAC. No public request selects a role/allocation, and an Alumni allocation never grants `admin.access`. Finite staff allocation caps remain enforced. Test newly activated alumni admission plus immediate denial after allocation/role revocation.
+
+## Security verification required
+
+Test anonymous, unverified, disabled, unallocated, Super Administrator, School Administrator, Tracer and Alumni actors. Use separate synthetic users/alumni; repair factory uniqueness before multi-user tests. Exercise HTTP panel middleware as well as direct/crafted Livewire actions, bulk actions and downloads. Test role/scope revocation while a component is mounted; changing public IDs, search filters or submitted arrays must not widen access. Verify target `/admin` and deliberate legacy `/online` handling during AT-F01; a 404 at the currently unused `/admin` alone proves nothing. For every conditional grant test both explicit approval and default denial.

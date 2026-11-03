@@ -23,6 +23,7 @@ return new class extends Migration
             $table->timestamp('password_reset_at')->nullable();
             $table->rememberToken();
             $table->foreignId('user_allocation_id')->nullable()->constrained('user_allocations')->nullOnDelete();
+            $table->enum('role', ['admin', 'alumni'])->default('alumni');
             $table->text('image')->nullable();
             $table->text('app_authentication_secret')->nullable();
             $table->text('app_authentication_recovery_codes')->nullable();

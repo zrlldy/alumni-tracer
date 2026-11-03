@@ -1,5 +1,40 @@
+## Required session context recovery
+
+Read [AI_MASTER_GUIDELINES.md](AI_MASTER_GUIDELINES.md) at the start of every
+session and follow its bootstrap, skill-discovery, session-start report and
+handoff requirements before implementation. Recover state from repository
+instructions, source, Git and verified task history; conversation or personal
+memory is not project authority. Report missing documents and unavailable tools.
+
+The required portal targets are `/admin` (Filament) and `/alumni` (Blade/Livewire).
+The currently implemented Filament panel remains `online` at `/online`; its
+controlled path transition is planned in AT-F01. Do not claim target routes
+exist or rename the panel ID/saved layouts as part of instruction maintenance.
+
 <laravel-boost-guidelines>
 === foundation rules ===
+# Alumni-Tracer — Agent Instructions
+
+Before starting any task, read and follow:
+
+`AI_MASTER_GUIDELINES.md`
+
+This document is the project's persistent AI operating guide.
+
+Mandatory initialization:
+
+1. Read the master AI guidelines.
+2. Recover repository context and inspect Git status.
+3. Read the implementation tracker and previous completed-task records.
+4. Discover and use applicable Ponytail and Superpowers plugins/skills if installed.
+5. Follow AUDIT → PLAN → IMPLEMENT → TEST → VERIFY → DOCUMENT.
+6. Preserve all security, RBAC, database, and privacy guardrails.
+7. Update persistent task history after verified completion.
+8. Leave a clear session handoff.
+
+When instructions conflict, follow higher-priority system/security instructions, then applicable repository instructions. Report unresolved conflicts rather than silently overriding them.
+
+Do not begin implementation until the relevant existing system has been inspected.
 
 # Laravel Boost Guidelines
 
@@ -10,6 +45,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application running on PHP 8.4. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
 Before relying on a package's API, confirm its installed version:
+
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
@@ -85,7 +121,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
 - Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
+    - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 
@@ -157,4 +193,34 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
 - After the feature tests pass, ask the user to run the complete suite with `php artisan test --compact`.
 
+## Formatting
+
+- Before finishing, format changed files using the project's existing formatter for that file type.
+- For PHP, follow the Laravel Pint instructions above.
+- For JavaScript and other files supported by the existing Prettier configuration, use that configuration.
+- Do not install formatters or change formatter configurations unless explicitly requested.
+- Avoid formatting unrelated files.
+
 </laravel-boost-guidelines>
+
+## Alumni-Tracer audit-first workflow
+
+- Before application changes, read `docs/audit/SYSTEM_AUDIT.md`,
+  `docs/requirements/REQUIREMENTS.md`, the relevant architecture/import documents,
+  `docs/implementation/IMPLEMENTATION_PLAN.md`, `TASK_TRACKER.md` in the same
+  implementation directory, and relevant `docs/implementation/completed/` records.
+- Inspect current source, applicable shared rules and Git status. Preserve
+  unrelated dirty changes. Documentation describes both current and proposed
+  behavior; only completion records with verification establish implemented work.
+- Select an eligible task with satisfied dependencies. Record files, decisions,
+  database/security impact, exact tests/results and remaining limits in its
+  completion record; keep tracker status accurate. Never infer completion from
+  written code or historical test results.
+- School decisions in REQUIREMENTS are gates for dependent tasks. Never approve
+  identity ownership, promote an existing account, choose retention policy or
+  run a migration on an unknown database by assumption. Pending questions are
+  not approval. Continue independent authorized work while those are pending.
+- Do not modify secrets, import live alumni, rewrite historical migrations or
+  execute destructive database commands. Keep real alumni records/URLs out of
+  Git, logs and test fixtures. Mark unavailable workbook/integration evidence
+  UNVERIFIED rather than reporting it absent or complete.
