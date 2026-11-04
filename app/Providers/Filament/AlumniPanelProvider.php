@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
 use JohnRivera7\FilamentWidgetGrid\FilamentWidgetGridPlugin;
+use Livewire\Livewire;
 
 class AlumniPanelProvider extends PanelProvider
 {
@@ -53,7 +54,8 @@ class AlumniPanelProvider extends PanelProvider
 
 
             // ->profile(isSimple: false)
-            ->profile(EditProfile::class)
+            ->profile(EditProfile::class, 
+                isSimple: false,)
             ->login(Login::class)
             // ->login()
             // ->registration()
@@ -76,6 +78,18 @@ class AlumniPanelProvider extends PanelProvider
             //         ->icon(Heroicon::OutlinedWrenchScrewdriver)
             //         ->collapsed(),
             // ])
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                function (): string {
+                    $livewire = Livewire::current();
+
+                    if ($livewire && filled($livewire->userUndertakingMultiFactorAuthentication ?? null)) {
+                        return '';
+                    }
+
+                    return view('filament.auth.login-footer')->render();
+                },
+            )
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn(): string => view('filament.vite-assets')->render()
@@ -105,8 +119,8 @@ class AlumniPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                RepairFilamentAlpineExpressions::class,
-                MinifyMiddleware::class,
+                // RepairFilamentAlpineExpressions::class,
+                // MinifyMiddleware::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

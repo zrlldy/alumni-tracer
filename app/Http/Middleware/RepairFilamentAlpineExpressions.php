@@ -35,19 +35,24 @@ class RepairFilamentAlpineExpressions
         | Filament theme switcher
         |--------------------------------------------------------------------------
         |
-        | Html minification can remove the statement boundary:
+        | Html minification can remove the statement boundary before:
         |
-        |     })theme = localStorage.getItem('theme') || 'system'
-        |
-        | Restore the missing semicolon.
+        | theme = localStorage.getItem('theme') || 'system'
         |
         */
 
+        $html = str_replace(
+            ") theme = localStorage.getItem('theme') || 'system'",
+            ");theme = localStorage.getItem('theme') || 'system'",
+            $html,
+        );
+
         $html = preg_replace(
-            '/\}\)\s*theme\s*=/',
-            '}); theme =',
+            '/(\$dispatch\([\'"]theme-changed[\'"]\s*,\s*theme\)\s*\})\s+theme\s*=/',
+            '$1;theme=',
             $html,
         ) ?? $html;
+
 
         /*
         |--------------------------------------------------------------------------
@@ -68,10 +73,11 @@ class RepairFilamentAlpineExpressions
         */
 
         $html = preg_replace(
-            '/(\$el\.nextElementSibling)\s+(container\.dispatchEvent\()/',
+            '/(\$el\.nextElementSibling)\s+(container\.dispatchEvent\s*\()/',
             '$1;$2',
             $html,
         ) ?? $html;
+
 
         $response->setContent($html);
 

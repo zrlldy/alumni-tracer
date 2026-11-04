@@ -11,6 +11,7 @@ use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Schemas\UserInfolist;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
+use App\Traits\RoleBasedAccessControl;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -21,7 +22,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserResource extends Resource
 {
-
+    use RoleBasedAccessControl;
+    public static function canAccess(): bool
+    {
+        return self::hasPageAccess();
+    }
     protected static ?string $cluster = UserManagementCluster::class;
 
     protected static ?string $model = User::class;

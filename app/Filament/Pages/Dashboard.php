@@ -8,11 +8,17 @@ use App\Filament\Widgets\AlumniStats;
 use App\Filament\Widgets\EmploymentStatus;
 use App\Filament\Widgets\RecentlyTraced;
 use App\Filament\Widgets\TracingProgress;
+use App\Traits\RoleBasedAccessControl;
 use Filament\Pages\Dashboard as BaseDashboard;
 use JohnRivera7\FilamentWidgetGrid\Concerns\HasWidgetGrid;
 
 class Dashboard extends BaseDashboard
 {
+    use RoleBasedAccessControl;
+    public static function canAccess(): bool
+    {
+        return self::hasPageAccess();
+    }
     use HasWidgetGrid;
 
     public function getWidgets(): array

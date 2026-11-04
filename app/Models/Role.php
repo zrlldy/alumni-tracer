@@ -68,7 +68,7 @@ class Role extends Model
         * Profile
         */
         if ($panel->hasProfile()) {
-            $pages['profile'] = 'Settings';
+            $pages['settings'] = 'Settings';
         }
 
         /*
