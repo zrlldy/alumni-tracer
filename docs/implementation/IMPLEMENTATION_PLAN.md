@@ -2,15 +2,23 @@
 
 > **For agentic workers:** Use Superpowers executing-plans for eligible tasks, with test-first changes and a completion record per task. Follow the owner's audit-first sequence and approval limits. Read the tracker before selecting work; do not implement blocked policies by assumption.
 
-**Goal:** Evolve the existing staff registry into a secure two-portal alumni tracing/survey system without losing working records, histories or reporting.
+**Goal:** Evolve the existing registry into a secure shared-panel alumni tracing/survey system without losing working records, histories or reporting.
 
-**Architecture:** One Laravel application/session guard. Reuse internal `online` Filament panel, transition its current `/online` path to required `/admin` in AT-F01, and retain existing core tables and widget identities; add Blade/Livewire alumni pages, explicit policies, reviewed identity claims, immutable surveys and queued delivery work.
+**Architecture:** One Laravel application/session guard and the existing `online` Filament panel. The current owner-approved increment adds a native alumni form to the shared `/online` Dashboard and retains existing RBAC, tables and widget identities. The earlier path transition, identity-claim, policy, survey and delivery proposals below remain separate work subject to the updated owner decisions.
 
 **Tech stack:** PHP 8.4, Laravel 13.30.1, Filament 5.7.8, Livewire 4.4.3, MariaDB (connected 12.3.2), Laravel Excel 4.0.3, Pest 5.1.3. No added dependency proposed.
 
 **Spec:** [REQUIREMENTS](../requirements/REQUIREMENTS.md), [SYSTEM_ARCHITECTURE](../architecture/SYSTEM_ARCHITECTURE.md), [DATABASE_DESIGN](../architecture/DATABASE_DESIGN.md), [RBAC](../architecture/RBAC_PERMISSION_MATRIX.md), [import contract](../import/IMPORT_VALIDATION_RULES.md).
 
 **Operating guide:** [AI_MASTER_GUIDELINES.md](../../AI_MASTER_GUIDELINES.md). Every new session must recover context, discover actual skills, report current state and leave a documented handoff before/after eligible work.
+
+## Owner-approved current increment — AT-F04-FORM, 2026-11-04
+
+The owner narrowed implementation to alumni create/update information on the existing shared Filament Dashboard, using `alumnis`, `alumni_education` and `alumni_employments`. This replaces the earlier separate alumni-layout approach for the current increment. Keep existing RBAC, panel identity/path, login and saved layouts. Do not bundle signup changes, automatic record claiming, one-month account deletion, migrations or staff permission repairs into this task.
+
+Reuse the existing identity/contact/academic schema in a native Livewire form. Resolve one own record by persisted `alumnis.user_id`; after creation, keep identity/program/graduation fields staff-controlled. Append/update own education/employment without deleting omitted rows. Use existing page/action grants, recheck active role/allocation, lock the account during atomic saves and reject foreign/archived history IDs. Existing matching Student ID/email candidates require administrator review. No live accounts or data are linked by the development session.
+
+Acceptance includes scoped create/update, negative authorization/tampering, history preservation, validation, safe failure/rollback, shared-dashboard integration and staff-grid preservation tests. Visual acceptance requires desktop/mobile browser verification; unavailable control leaves that acceptance IMPLEMENTED BUT UNVERIFIED. Record baseline fixture failures separately from new form checks. Broader tasks below retain their historical proposal/dependency context and need reconciliation with the updated owner policy before execution.
 
 ## Global constraints
 

@@ -11,10 +11,11 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-P01 | Requirements/design/plan/history | VERIFIED COMPLETED | [Record](completed/AT-P01.md); links/coverage/source facts checked; independent review resolved; provisional school decisions remain pending |
 | AT-P02 | Persistent AI Master Guidelines v1.0 and session bootstrap | VERIFIED COMPLETED | [Record](completed/AT-P02.md); all 15 sections saved, entry-point links/bootstrap paths checked, target/current route distinction synchronized and existing app/test checksums preserved |
 | AT-S01 | Firewall request log minimization | VERIFIED COMPLETED | [Record](completed/AT-S01.md); red/green regression, 4 focused tests/16 assertions, full suite 20/114, Pint/diff checks |
-| AT-F01 | Staff bootstrap, panel/RBAC and policies | BLOCKED | DEC-02/03: designated privileged account and approved scope; current account unallocated, roles empty |
+| AT-F01 | Staff bootstrap, panel/RBAC and policies | BLOCKED | Broader policies/path transition and approved scope decisions remain open. Newer commits add existing RBAC/role UI; earlier empty-role/account observations are historical, not current verified counts. AT-F04-FORM does not certify or replace that implementation. |
 | AT-F02 | Registry/string ID/schema expansion | PLANNED | DEC-04/05; reviewed forward migrations and rollout target; AT-F01 before exposure |
 | AT-F03 | Approved activation/authenticator repair | BLOCKED | AT-F01/02, DEC-01/token lifetime/contact proof; no approval assumed |
-| AT-F04 | Owned alumni portal/profile | PLANNED | AT-F03 |
+| AT-F04 | Owned alumni portal/profile | IMPLEMENTED BUT UNVERIFIED | Scoped shared-panel form is implemented as AT-F04-FORM; broader account linking/lifecycle and browser acceptance remain outstanding. Earlier separate-layout plan is superseded for this increment. |
+| AT-F04-FORM | Shared-panel alumni information create/update form | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-FORM.md). 32 focused tests/126 assertions, shared HTTP Dashboard integration, build/Pint/diff checks pass. Browser control timed out. Full suite retains 12 baseline campus fixture errors. No global RBAC/auth/schema changes. |
 | AT-T01 | History/status/provenance model | PLANNED | AT-F02, DEC-05/06 |
 | AT-T02 | History editors/staff review | PLANNED | AT-T01/F04 |
 | AT-V01 | Survey definitions/version/publication | PLANNED | AT-F01/02, DEC-07 |
@@ -48,3 +49,12 @@ Next foundational task after security decisions: AT-F01. AT-A02 resumes when the
 5. Blocked: AT-A02 lacks workbook; AT-F01 awaits approved initial staff designation/access scopes; AT-F03 awaits identity policy and prerequisite work. This guideline does not approve those school decisions.
 6. Remaining: implement the documented two-portal/security/tracing/survey/notification/import/reporting plan incrementally. `/admin` is now the required target, not an optional alias; preserve internal panel ID/named-route prefix/saved layouts when transitioning it.
 7. Exact next recommended task: AT-F01 once DEC-02/03 are supplied, including controlled path transition and negative authorization tests. Resume AT-A02 when source workbook is available. Do not redo AT-A01/P01/S01/P02 without a verified reason.
+
+## Latest handoff — AT-F04-FORM, 2026-11-04
+
+1. Completed code: native create/update alumni information form embedded on the shared Dashboard, using existing RBAC page/action grants and `my_records`; owns data through `alumnis.user_id`; preserves omitted histories, protected identity/tracing fields and staff widget-grid behavior.
+2. Verified: read-only metadata for users/alumnis/both history tables matches source; 32 focused tests/126 assertions pass, including actual shared Dashboard HTTP rendering, ownership/tampering, revoked grants, archival, validation and atomic rollback. Build, required Pint and diff checks pass. Existing `.env.example` edit retained its original SHA-256.
+3. Failed baseline: full isolated suite is 52 tests, 40 passed, 12 errors, 147 assertions. The same 12 pre-task tests fail on missing `programs.campus_id` fixture data. No existing tests/factories were rewritten to hide those failures.
+4. Unverified: desktop/mobile visual checks; Computer Use inventory worked, but Chrome control timed out. No live-account form submission, MariaDB concurrent-save test, migration or connected-data write occurred.
+5. Limits: existing schema requires numeric Student ID, exact graduation date, education end date and employment document reference. Concurrent different-account duplicate creation is not closed by a unique constraint. Existing matching unlinked records require administrator linking; the linking workflow remains separate. Full RBAC, signup, roleless-page admission and one-month expiry are not implemented or certified by this task.
+6. Next recommended work: visually verify this form with synthetic data in an isolated environment, then repair baseline fixture compatibility under a separately scoped task. Resolve account-link confirmation/conflict and expiry/verification details before implementing those workflows. Preserve existing RBAC and unrelated `.env.example` changes.
