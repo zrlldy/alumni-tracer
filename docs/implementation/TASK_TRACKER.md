@@ -11,10 +11,11 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-P01 | Requirements/design/plan/history | VERIFIED COMPLETED | [Record](completed/AT-P01.md); links/coverage/source facts checked; independent review resolved; provisional school decisions remain pending |
 | AT-P02 | Persistent AI Master Guidelines v1.0 and session bootstrap | VERIFIED COMPLETED | [Record](completed/AT-P02.md); all 15 sections saved, entry-point links/bootstrap paths checked, target/current route distinction synchronized and existing app/test checksums preserved |
 | AT-S01 | Firewall request log minimization | VERIFIED COMPLETED | [Record](completed/AT-S01.md); red/green regression, 4 focused tests/16 assertions, full suite 20/114, Pint/diff checks |
-| AT-F01 | Staff bootstrap, panel/RBAC and policies | BLOCKED | DEC-02/03: designated privileged account and approved scope; current account unallocated, roles empty |
+| AT-F01 | Staff bootstrap, panel/RBAC and policies | BLOCKED | Broader policies/path transition and approved scope decisions remain open. Newer commits add existing RBAC/role UI; earlier empty-role/account observations are historical, not current verified counts. AT-F04-FORM does not certify or replace that implementation. |
 | AT-F02 | Registry/string ID/schema expansion | PLANNED | DEC-04/05; reviewed forward migrations and rollout target; AT-F01 before exposure |
 | AT-F03 | Approved activation/authenticator repair | BLOCKED | AT-F01/02, DEC-01/token lifetime/contact proof; no approval assumed |
-| AT-F04 | Owned alumni portal/profile | PLANNED | AT-F03 |
+| AT-F04 | Owned alumni portal/profile | IMPLEMENTED BUT UNVERIFIED | Scoped shared-panel form is implemented as AT-F04-FORM; broader account linking/lifecycle and browser acceptance remain outstanding. Earlier separate-layout plan is superseded for this increment. |
+| AT-F04-FORM | Shared-panel alumni information create/update form | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-FORM.md). 32 focused tests/126 assertions, shared HTTP Dashboard integration, build/Pint/diff checks pass. Browser control timed out. Full suite retains 12 baseline campus fixture errors. No global RBAC/auth/schema changes. |
 | AT-T01 | History/status/provenance model | PLANNED | AT-F02, DEC-05/06 |
 | AT-T02 | History editors/staff review | PLANNED | AT-T01/F04 |
 | AT-V01 | Survey definitions/version/publication | PLANNED | AT-F01/02, DEC-07 |

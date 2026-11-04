@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Programs\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
@@ -12,6 +13,14 @@ class ProgramForm
     {
         return $schema
             ->components([
+
+                Select::make('campus_id')
+                    ->label('Campus')
+                    ->relationship('campus', 'name')
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->live(),
 
                 TextInput::make('program_name')
                     ->label('Program Name')

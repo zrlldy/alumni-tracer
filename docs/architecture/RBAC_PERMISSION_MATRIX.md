@@ -1,6 +1,8 @@
 # RBAC permission matrix
 
-Date: 2026-11-01. **Proposed grants; school approval pending.** Existing roles/allocations store data but do not enforce these permissions. No accounts are assigned or promoted by this document. DEC-02/03 in [requirements](../requirements/REQUIREMENTS.md) govern rollout.
+Date: 2026-11-01; implementation note added 2026-11-04. **Proposed future grants; school approval pending.** These namespaced grants are not the current JSON permission format. No accounts are assigned or promoted by this document. DEC-02/03 in [requirements](../requirements/REQUIREMENTS.md) govern the broader rollout.
+
+**2026-11-04 implementation note:** newer source includes a role/allocation UI and `RoleBasedAccessControl` trait. AT-F04-FORM consumes that implementation without changing it: existing `alumnis` page access, `view`/`create`/`edit` actions and an active `my_records` allocation govern the self-service form on the shared Dashboard. Dashboard access remains controlled by its existing grant. The form additionally enforces persisted `alumnis.user_id` ownership and rejects deleted grants/foreign histories. No new permission keys, roles or live account grants are provisioned. The namespaced permission matrix below is still a proposed future contract, not the format of current JSON grants. Roleless Dashboard/Settings access and signup/expiry are outside this form task.
 
 ## Grants
 

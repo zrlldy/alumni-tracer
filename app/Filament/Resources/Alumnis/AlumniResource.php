@@ -10,6 +10,7 @@ use App\Filament\Resources\Alumnis\Schemas\AlumniForm;
 use App\Filament\Resources\Alumnis\Schemas\AlumniInfolist;
 use App\Filament\Resources\Alumnis\Tables\AlumnisTable;
 use App\Models\Alumni;
+use App\Traits\RoleBasedAccessControl;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -20,6 +21,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AlumniResource extends Resource
 {
+    use RoleBasedAccessControl;
+    public static function canAccess(): bool
+    {
+        return self::hasPageAccess();
+    }
     protected static ?string $model = Alumni::class;
 
     protected static ?string $navigationLabel = "Alumni";

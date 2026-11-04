@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Register;
 use App\Http\Middleware\RepairFilamentAlpineExpressions;
@@ -13,10 +14,12 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -41,7 +44,7 @@ class AlumniPanelProvider extends PanelProvider
             ->path('online')
             ->brandLogo(asset('images/alumni-darklogo.svg'))
             ->darkModeBrandLogo(asset('images/alumni-whitelogo.svg'))
-            ->brandLogoHeight('3.5rem')
+            ->brandLogoHeight('2.3rem')
             ->brandName('Alumni Tracer')
             ->favicon(asset('favicon.ico'))
             // ->sidebarCollapsibleOnDesktop()
@@ -66,6 +69,24 @@ class AlumniPanelProvider extends PanelProvider
                 // Extra brand color for selected components
                 'accent' => Color::hex('#F77F00'), // Orange
             ])
+            // ->navigationGroups([
+            //     NavigationGroup::make()
+            //         ->label('Management')
+            //         ->icon(Heroicon::OutlinedWrenchScrewdriver)
+            //         ->collapsed(),
+            // ])
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                function (): string {
+                    $livewire = Livewire::current();
+
+                    if ($livewire && filled($livewire->userUndertakingMultiFactorAuthentication ?? null)) {
+                        return '';
+                    }
+
+                    return view('filament.auth.login-footer')->render();
+                },
+            )
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): string => view('filament.vite-assets')->render()
@@ -75,6 +96,8 @@ class AlumniPanelProvider extends PanelProvider
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            
+            ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             // ->pages([
             //     Dashboard::class,
             // ])
@@ -93,8 +116,8 @@ class AlumniPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                RepairFilamentAlpineExpressions::class,
-                MinifyMiddleware::class,
+                // RepairFilamentAlpineExpressions::class,
+                // MinifyMiddleware::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

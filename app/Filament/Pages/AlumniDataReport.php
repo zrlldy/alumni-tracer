@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Exports\AlumniDataExport;
 use App\Models\Alumni;
 use App\Models\Program;
+use App\Traits\RoleBasedAccessControl;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -22,6 +23,11 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AlumniDataReport extends Page implements HasTable
 {
+    use RoleBasedAccessControl;
+    public static function canAccess(): bool
+    {
+        return self::hasPageAccess();
+    }
     use InteractsWithTable;
 
     protected static ?string $title = 'Alumni Data Report';

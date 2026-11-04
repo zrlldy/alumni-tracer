@@ -13,28 +13,6 @@ exist or rename the panel ID/saved layouts as part of instruction maintenance.
 
 <laravel-boost-guidelines>
 === foundation rules ===
-# Alumni-Tracer — Agent Instructions
-
-Before starting any task, read and follow:
-
-`AI_MASTER_GUIDELINES.md`
-
-This document is the project's persistent AI operating guide.
-
-Mandatory initialization:
-
-1. Read the master AI guidelines.
-2. Recover repository context and inspect Git status.
-3. Read the implementation tracker and previous completed-task records.
-4. Discover and use applicable Ponytail and Superpowers plugins/skills if installed.
-5. Follow AUDIT → PLAN → IMPLEMENT → TEST → VERIFY → DOCUMENT.
-6. Preserve all security, RBAC, database, and privacy guardrails.
-7. Update persistent task history after verified completion.
-8. Leave a clear session handoff.
-
-When instructions conflict, follow higher-priority system/security instructions, then applicable repository instructions. Report unresolved conflicts rather than silently overriding them.
-
-Do not begin implementation until the relevant existing system has been inspected.
 
 # Laravel Boost Guidelines
 
@@ -45,7 +23,6 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application running on PHP 8.4. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
 Before relying on a package's API, confirm its installed version:
-
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
@@ -121,7 +98,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
 - Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-    - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
+  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 
@@ -139,6 +116,15 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Deployment
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Test every code change by adding or updating a test.
+- Run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.
 
 === laravel/core rules ===
 
@@ -192,14 +178,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Rerun a test after each change to it.
 - Run `vendor/bin/pest` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
 - After the feature tests pass, ask the user to run the complete suite with `php artisan test --compact`.
-
-## Formatting
-
-- Before finishing, format changed files using the project's existing formatter for that file type.
-- For PHP, follow the Laravel Pint instructions above.
-- For JavaScript and other files supported by the existing Prettier configuration, use that configuration.
-- Do not install formatters or change formatter configurations unless explicitly requested.
-- Avoid formatting unrelated files.
 
 </laravel-boost-guidelines>
 
