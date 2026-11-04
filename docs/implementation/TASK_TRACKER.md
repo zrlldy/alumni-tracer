@@ -1,6 +1,6 @@
 # Alumni-Tracer task tracker
 
-Updated: 2026-11-01. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
+Updated: 2026-11-04. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.
 
@@ -21,6 +21,7 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-V01 | Survey definitions/version/publication | PLANNED | AT-F01/02, DEC-07 |
 | AT-V02 | Survey participation/response isolation | PLANNED | AT-V01/F04 |
 | AT-N01 | Queue delivery/notification outcomes | PLANNED | AT-V01/02, DEC-08 |
+| AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views; welcome sends on `Verified`; focused array-mailer tests pass |
 | AT-I01 | Staged reviewed legacy/flat import | PLANNED | AT-A02/F01/F02/T01, DEC-04/10 |
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
 | AT-O01 | Deployment/privacy/end-to-end readiness | PLANNED | Applicable implemented modules and school policy approvals |
@@ -37,6 +38,7 @@ See DEC-01..10 in [requirements](../requirements/REQUIREMENTS.md). Explicit ques
 - AT-S01 focused red/green tests: privacy failures confirmed before fix, then 4 passed/16 assertions. Full isolated suite: 20 passed/114 assertions. Scoped Pint and diff check passed; pre-existing report checksum preserved.
 - Independent read-only review accepted app correction and provisional design after resolving delivery-ledger task ordering, nullable unknowns and explicit Alumni-allocation claim contract.
 - No database mutations, migrations on connected MariaDB, seeders, workbook imports, package installs, external messages or environment changes performed.
+- Branded authentication email tests: 10 passed / 52 assertions with SQLite memory, array mailer and sync queue; inline PNG MIME parts verified. Full suite: 18 passed, 1 failed, 11 errors from the missing Vite manifest and alumni fixtures missing required `user_id`.
 
 Next foundational task after security decisions: AT-F01. AT-A02 resumes when the workbook is supplied. Downstream features remain planned until their dependencies are satisfied. Resume from evidence and tracker, not a previous agent's success claim.
 
@@ -50,11 +52,9 @@ Next foundational task after security decisions: AT-F01. AT-A02 resumes when the
 6. Remaining: implement the documented two-portal/security/tracing/survey/notification/import/reporting plan incrementally. `/admin` is now the required target, not an optional alias; preserve internal panel ID/named-route prefix/saved layouts when transitioning it.
 7. Exact next recommended task: AT-F01 once DEC-02/03 are supplied, including controlled path transition and negative authorization tests. Resume AT-A02 when source workbook is available. Do not redo AT-A01/P01/S01/P02 without a verified reason.
 
-## Latest handoff — AT-F04-FORM, 2026-11-04
+## Latest handoff — AT-N02, 2026-11-04
 
-1. Completed code: native create/update alumni information form embedded on the shared Dashboard, using existing RBAC page/action grants and `my_records`; owns data through `alumnis.user_id`; preserves omitted histories, protected identity/tracing fields and staff widget-grid behavior.
-2. Verified: read-only metadata for users/alumnis/both history tables matches source; 32 focused tests/126 assertions pass, including actual shared Dashboard HTTP rendering, ownership/tampering, revoked grants, archival, validation and atomic rollback. Build, required Pint and diff checks pass. Existing `.env.example` edit retained its original SHA-256.
-3. Failed baseline: full isolated suite is 52 tests, 40 passed, 12 errors, 147 assertions. The same 12 pre-task tests fail on missing `programs.campus_id` fixture data. No existing tests/factories were rewritten to hide those failures.
-4. Unverified: desktop/mobile visual checks; Computer Use inventory worked, but Chrome control timed out. No live-account form submission, MariaDB concurrent-save test, migration or connected-data write occurred.
-5. Limits: existing schema requires numeric Student ID, exact graduation date, education end date and employment document reference. Concurrent different-account duplicate creation is not closed by a unique constraint. Existing matching unlinked records require administrator linking; the linking workflow remains separate. Full RBAC, signup, roleless-page admission and one-month expiry are not implemented or certified by this task.
-6. Next recommended work: visually verify this form with synthetic data in an isolated environment, then repair baseline fixture compatibility under a separately scoped task. Resolve account-link confirmation/conflict and expiry/verification details before implementing those workflows. Preserve existing RBAC and unrelated `.env.example` changes.
+1. Completed: connected Filament password reset, email verification and MFA OTP to the branded views; added a queued welcome on Laravel's `Verified` event and embedded the logo and mascot as inline PNG MIME parts.
+2. Verified: focused email tests passed (10 tests, 52 assertions); Pint and `git diff --check` passed. The full suite has unrelated failures from a missing Vite manifest and alumni fixtures without required `user_id` (18 passed, 1 failed, 11 errors).
+3. Remaining: live delivery requires a working mail transport and queue worker. Account activation/RBAC remain blocked and survey delivery remains planned under AT-N01.
+4. Exact next recommended task remains AT-F01 after DEC-02/03 are supplied. Resume AT-A02 when the source workbook is available; do not redo completed audit/design/security/bootstrap tasks without a verified reason.

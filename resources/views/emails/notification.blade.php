@@ -25,7 +25,7 @@
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF" style="margin:0 auto;border-collapse:separate;border-spacing:0;background-color:#FFFFFF;border-radius:8px;">
                                 <tr>
                                     <td align="center" valign="middle" style="padding:5px;">
-                                        <img src="{{ $message->embed(public_path('images/alumni-tracer-email-logo.png')) }}" width="58" height="58" alt="Alumni Tracer" style="display:block;width:58px;height:58px;border:0;">
+                                        <img src="{{ $logoSource ?? $message->embed(public_path('images/alumni-tracer-email-logo.png')) }}" width="58" height="58" alt="Alumni Tracer" style="display:block;width:58px;height:58px;border:0;">
                                     </td>
                                 </tr>
                             </table>
@@ -34,7 +34,7 @@
                     </tr>
                     <tr>
                         <td align="center" bgcolor="#FCBF49" style="height:204px;padding:0;background-color:#FCBF49;border-radius:30px 30px 0 0;">
-                            <img src="{{ $message->embed(public_path('images/alumni-tracer-email-mascot.png')) }}" width="188" height="164" alt="Pixel alumni mascot wearing a graduation cap" style="display:block;width:188px;height:164px;margin:0 auto;border:0;">
+                            <img src="{{ $mascotSource ?? $message->embed(public_path('images/alumni-tracer-email-mascot.png')) }}" width="188" height="164" alt="Pixel alumni mascot wearing a graduation cap" style="display:block;width:188px;height:164px;margin:0 auto;border:0;">
                         </td>
                     </tr>
                     <tr>
