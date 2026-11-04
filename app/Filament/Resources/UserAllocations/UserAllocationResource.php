@@ -11,6 +11,7 @@ use App\Filament\Resources\UserAllocations\Schemas\UserAllocationForm;
 use App\Filament\Resources\UserAllocations\Schemas\UserAllocationInfolist;
 use App\Filament\Resources\UserAllocations\Tables\UserAllocationsTable;
 use App\Models\UserAllocation;
+use App\Traits\RoleBasedAccessControl;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -21,7 +22,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserAllocationResource extends Resource
 {
-
+    use RoleBasedAccessControl;
+    public static function canAccess(): bool
+    {
+        return self::hasPageAccess();
+    }
     protected static ?string $cluster = UserManagementCluster::class;
 
     protected static ?string $model = UserAllocation::class;

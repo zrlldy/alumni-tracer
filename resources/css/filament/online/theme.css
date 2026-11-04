@@ -2,6 +2,12 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+
+@source '../../../../resources/views/components/**/*';
+@source '../../../../resources/views/livewire/**/*';
+
+
+@source '../../../../resources/views/vendor/passkeys/**/*.blade.php';
 @source '../../../../vendor/diogogpinto/filament-auth-ui-enhancer/resources/**/*.blade.php';
 
 /* =========================================================

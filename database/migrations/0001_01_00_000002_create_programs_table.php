@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('campus_id')->constrained('campuses');
             $table->string('program_name');
             $table->boolean('is_active')->default(true);
             $table->softDeletes();

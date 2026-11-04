@@ -3,7 +3,7 @@
 use App\Http\Controllers\GoogleAuthController;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
-use Spatie\LaravelPasskeys\Http\Controllers\AuthenticateUsingPasskeyController;
+use App\Http\Controllers\AuthenticateUsingPasskeyController;
 use Spatie\LaravelPasskeys\Http\Controllers\GeneratePasskeyAuthenticationOptionsController;
 
 Route::get('/', function (): View {
