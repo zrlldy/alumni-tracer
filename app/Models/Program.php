@@ -17,4 +17,21 @@ class Program extends Model
     {
         return $this->hasMany(Alumni::class);
     }
+
+    public function campus()
+    {
+        return $this->belongsTo(Campus::class);
+    }
+
+    public function userAllocations()
+    {
+        return $this->belongsToMany(
+            UserAllocation::class,
+            'program_user_allocations',
+            'program_id',
+            'user_allocation_id'
+        );
+    }
+
+
 }

@@ -3,24 +3,21 @@
 namespace App\Filament\Resources\Alumnis\Pages;
 
 use App\Filament\Resources\Alumnis\AlumniResource;
-use Filament\Actions\CreateAction;
+use App\Filament\Widgets\AlumniStats;
 use Filament\Resources\Pages\ListRecords;
 
 class ListAlumnis extends ListRecords
 {
     protected static string $resource = AlumniResource::class;
-    protected ?string $heading = 'Alumni';
 
-    // protected function getHeaderActions(): array
-    // {
-    //     return [
-    //         // CreateAction::make('CreateAlumni')
-    //         //     ->label('Create Alumni Record')
-    //         //     ->icon('heroicon-o-plus')
-    //         //     ->modalHeading('Create Alumni')
-    //         //     ->modalDescription('Enter the information of the new alumnus.')
-    //         //     ->modalSubmitActionLabel('Create Alumni')
-    //         //     ->successNotificationTitle('Alumni created successfully'),
-    //     ];
-    // }
+    protected ?string $heading = 'Alumni Directory';
+
+    protected ?string $subheading = 'Search records, update tracer information, and monitor alumni outcomes.';
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            AlumniStats::class,
+        ];
+    }
 }

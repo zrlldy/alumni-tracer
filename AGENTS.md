@@ -1,3 +1,16 @@
+## Required session context recovery
+
+Read [AI_MASTER_GUIDELINES.md](AI_MASTER_GUIDELINES.md) at the start of every
+session and follow its bootstrap, skill-discovery, session-start report and
+handoff requirements before implementation. Recover state from repository
+instructions, source, Git and verified task history; conversation or personal
+memory is not project authority. Report missing documents and unavailable tools.
+
+The required portal targets are `/admin` (Filament) and `/alumni` (Blade/Livewire).
+The currently implemented Filament panel remains `online` at `/online`; its
+controlled path transition is planned in AT-F01. Do not claim target routes
+exist or rename the panel ID/saved layouts as part of instruction maintenance.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -104,12 +117,14 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
 
-=== herd rules ===
+=== tests rules ===
 
-# Laravel Herd
+# Test Enforcement
 
-- The application is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use the `get-absolute-url` tool to generate valid URLs. Never run commands to serve the site. It is always available.
-- Use the `herd` CLI to manage services, PHP versions, and sites (e.g. `herd sites`, `herd services:start <service>`, `herd php:list`). Run `herd list` to discover all available commands.
+- Test every code change by adding or updating a test.
+- Run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.
 
 === laravel/core rules ===
 
@@ -165,3 +180,25 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - After the feature tests pass, ask the user to run the complete suite with `php artisan test --compact`.
 
 </laravel-boost-guidelines>
+
+## Alumni-Tracer audit-first workflow
+
+- Before application changes, read `docs/audit/SYSTEM_AUDIT.md`,
+  `docs/requirements/REQUIREMENTS.md`, the relevant architecture/import documents,
+  `docs/implementation/IMPLEMENTATION_PLAN.md`, `TASK_TRACKER.md` in the same
+  implementation directory, and relevant `docs/implementation/completed/` records.
+- Inspect current source, applicable shared rules and Git status. Preserve
+  unrelated dirty changes. Documentation describes both current and proposed
+  behavior; only completion records with verification establish implemented work.
+- Select an eligible task with satisfied dependencies. Record files, decisions,
+  database/security impact, exact tests/results and remaining limits in its
+  completion record; keep tracker status accurate. Never infer completion from
+  written code or historical test results.
+- School decisions in REQUIREMENTS are gates for dependent tasks. Never approve
+  identity ownership, promote an existing account, choose retention policy or
+  run a migration on an unknown database by assumption. Pending questions are
+  not approval. Continue independent authorized work while those are pending.
+- Do not modify secrets, import live alumni, rewrite historical migrations or
+  execute destructive database commands. Keep real alumni records/URLs out of
+  Git, logs and test fixtures. Mark unavailable workbook/integration evidence
+  UNVERIFIED rather than reporting it absent or complete.

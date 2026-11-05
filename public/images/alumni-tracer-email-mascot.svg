@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="188" height="164" viewBox="0 0 188 164" role="img" aria-labelledby="mascot-title">
+    <title id="mascot-title">Pixel alumni mascot wearing a graduation cap</title>
+    <circle cx="83" cy="78" r="67" fill="#FFF9F4"/>
+    <path d="M35 54h18V36h18V24h38v12h18v18h12v42h-13v15h-16v15H80v-15H64v-15H49V96H35z" fill="#FFC247"/>
+    <path d="M60 58h22v27H60zm42 0h22v27h-22z" fill="#003049"/>
+    <circle cx="140" cy="112" r="31" fill="#FFF" stroke="#003049" stroke-width="2"/>
+    <circle cx="140" cy="112" r="26" fill="#FFF" stroke="#E7E2DC" stroke-width="1"/>
+    <path d="m140 98-19 10 19 10 19-10-19-10Z" fill="#003049"/>
+    <path d="M126 113v9c9 6 19 6 28 0v-9l-14 7-14-7Z" fill="#003049"/>
+    <path d="M158 109v13" stroke="#D62828" stroke-width="2"/>
+    <circle cx="158" cy="124" r="2.5" fill="#D62828"/>
+</svg>

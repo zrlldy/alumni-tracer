@@ -26,8 +26,6 @@ class AlumniImporter implements ToModel, WithHeadingRow, WithValidation
             ? Date::excelToDateTimeObject($row['graduation_year'])->format('Y-m-d')
             : null;
 
-        // IMPORTANT:
-        // Do not use Alumni::create() here.
         return new Alumni([
             'student_number' => $row['student_number'],
             'first_name' => $row['first_name'],
