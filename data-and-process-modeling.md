@@ -1,234 +1,92 @@
-# Alumni Tracer - Data and Process Modeling
+# Alumni-Tracer data and process modeling
 
-## Modeling choice
+Updated 2026-11-05. This models the current source and connected schema. [E] means implemented in source, [D] means stored data without the full intended workflow, and [P] means proposed work. An implemented flow may still lack browser, live-integration, or policy verification. Field definitions are in [data dictionary.md](data%20dictionary.md); task evidence is in [TASK_TRACKER](docs/implementation/TASK_TRACKER.md).
 
-Data and process modeling describes how alumni records, imports, tracing data,
-and reports move through the application. Class and interaction diagrams are in
-[object-modeling.md](object-modeling.md); controls and acceptance criteria are in
-[requirements-modeling.md](requirements-modeling.md).
+## Context and boundaries
 
-## Scope and notation
+One Laravel 13 application uses Filament 5 and Livewire 4 with MariaDB. The current Filament panel ID and path are both online at /online. The shared Dashboard chooses a staff widget grid or an alumni information form according to current allocation and page/action checks. /admin and /alumni are required targets in the project instructions, but neither route is implemented. Registration, Google OAuth routes, passkey routes, password recovery and MFA exist; external-provider/browser acceptance is not established here.
 
-The current system has one Laravel/Filament `online` panel at `/online`
-and a shared database. The diagrams model its current management/reporting
-flows. **Panel user** means an authenticated account using staff-oriented
-functions; it does not imply enforced administrator permissions.
-
-**[E]** means implemented, **[D]** means data structure only, and **[P]** means
-planned. Alumni self-service and role/scope enforcement remain [P].
-
-## Diagram shapes used
-
-| Shape | Mermaid notation | ASCII notation | Meaning |
-| --- | --- | --- | --- |
-| External entity | `[Panel user]` | `[Panel user]` | Person/service exchanging data. |
-| Process | `([Process])` | `(Process)` | Operation reading or transforming data. |
-| System boundary | `([Alumni Tracer])` | `[Alumni Tracer]` | Application under analysis. |
-| Data store | `[(Data store)]` | `[Data store]` | Persistent data. |
-| Decision | `{Condition?}` | `{Condition?}` | Control-flow branch. |
-| Arrow | `-->` / `<-->` | `-->` / `<-->` | Data/control flow. |
-
-## 1. Context diagram
-
-```mermaid
+~~~mermaid
 flowchart LR
-    U[Panel user]
-    G[Google OAuth provider]
-    M[Mail delivery]
-    S([Alumni Tracer - online panel])
-    U -->|Account data, record changes, XLSX uploads, filters| S
-    S -->|Session, records, feedback, analytics, XLSX downloads| U
-    S -->|OAuth request| G
-    G -->|Identity response| S
-    S -->|Password reset or configured email MFA message| M
-    M -->|Email| U
-```
+    U[Account holder] -->|Login, profile, history, filters, XLSX| A[Laravel and Filament online panel]
+    A -->|Pages, validation, downloads, feedback| U
+    A <--> DB[(MariaDB)]
+    A <--> G[Google OAuth, when configured]
+    A --> M[Configured mail transport]
+    A --> X[XLSX download]
+~~~
 
-### ASCII drawing
+The system stores personal contact, academic, employment and authentication data. Database access and exports therefore require authorization and minimization; current source-level grants are not a complete security certification.
 
-```text
-[Panel user] -- accounts / records / XLSX / filters --> [Alumni Tracer]
-[Panel user] <-- session / feedback / reports / XLSX -- [Alumni Tracer]
-                                                        |      ^
-                                                        v      |
-                                                      [Google OAuth]
-[Alumni Tracer] -> [Mail delivery] -> [Panel user]
-```
+## Level 0 data flow
 
-Google OAuth routes/UI are present; provider setup and end-to-end behavior need
-verification. Passkeys use browser/device credentials and app MFA uses an
-authenticator, rather than a shared external OAuth service. Turnstile challenges
-are used on login/registration when configured.
-
-## 2. Data flow diagram (DFD - Level 0)
-
-```mermaid
+~~~mermaid
 flowchart LR
-    U[Panel user]
-    A([1 Account access])
-    C([2 Maintain alumni and tracing fields])
-    P([3 Maintain programs and users])
-    I([4 Import alumni XLSX])
-    R([5 Generate analytics and reports])
-    X([6 Export alumni XLSX])
-    D1[(D1 User accounts)]
-    D2[(D2 Alumni and programs)]
-    D3[(D3 Education and employment history)]
-    D4[(D4 Dashboard layouts and templates)]
+    U[Signed-in account]
+    Auth([1 Account access])
+    Admin([2 Manage catalogs, roles, allocations and users])
+    Form([3 Owned alumni information form])
+    Registry([4 Staff alumni directory and flat XLSX import])
+    Report([5 Dashboard, report and XLSX export])
+    D1[(Users, roles, allocations, sessions and credentials)]
+    D2[(Campuses, programs and alumni)]
+    D3[(Education and employment)]
+    D4[(Widget layouts and settings)]
+    U --> Auth
+    Auth <--> D1
+    U --> Admin
+    Admin <--> D1
+    Admin <--> D2
+    U --> Form
+    Form <--> D1
+    Form <--> D2
+    Form <--> D3
+    U --> Registry
+    Registry <--> D2
+    U --> Report
+    Report --> D2
+    Report --> D3
+    Report <--> D4
+    Report -->|Rows, charts or XLSX| U
+~~~
 
-    U -->|Account data and credentials| A
-    A <--> D1
-    A -->|Session or authentication feedback| U
-    U -->|Profile and tracing fields| C
-    C <--> D2
-    C -->|Saved record or validation feedback| U
-    U -->|Program and user fields| P
-    P <--> D1
-    P <--> D2
-    P -->|Records and feedback| U
-    U -->|XLSX file| I
-    D2 -->|Existing student numbers and active programs| I
-    I -->|New alumni records| D2
-    I -->|Result or row errors| U
-    U -->|Dashboard request or report filters| R
-    D2 -->|Alumni and program records| R
-    D3 -->|History for report details| R
-    R <--> D4
-    R -->|Statistics, charts, report rows, details| U
-    U -->|Year, program, status filters and export request| X
-    D2 -->|Matching alumni and programs| X
-    D3 -->|Education and employment histories| X
-    X -->|XLSX workbook| U
-```
-
-### ASCII drawing
-
-```text
-[Panel user] -> (1 Account access) <-> [D1 Users]
-[Panel user] -> (2 Alumni / tracing maintenance) <-> [D2 Alumni / programs]
-[Panel user] -> (3 Program / user maintenance) <-> [D1, D2]
-[Panel user] -> (4 XLSX import) <-> [D2]
-[Panel user] -> (5 Analytics / reports) <- [D2, D3]
-                    | dashboard customization
-                    +------------------ <-> [D4 Layouts / templates]
-[Panel user] -> (6 XLSX export) <- [D2, D3]
-                    +--------------------> [XLSX download]
-```
-
-Histories are read by report details and export. The Alumni resource has no
-history editor, so no history-write flow is shown. Roles/allocations are schema
-structures [D], not an active permission process.
-
-### Data stores
-
-| Store | Tables and contents | Current use |
+| Store | Current tables | Purpose |
 | --- | --- | --- |
-| D1 - Accounts | `users`, sessions, password-reset tokens, MFA settings | Account access and Users resource |
-| D2 - Alumni/programs | `alumnis`, `programs`; identity, contacts, graduation dates, status, tracing fields, program availability | Directory, maintenance, import, reports, export, analytics |
-| D3 - History | `alumni_education`, `alumni_employments`; education, employers, dates, current-job flags, document references | Report details and XLSX; maintenance [P] |
-| D4 - Dashboard customization | `widget_grid_layouts`, `widget_grid_templates`, `widget_grid_settings` | User layouts/templates through the widget-grid plugin |
-| Access structures [D] | `roles`, `user_allocations`, nullable `users.user_allocation_id` | Permission/scope/allocation storage; management and enforcement [P] |
+| D1 | users, roles, user_allocations, campus_user_allocations, program_user_allocations, sessions, password_reset_tokens, passkeys, trusted_devices | Accounts, grants, scoped allocation references and authenticators |
+| D2 | campuses, programs, alumnis | Campus/program catalog and alumni registry |
+| D3 | alumni_education, alumni_employments | Multiple study and work entries per alumnus |
+| D4 | widget_grid_layouts, widget_grid_templates, widget_grid_settings | Saved dashboard layout state for a panel |
+| Infrastructure | cache, cache_locks, jobs, job_batches, failed_jobs, migrations | Framework storage and queue bookkeeping |
 
-### Data definitions affecting flows
+## Current process flows
 
-- `graduation_year` is a database **date**. Directory filtering uses an exact
-  date; report/export filtering uses the calendar year.
-- **Department** refers to a program name; no separate department table exists.
-- `employment_status` is employed, unemployed, untraced, or null, stored on the
-  alumni record rather than derived from employment history.
-- `date_traced`, `trace_by`, and `remarks` are manually supplied.
-- `instituion` preserves the current education column spelling.
-- `supported_documents` is a reference string, displayed/exported as text,
-  not an embedded file or an implemented document-upload workflow.
-- Alumni, Program, and User use soft deletes. History tables have `deleted_at`,
-  but their models do not apply soft-deletion scopes.
+### Shared alumni information form [E, acceptance incomplete]
 
-## 3. System flowchart
+1. A signed-in account reaches the Dashboard at /online. Dashboard displays the form only when the account has an active my_records allocation, active role, Dashboard and alumni page grants, and a relevant action grant.
+2. AlumniInformationForm resolves the record through alumnis.user_id. It refuses multiple owned rows or an archived owned row. Student number or email similarity never silently transfers ownership.
+3. On first submission, the account supplies identity, contact and academic fields. Existing identity, program and graduation fields are read-only in this form. The account may edit contact details, reported employment status and owned education/employment entries.
+4. Save rechecks access, locks the user and owned rows, validates the submitted form, rejects foreign or archived history IDs, and writes the registry and child rows in one transaction. Omitting a saved history row does not delete it. A match against another active or archived alumni row requires administrator review.
+5. The form displays its saved overview. Core profile completion is a binary 0%/100% measure of eight required identity, contact and academic fields. Current/past jobs and education are displayed separately; neither changes that percentage or establishes verification. The existing editor opens on the same page. Browser behavior and the broader admission/account-link policy remain unverified or pending as recorded in the tracker.
 
-```mermaid
-flowchart TD
-    S([Start]) --> L[Open online panel]
-    L --> A{Authenticated?}
-    A -->|No| B[Login, registration, or recovery]
-    B --> A
-    A -->|Yes| O{Choose operation}
-    O -->|Maintain records| F[Enter alumni, program, or user fields]
-    F --> V{Form valid?}
-    V -->|No| E[Show field errors]
-    E --> F
-    V -->|Yes| W[Save and show confirmation]
-    O -->|Import| I[Upload XLSX and validate rows]
-    I --> K{Import succeeds?}
-    K -->|No| N[Show row-specific or general failure]
-    K -->|Yes| C[Create alumni and show success]
-    O -->|Dashboard| D[Read aggregates and recent traces]
-    O -->|Report| R[Apply year, program, and status filters]
-    R --> Q{Report action?}
-    Q -->|View| T[Display table or details modal]
-    Q -->|Export| X[Read matching records and histories]
-    X --> Y[Generate fixed-column XLSX]
-    W --> Z([End])
-    N --> Z
-    C --> Z
-    D --> Z
-    T --> Z
-    Y --> Z
-```
+The education table requires an end date. An ongoing study without a known end date cannot be entered through this form. Employment supporting documents are text references, not uploaded files. No history-verification or trace-event record is written.
 
-### ASCII drawing
+### Staff records, allocation and import [E with limits]
 
-```text
-[Open online] -> {Authenticated?} -- No --> [Login / register / recover]
-                       | Yes
-                       v
-                {Choose operation}
-                  | Maintain -> [Validate form] -> [Save / field errors]
-                  | Import -> [Validate XLSX] -> [Create / failure]
-                  | Dashboard -> [Aggregates / recent traces]
-                  + Report -> [Year / program / status filters]
-                                | View -> [Table / details]
-                                + Export -> [Records + histories] -> [XLSX]
-```
+Filament resources provide campus, program, alumni, role, allocation and user screens. The current RoleBasedAccessControl trait uses page/action/widget grants and allocation scopes; it does not prove every direct action and query is fully scoped. Staff alumni forms edit current registry and tracing fields. The flat AlumniImporter validates spreadsheet rows, resolves active programs by name and creates alumni rows; it has no staged preview, conflict ledger or history import. Its construction does not populate the now-required alumnis.user_id, so successful live import against this schema is not established. The original legacy workbook remains unavailable for inspection.
 
-### Report/export processing [E]
+### Reporting, dashboard and export [E, acceptance incomplete]
 
-`AlumniDataReport` passes `graduationYear`, `programId`, and
-`employmentStatus` to `AlumniDataExport`. Both use the Alumni scopes
-`graduatedInYear`, `forProgram`, and `withEmploymentStatus`.
+The report reads non-deleted alumni with campus, graduation calendar year, department/program and employment-status filters; its details modal reads related histories. The XLSX export accepts those four filter values, groups by campus/program, and writes a title plus 18 data columns. It selects a current employment entry when available, otherwise the most recent entry. Table search, sort, page and selected rows do not define export scope. Campus-filtered source tests passed, while browser acceptance and broader export authorization/scope remain open in the tracker. Dashboard widgets are derived from stored records, not separate facts.
 
-Export orders by ID, eagerly loads programs/histories, and writes one row per
-alumnus with 15 fixed headings. Histories are combined into multiline cells.
-Conditional formatting marks unemployed rows yellow and untraced rows light
-red. Soft-deleted alumni are excluded. The filename includes the selected
-graduation year when present.
+## Data and control rules
 
-Table search, sorting, pagination, and row selection do not affect the export.
-No field selector, export audit store, or management-scope restriction exists.
+- The registry column graduation_year stores an exact date. Department in the report is a Program; there is no department table.
+- Nullable employment_status and untraced are separate from unemployed. Employment rows and education rows can overlap; neither automatically verifies the other.
+- Alumni and catalog models use soft deletion. Education/employment models do not apply SoftDeletes despite having deleted_at columns; the shared form filters those rows explicitly.
+- alumnis.user_id is required and is the form's ownership key, but is not unique. Form-level ambiguity checks do not replace a future reviewed database constraint.
+- Physical FK deletion can cascade from users, programs and alumni to dependent data. No deletion or migration is performed by this documentation change.
+- Stored role/access JSON and allocation links are current. The approved institution-wide role policy, account claim, retention and export scope remain separate decisions.
 
-### Analytics definitions [E]
+## Planned process extensions [P]
 
-- `AlumniStats`: total non-deleted alumni and counts/percentages by employment
-  status; also shown on the directory.
-- `AlumniLineChart`: status counts by graduation year from 2015 through the
-  current year, rather than a time series of trace events.
-- `AlumniByProgramChart`: status counts grouped by program.
-- `EmploymentStatus`: distribution of the three employment statuses.
-- `TracingProgress`: traced equals employed plus unemployed; the denominator
-  adds untraced records. Null statuses are excluded.
-- `RecentlyTraced`: records with a non-null trace date, ordered by that date.
-- `ProgramStats`: total/active/inactive non-deleted programs on the Programs list.
-
-## Planned flows [P]
-
-The intended two-client design adds:
-
-1. A stable relationship from each alumni account to exactly one alumni record.
-2. Alumni reads/updates restricted to that account's own profile and histories.
-3. Staff permissions and management scope on actions, reports, and exports.
-4. Validated history maintenance and accountable tracing.
-5. Consistent form/import/schema rules and active-program validation.
-6. Export events and auditable changes.
-
-`users.student_id` and `alumnis.student_number` are identifiers without a
-foreign key or model relationship between them. Ownership, permission,
-history-write, and audit flows are future requirements.
+The target design calls for controlled /admin and /alumni routing, approved identity linking, verified tracing events, survey definitions/assignments/responses, approved queued survey delivery, staged legacy import, and audited scoped exports. These tables and workflows are absent from the current schema. See [requirements](docs/requirements/REQUIREMENTS.md), [database design](docs/architecture/DATABASE_DESIGN.md), and [implementation plan](docs/implementation/IMPLEMENTATION_PLAN.md); proposed behavior is not shown as a current data flow.
