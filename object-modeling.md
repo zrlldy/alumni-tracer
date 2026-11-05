@@ -147,15 +147,15 @@ sequenceDiagram
     F->>R: Check active role, page and action access
     F->>DB: Read alumnis by authenticated user_id
     alt Multiple or archived owned rows
-        F-->>U: Deny; administrator review needed
+        F-->>U: Deny and request administrator review
     else No or one active owned row
         F-->>U: First-entry or editable own form
         U->>F: Submit profile and history rows
         F->>R: Recheck permission
-        F->>DB: Begin transaction; lock user and owned rows
+        F->>DB: Begin transaction and lock user and owned rows
         F->>DB: Check other active/archived student-number or email match
         alt Ambiguous match or foreign/archived history ID
-            F-->>U: Validation failure; rollback
+            F-->>U: Validation failure and rollback
         else Valid owned data
             F->>DB: Insert/update alumni and own history rows
             DB-->>F: Commit

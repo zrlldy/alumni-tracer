@@ -95,6 +95,7 @@ if (landingPage) {
 
     const closeMenu = () => {
         navigation.hidden = true;
+        landingPage.classList.remove("is-menu-open");
         menuButton.setAttribute("aria-expanded", "false");
         menuLabel.textContent = "Menu";
     };
@@ -104,6 +105,7 @@ if (landingPage) {
     menuButton.addEventListener("click", () => {
         const expanded = menuButton.getAttribute("aria-expanded") !== "true";
         navigation.hidden = !expanded;
+        landingPage.classList.toggle("is-menu-open", expanded);
         menuButton.setAttribute("aria-expanded", String(expanded));
         menuLabel.textContent = expanded ? "Close" : "Menu";
     });
