@@ -32,9 +32,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
 use JohnRivera7\FilamentWidgetGrid\FilamentWidgetGridPlugin;
-use Livewire\Livewire;
+use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
 
 class AlumniPanelProvider extends PanelProvider
 {
@@ -76,12 +75,12 @@ class AlumniPanelProvider extends PanelProvider
                 'primary' => Color::hex('#D62828'), // Brand red
                 'success' => Color::Green,          // Successful actions
                 'warning' => Color::hex('#FCBF49'), // Golden yellow
-                'danger'  => Color::hex('#D62828'), // Errors and delete actions
-                'info'    => Color::hex('#003049'), // Navy for information
-                'gray'    => Color::Zinc,           // Neutral backgrounds and text
+                'danger' => Color::hex('#D62828'), // Errors and delete actions
+                'info' => Color::hex('#003049'), // Navy for information
+                'gray' => Color::Zinc,           // Neutral backgrounds and text
 
                 // Extra brand color for selected components
-                'accent'  => Color::hex('#F77F00'), // Orange
+                'accent' => Color::hex('#F77F00'), // Orange
             ])
             // ->navigationGroups([
             //     NavigationGroup::make()
@@ -103,8 +102,8 @@ class AlumniPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn(): string => view('filament.vite-assets')->render()
-                    . (app(TurnstileClientContract::class)->isConfigured()
+                fn (): string => view('filament.vite-assets')->render()
+                    .(app(TurnstileClientContract::class)->isConfigured()
                         ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>'
                         : ''),
             )
@@ -138,7 +137,7 @@ class AlumniPanelProvider extends PanelProvider
             ])
             ->multiFactorAuthentication([
                 AppAuthentication::make()->recoverable()->recoveryCodeCount(10)->codeWindow(4),
-                EmailAuthentication::make()->codeExpiryMinutes(2),
+                EmailAuthentication::make()->codeExpiryMinutes(2)->codeNotification(AlumniEmailOtp::class),
             ])
             ->plugins([
                 AuthUIEnhancerPlugin::make()
