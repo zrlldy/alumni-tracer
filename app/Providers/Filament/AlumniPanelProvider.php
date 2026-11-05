@@ -6,6 +6,7 @@ use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Register;
 use App\Http\Middleware\RepairFilamentAlpineExpressions;
+use App\Notifications\AlumniEmailOtp;
 use App\Support\PluginAccess;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use Filament\Actions\Action;
@@ -33,6 +34,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use JohnRivera7\FilamentWidgetGrid\FilamentWidgetGridPlugin;
+use Livewire\Livewire;
 use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
 
 class AlumniPanelProvider extends PanelProvider
