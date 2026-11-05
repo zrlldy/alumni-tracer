@@ -6,6 +6,7 @@ use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Register;
 use App\Http\Middleware\RepairFilamentAlpineExpressions;
+use App\Notifications\AlumniEmailOtp;
 use App\Support\PluginAccess;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use Filament\Actions\Action;
@@ -33,6 +34,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use JohnRivera7\FilamentWidgetGrid\FilamentWidgetGridPlugin;
+use Livewire\Livewire;
 use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
 
 class AlumniPanelProvider extends PanelProvider
@@ -55,14 +57,13 @@ class AlumniPanelProvider extends PanelProvider
             ->sidebarWidth('10rem')
             ->topNavigation()
 
-
             // ->profile(isSimple: false)
-            ->profile(EditProfile::class, 
-                isSimple: false,)
+            ->profile(EditProfile::class,
+                isSimple: false, )
             ->userMenuItems([
-            'profile' => fn(Action $action) => $action
-                ->label('Settings')
-                ->icon('heroicon-o-cog-6-tooth'),
+                'profile' => fn (Action $action) => $action
+                    ->label('Settings')
+                    ->icon('heroicon-o-cog-6-tooth'),
 
             ])
             ->login(Login::class)
@@ -109,7 +110,7 @@ class AlumniPanelProvider extends PanelProvider
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            
+
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\\Filament\\Clusters')
             // ->pages([
             //     Dashboard::class,
@@ -157,12 +158,12 @@ class AlumniPanelProvider extends PanelProvider
                     ->canViewWidget(fn (string $widget): bool => true)
                     // ->canCustomize(fn (): bool => Auth::check())
                     ->canCustomize(
-                        fn(): bool => PluginAccess::canAccessPageSlug('widget-grid')
+                        fn (): bool => PluginAccess::canAccessPageSlug('widget-grid')
                     )
                     ->canManageDefaults(
-                        fn(): bool => PluginAccess::canAccessPageSlug('widget-grid')
-                    )
-                    // ->canManageDefaults(fn (): bool => false),
+                        fn (): bool => PluginAccess::canAccessPageSlug('widget-grid')
+                    ),
+                // ->canManageDefaults(fn (): bool => false),
             ])
             ->viteTheme('resources/css/filament/online/theme.css');
     }

@@ -508,12 +508,164 @@ it('shows the alumni form on the shared dashboard without administrative widgets
     config()->set('app.developer_host', 'developer.example.test');
     $user = createInformationFormUser();
     $user->update(['email' => 'ctu.synthetic-form-test@gmail.com']);
+    $user->userAllocation->role->update(['access_widget' => [RecentlyTraced::class]]);
 
     $this->actingAs($user)->get('/online')
         ->assertOk()
         ->assertSeeLivewire(AlumniInformationForm::class)
-        ->assertSee('Complete my alumni information')
+        ->assertSee('Complete my information')
         ->assertDontSeeLivewire(RecentlyTraced::class);
+});
+
+it('shows an empty alumni overview and opens the owned editor on request', function () {
+    $user = createInformationFormUser();
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->assertSee('0%')
+        ->assertSee('Employment status not recorded')
+        ->assertSee('No work history recorded')
+        ->assertSee('No education history recorded')
+        ->assertSee('Complete my information')
+        ->assertDontSee('wire:submit="save"', escape: false)
+        ->call('openEditor')
+        ->assertSee('wire:submit="save"', escape: false);
+});
+
+it('shows only owned work and education history without inferring employment status', function () {
+    $user = createInformationFormUser();
+    $program = createInformationFormProgram();
+    $alumni = createInformationFormAlumni($user, $program, ['employment_status' => 'unemployed']);
+    $alumni->alumniEmployment()->create([
+        ...informationEmploymentData(),
+        'company_name' => 'Current Synthetic Employer',
+        'supported_documents' => '<script>private-reference</script>',
+    ]);
+    $alumni->alumniEmployment()->create([
+        ...informationEmploymentData(),
+        'company_name' => 'Past Synthetic Employer',
+        'is_current' => false,
+        'ended_at' => '2025-01-01',
+    ]);
+    $alumni->alumniEducation()->create(informationEducationData());
+    $otherUser = User::factory()->create(['email' => 'foreign@example.test']);
+    $foreignAlumni = createInformationFormAlumni($otherUser, $program, [
+        'student_number' => 20249999,
+        'email' => 'foreign@example.test',
+    ]);
+    $foreignAlumni->alumniEmployment()->create([
+        ...informationEmploymentData(),
+        'company_name' => 'Foreign Private Employer',
+    ]);
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->assertSee('100%')
+        ->assertSee('Unemployed')
+        ->assertSee('Current Synthetic Employer')
+        ->assertSee('Past Synthetic Employer')
+        ->assertSee('Synthetic Graduate School')
+        ->assertSee('&lt;script&gt;private-reference&lt;/script&gt;', escape: false)
+        ->assertDontSee('<script>private-reference</script>', escape: false)
+        ->assertDontSee('Foreign Private Employer');
+});
+
+it('shows an incomplete milestone when a saved core profile field is blank', function () {
+    $user = createInformationFormUser();
+    createInformationFormAlumni($user, createInformationFormProgram(), ['current_address' => '']);
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->assertSee('0%')
+        ->assertSee('Core profile needs attention')
+        ->assertDontSee('Core profile information recorded')
+        ->assertSee('Review my information')
+        ->call('openEditor')
+        ->assertSee('Current Address');
+});
+
+it('does not offer update actions to an alumni account with view-only access', function () {
+    $user = createInformationFormUser();
+    createInformationFormAlumni($user, createInformationFormProgram());
+    $user->userAllocation->role->update(['action' => ['view']]);
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->assertSee('100%')
+        ->assertDontSee('Update work')
+        ->assertDontSee('Update education')
+        ->assertSee('View my information')
+        ->call('openEditor')
+        ->assertSee('Current Address')
+        ->assertSet('data.current_address', 'Sample City')
+        ->assertFormFieldIsDisabled('email')
+        ->call('save')
+        ->assertForbidden();
+});
+
+it('refreshes the overview after saving an alumni profile and histories', function () {
+    $user = createInformationFormUser();
+    $data = informationFormData(createInformationFormProgram());
+    $data['education'] = [informationEducationData()];
+    $data['employments'] = [informationEmploymentData()];
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->assertSee('0%')
+        ->call('openEditor')
+        ->set('data', $data)
+        ->call('save')
+        ->assertHasNoErrors()
+        ->assertSee('100%')
+        ->assertSee('Employed')
+        ->assertSee('Synthetic Employer')
+        ->assertSee('Synthetic Graduate School');
+});
+
+it('shows a safe dashboard notice to roleless accounts', function () {
+    $user = User::factory()->create(['user_allocation_id' => null]);
+
+    Livewire::actingAs($user)->test(Dashboard::class)
+        ->assertSee('Ask the administrator to enable access')
+        ->assertDontSeeLivewire(AlumniInformationForm::class)
+        ->assertDontSee('class="fi-wg"', escape: false);
+});
+
+it('redirects guests from the shared dashboard', function () {
+    $this->get('/online')->assertRedirect('/online/login');
+});
+
+it('renders the shared login page for guests', function () {
+    $this->get('/online/login')->assertOk();
+});
+
+it('shows only the access notice to a roleless account through the shared dashboard route', function () {
+    config()->set('app.system_key', 'synthetic-test-key');
+    config()->set('app.super_admin_emails_encrypted', SystemEncrypter::encryptSuperAdminData(''));
+    config()->set('system.seal', SystemEncrypter::getSeal());
+    config()->set('app.developer_host', 'developer.example.test');
+    $user = User::factory()->create([
+        'email' => 'ctu.synthetic-roleless-test@gmail.com',
+        'user_allocation_id' => null,
+    ]);
+
+    $this->actingAs($user)->get('/online')
+        ->assertOk()
+        ->assertSee('Ask the administrator to enable access')
+        ->assertDontSeeLivewire(AlumniInformationForm::class)
+        ->assertDontSee('class="fi-wg"', escape: false);
+});
+
+it('does not mount the alumni dashboard without its page grant', function () {
+    $user = createInformationFormUser();
+    $user->userAllocation->role->update(['access_page' => [AlumniResource::getSlug()]]);
+
+    Livewire::actingAs($user)->test(Dashboard::class)
+        ->assertSee('Ask the administrator to enable access')
+        ->assertDontSeeLivewire(AlumniInformationForm::class)
+        ->assertDontSee('class="fi-wg"', escape: false);
+});
+
+it('denies direct alumni form access without the dashboard page grant', function () {
+    $user = createInformationFormUser();
+    $user->userAllocation->role->update(['access_page' => [AlumniResource::getSlug()]]);
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)->assertForbidden();
 });
 
 it('accepts a finished job when its optional work start date is unknown', function () {
@@ -549,6 +701,7 @@ it('keeps the archived program label visible for an existing alumni record', fun
     $program->delete();
 
     Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->call('openEditor')
         ->assertSee('Sample Program');
 });
 
@@ -583,6 +736,7 @@ it('reports database failures safely and leaves all three tables unchanged', fun
 
     try {
         Livewire::actingAs($user)->test(AlumniInformationForm::class)
+            ->call('openEditor')
             ->set('data', $data)->call('save')
             ->assertHasErrors(['data'])
             ->assertSee('Your information could not be saved.')

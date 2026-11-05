@@ -59,14 +59,16 @@ it('embeds both branded images as inline PNGs when a notification is sent', func
     $user->notifyNow(new AlumniEmailOtp('617204', 2));
 
     $sent = app('mail.manager')->mailer()->getSymfonyTransport()->messages()[0];
-    $mime = $sent->getOriginalMessage()->toString();
+    $email = $sent->getOriginalMessage();
+    $mime = $email->toString();
 
     expect($mime)
         ->toContain('multipart/related')
         ->toContain('image/png')
-        ->toContain('617204')
         ->toContain('alumni-tracer-email-logo@alumnitracer')
         ->toContain('alumni-tracer-email-mascot@alumnitracer');
+
+    expect($email->getHtmlBody())->toContain('617204');
 });
 
 it('sends the alumni welcome only after the user is verified', function () {

@@ -10,7 +10,6 @@ use App\Filament\Widgets\RecentlyTraced;
 use App\Filament\Widgets\TracingProgress;
 use App\Livewire\AlumniInformationForm;
 use App\Support\SystemSecurity;
-use App\Traits\RoleBasedAccessControl;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Schemas\Components\Livewire;
 use Filament\Schemas\Components\Section;
@@ -20,13 +19,35 @@ use JohnRivera7\FilamentWidgetGrid\Concerns\HasWidgetGrid;
 
 class Dashboard extends BaseDashboard
 {
-    // use RoleBasedAccessControl;
     use HasWidgetGrid;
 
-    // public static function canAccess(): bool
-    // {
-    //     return static::hasPageAccess();
-    // }
+    public function content(Schema $schema): Schema
+    {
+        $user = Auth::user();
+        $allocation = $user?->userAllocation;
+        $role = $allocation?->role;
+
+        if (SystemSecurity::isBootstrapSuperAdmin($user) || (
+            $allocation !== null
+            && ! $allocation->trashed()
+            && $role !== null
+            && ! $role->trashed()
+            && in_array($allocation->management_scope, ['all_program', 'specified_program', 'my_program', 'my_department'], true)
+        )) {
+            return parent::content($schema);
+        }
+
+        $canAccessAlumni = AlumniInformationForm::canAccess();
+
+        return $schema->components([
+            Livewire::make(AlumniInformationForm::class)
+                ->key('alumni-information-form')
+                ->visible($canAccessAlumni),
+            Section::make('Alumni information')
+                ->description('Ask the administrator to enable access to your alumni information form.')
+                ->visible(! $canAccessAlumni),
+        ]);
+    }
 
     public function getWidgets(): array
     {

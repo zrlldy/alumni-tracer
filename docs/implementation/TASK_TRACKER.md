@@ -1,6 +1,6 @@
 # Alumni-Tracer task tracker
 
-Updated: 2026-11-04. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
+Updated: 2026-11-05. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.
 
@@ -10,21 +10,24 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-A02 | Actual legacy workbook inspection | BLOCKED | DEC-10: source file path unavailable; no actual rows inspected |
 | AT-P01 | Requirements/design/plan/history | VERIFIED COMPLETED | [Record](completed/AT-P01.md); links/coverage/source facts checked; independent review resolved; provisional school decisions remain pending |
 | AT-P02 | Persistent AI Master Guidelines v1.0 and session bootstrap | VERIFIED COMPLETED | [Record](completed/AT-P02.md); all 15 sections saved, entry-point links/bootstrap paths checked, target/current route distinction synchronized and existing app/test checksums preserved |
+| AT-D01 | Current-schema data dictionary and modeling refresh | VERIFIED COMPLETED | [Record](completed/AT-D01.md); read-only connected metadata, source/routes, field coverage and Markdown links checked. Documentation only; no application acceptance inferred. |
 | AT-S01 | Firewall request log minimization | VERIFIED COMPLETED | [Record](completed/AT-S01.md); red/green regression, 4 focused tests/16 assertions, full suite 20/114, Pint/diff checks |
 | AT-F01 | Staff bootstrap, panel/RBAC and policies | BLOCKED | Broader policies/path transition and approved scope decisions remain open. Newer commits add existing RBAC/role UI; earlier empty-role/account observations are historical, not current verified counts. AT-F04-FORM does not certify or replace that implementation. |
 | AT-F02 | Registry/string ID/schema expansion | PLANNED | DEC-04/05; reviewed forward migrations and rollout target; AT-F01 before exposure |
 | AT-F03 | Approved activation/authenticator repair | BLOCKED | AT-F01/02, DEC-01/token lifetime/contact proof; no approval assumed |
 | AT-F04 | Owned alumni portal/profile | IMPLEMENTED BUT UNVERIFIED | Scoped shared-panel form is implemented as AT-F04-FORM; broader account linking/lifecycle and browser acceptance remain outstanding. Earlier separate-layout plan is superseded for this increment. |
 | AT-F04-FORM | Shared-panel alumni information create/update form | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-FORM.md). 32 focused tests/126 assertions, shared HTTP Dashboard integration, build/Pint/diff checks pass. Browser control timed out. Full suite retains 12 baseline campus fixture errors. No global RBAC/auth/schema changes. |
+| AT-F04-DASH | Shared alumni progress dashboard and form entry | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-DASH.md). 43 focused tests/179 assertions, build/Pint/diff pass. Synthetic SQLite login renders after a one-line import fix; browser host unavailable, so visual and interaction acceptance remains open. Prior full isolated suite has 1 unrelated OTP failure and 12 campus fixture errors. |
 | AT-T01 | History/status/provenance model | PLANNED | AT-F02, DEC-05/06 |
 | AT-T02 | History editors/staff review | PLANNED | AT-T01/F04 |
 | AT-V01 | Survey definitions/version/publication | PLANNED | AT-F01/02, DEC-07 |
 | AT-V02 | Survey participation/response isolation | PLANNED | AT-V01/F04 |
 | AT-N01 | Queue delivery/notification outcomes | PLANNED | AT-V01/02, DEC-08 |
-| AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views; welcome sends on `Verified`; focused array-mailer tests pass |
+| AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views; welcome sends on `Verified`. All ten Blade email files share a formal graduate-records design with the existing brand colors and inline artwork; focused array-mailer tests and synthetic desktop/phone previews pass. Live inbox/client acceptance remains unverified. |
 | AT-I01 | Staged reviewed legacy/flat import | PLANNED | AT-A02/F01/F02/T01, DEC-04/10 |
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
 | AT-R01-CAMPUS | Campus filter and linked campus XLSX labels | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-CAMPUS.md). Focused SQLite tests pass; connected MariaDB `campuses` schema verified after owner migration; browser acceptance is pending. Does not complete AT-R01 or its security gates. |
+| AT-UI01 | Landing page mobile navigation and placement | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI01.md). Focused tests/build and closed 390px render passed; static open-panel render inspected. Live menu interaction remains unverified. |
 | AT-O01 | Deployment/privacy/end-to-end readiness | PLANNED | Applicable implemented modules and school policy approvals |
 
 ## Decisions pending
@@ -76,3 +79,71 @@ After the owner reported migrating, read-only `php artisan db:table campuses --j
 ## Focused behavior recheck — 2026-11-05
 
 Four selected SQLite-memory tests passed with 16 assertions, including campus-filtered Livewire rows and download, generated XLSX campus heading/grouping, valid XLSX generation, and download dispatch. The full isolated suite ran 64 tests: 52 passed and 12 errored because older fixtures create programs without required `campus_id`. Browser control was unavailable, so rendered UI behavior remains unverified. Pint and diff checks passed. Next: repair the baseline fixtures under a separately scoped change, then verify the report in a browser with an authorized synthetic account; do not run live data writes merely for testing.
+
+## Latest handoff — AT-UI01, 2026-11-05
+
+1. Completed in source: mobile navigation starts hidden; removed unused Alpine calls that prevented the landing script from initializing. Follow-up Taste Skill pass places a Menu/Close control at the right of a sticky header and opens a full-height sheet with section links above account actions.
+2. Verified: initial regression failed before the markup fix; focused landing tests pass (3 tests, 7 assertions), Vite build and diff check pass. Taste Skill headless Chrome rendered the closed 390px layout and a static open-panel preview; the hero is no longer displaced in the closed view.
+3. Failed or unavailable: Taste Skill's consistency checker twice lost its CDP socket, including a phone-only retry. Static open-panel preview did not execute the menu JavaScript; live tap, Escape, link dismissal and tablet interaction remain unverified.
+4. Blocked: AT-UI01 interaction acceptance only. Existing policy, workbook and reporting blockers retain their tracker statuses.
+5. Remaining: inspect the landing page with JavaScript enabled at phone and tablet widths, open and close Menu, confirm focus/scroll behavior and check recent browser errors.
+6. Exact next recommended task: perform that live menu interaction verification; independently resume AT-F01 after DEC-02/03 approval or AT-A02 when the workbook is available.
+
+## Latest handoff — AT-F04-DASH, 2026-11-05
+
+1. Completed in source: restored the shared `/online` Dashboard content switch; assigned `my_records` alumni see a core-profile milestone, reported work status, own current/past jobs and education history, with actions opening the existing editor. Staff keep their widget grid; roleless users get an access notice.
+2. Verified: the pre-existing dashboard integration test failed before the fix; five new overview/access cases failed before implementation. View-only details and an incomplete-profile action were each fixed red-to-green. Final focused form/dashboard suite: 42 passed, 178 assertions. Pint, Vite build and `git diff --check` passed. No connected database writes or migrations ran.
+3. Failed or unavailable: full isolated suite ran 76 tests: 63 passed, 1 OTP notification class mismatch failed, and 12 existing `programs.campus_id` fixture errors. Computer Use reported its browser access host unavailable, so desktop/mobile layout, live click, keyboard and focus acceptance remain UNVERIFIED.
+4. Blocked: visual acceptance for AT-F04-DASH; broader panel admission and staff RBAC remain AT-F01 decisions, not part of this dashboard release.
+5. Remaining: verify the alumni dashboard at phone and desktop widths with a synthetic authorized account, including open/save interactions and keyboard focus. Repair the independent OTP namespace mismatch and old campus fixtures in separately scoped work.
+6. Exact next recommended task: complete that synthetic browser acceptance for AT-F04-DASH when browser control is available; independently resume AT-F01 after DEC-02/03 approval.
+
+## Latest handoff — AT-D01, 2026-11-05
+
+1. Completed: added a current-schema data dictionary and refreshed the data/process, ERD, object and requirements modeling documents. They now show the required alumni owner FK, campus and allocation links, shared alumni dashboard/form, current report/export shape, and current versus proposed modules.
+2. Partially completed: no application module or schema work was attempted. Existing AT-F04-DASH, AT-R01-CAMPUS and AT-UI01 browser acceptance remains separate.
+3. Verified: read-only Laravel Boost schema metadata covered 23 connected tables and 183 columns; route list and current models/migrations/pages/import/export were inspected; all dictionary table/column names matched the connected schema; local links and fences, Git diff whitespace and preservation of unrelated dirty files were checked. See [AT-D01 record](completed/AT-D01.md).
+4. Failed: no documentation check failed after corrections. Application tests were not rerun for this prose-only change; existing full-suite failures remain as recorded above.
+5. Blocked: actual legacy workbook evidence and school decisions DEC-01..10 as applicable. Live/browser acceptance remains unverified for the separate feature increments.
+6. Remaining: keep the modeling documents synchronized when schema or approved workflows change; reconcile older target architecture documents only within their owning tasks so proposed behavior is not mistaken for current source.
+7. Exact next recommended task: verify AT-F04-DASH with a synthetic authorized browser session when browser control is available; independently resume AT-F01 after DEC-02/03 approval and AT-A02 when the source workbook is supplied.
+
+AT-D01 follow-up, 2026-11-05: restored the original system flowchart format and ASCII drawing in `data-and-process-modeling.md`, with current Dashboard/report labels and the import limitation. Documentation-only checks were rerun; feature statuses and next task are unchanged.
+
+## Latest handoff — AT-F04-DASH browser acceptance follow-up, 2026-11-05
+
+1. Completed: prepared an explicit disposable SQLite target and synthetic authorized alumni account with core profile, current/past jobs and education. Found `/online/login` returned 500 from a missing `Livewire` import in the panel provider; fixed it with a failing-then-passing guest route test.
+2. Verified: local `/online/login` returned HTTP 200 after the fix; focused isolated SQLite form/dashboard tests passed 43/179. Pint, Vite build and diff checks passed. No configured MariaDB write or migration was run.
+3. Unavailable: Computer Use browser inventory and in-app tab reported browser access host unavailable; native Chrome control timed out twice. Desktop/phone layout, signed-in dashboard, open/save, keyboard and focus acceptance remain UNVERIFIED. The full suite was not rerun; its prior independent failures remain.
+4. Status and next step: AT-F04-DASH remains IMPLEMENTED BUT UNVERIFIED. Repeat the synthetic browser interaction check when browser control is available; keep AT-F01 policy decisions and unrelated suite repair separate.
+
+## Latest handoff — email verification diagnosis, 2026-11-05
+
+1. Found and fixed a concrete email-code defect: the panel provider referenced `App\Providers\Filament\AlumniEmailOtp` instead of the existing `App\Notifications\AlumniEmailOtp`. The existing OTP notification test failed before the import and passed after it. No account, permission, route, schema or secret changed.
+2. A new isolated SQLite HTTP test followed a Filament signed verification link for a synthetic unverified account; the request redirected successfully, persisted `email_verified_at` and dispatched the welcome notification. Focused auth, verification and dashboard tests passed 48 tests/201 assertions; Pint and diff checks passed.
+3. Local runtime configuration reports `mail.default=log` and `queue.default=database`; logged verification messages and zero queued/failed jobs were observed. This configuration does not establish delivery to an inbox. No live mail provider, external inbox, or production link was tested or reconfigured. The owner's exact symptom is still being clarified.
+4. Profile email-change verification is a separate disabled Filament feature: the panel does not call `emailChangeVerification()` and no such route is registered. It was not enabled because live mail delivery and the intended email-change policy are not yet established.
+5. Email delivery remains UNVERIFIED; this narrow OTP import repair does not complete AT-F03 activation/identity decisions or the wider AT-F01 authorization work. Next: identify whether the symptom is missing delivery, an error on the link, an unchanged verification state, or profile email change, then check the corresponding environment with synthetic data only.
+
+## Latest handoff — AT-N02 email design refresh, 2026-11-05
+
+1. Updated only the active shared email layout and the four wrapper views (sign-in code, verification, reset, welcome). Kept the existing crimson and gold brand colors and inline PNG logo/graduate mascot; simplified the hierarchy, made the content left-aligned, and corrected the sign-in code copy so it no longer claims to verify mailbox ownership. Legacy `emails/auth/*` views have no production callers and were not changed.
+2. A focused copy regression failed before the change and passed after it. Isolated SQLite/array-mailer tests for templates, branded notifications and the signed verification link passed 12 tests/59 assertions. Pint and `git diff --check` passed. No dependency, route, database, mail transport or secret changed.
+3. Taste Skill synthetic previews were captured and inspected at 1440px for the code email and 390px for code, verification and reset emails. Header artwork, actions, code, notes and footer remained visible without clipping. The website-specific consistency/performance checker was not applied to transactional email HTML. Live Gmail/Outlook rendering and actual inbox delivery remain UNVERIFIED.
+4. AT-N02 remains VERIFIED COMPLETED for the source template update. Next, if an authorized mail transport and test inbox become available, check real client rendering and delivery separately; do not treat this design pass as solving the earlier local `log` mailer configuration.
+
+## Latest handoff — AT-N02 all-template follow-up, 2026-11-05
+
+1. The owner clarified that every email template should be updated. Moved the existing graduate-records shell into `emails/layouts/alumni.blade.php`; the active notification view now extends it, and all four legacy `emails/auth/*` views pass their original data into the corresponding active message view. All ten Blade email files use one visual system, and no production notification class or route changed.
+2. A regression rendering all four legacy views failed on the old layout before the change and passed after it. The existing raw-MIME OTP assertion was corrected to inspect decoded HTML because quoted-printable line wrapping can split digits in the wire representation. Focused isolated SQLite/array-mailer tests passed 13 tests/71 assertions; Pint and `git diff --check` passed.
+3. Synthetic previews rendered all four legacy views; the legacy welcome was visually inspected at 390px alongside the earlier active OTP desktop/phone and verification/reset phone checks. The layout, personalized greeting, action and footer appeared without clipping. Live mail clients and external delivery remain UNVERIFIED, and `.env` was not read or changed.
+
+## Latest handoff — AT-N02 visual redesign follow-up, 2026-11-05
+
+1. After the owner clarified that the request was for the visual design inside `resources/views/emails/`, redesigned the shared shell as a light academic masthead, gold divider and crimson title panel with serif headings. The message area has a full-width action and a distinct code panel. Kept existing crimson, gold and navy colors, the logo and graduate mascot, all view data contracts, and inline PNG/CID delivery.
+2. Rendered all four active and four legacy messages with synthetic data. Taste Skill local screenshots were inspected for verification, sign-in code and reset at 390px and welcome at 1440px; headings, buttons, codes, notes and artwork stayed visible without clipping. The website-only checker was not used for transactional email HTML.
+3. Focused isolated SQLite/array-mailer email, notification and signed-link tests passed 13 tests/71 assertions. Pint and `git diff --check` passed. Actual Gmail/Outlook rendering and external inbox delivery remain UNVERIFIED. No `.env`, mail transport, route, account or database change.
+
+## AT-D01 Mermaid render follow-up — 2026-11-05
+
+Removed three unescaped semicolons from the Owned form sequence message labels in `object-modeling.md`. A Mermaid renderer returned valid SVG with the corrected messages and no parse error; the GitHub browser view itself was unavailable. `git diff --check` passed. This is a documentation fix only; prior feature statuses and next tasks are unchanged.

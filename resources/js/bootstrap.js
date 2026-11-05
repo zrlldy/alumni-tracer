@@ -13,9 +13,3 @@ import {
 window.browserSupportsWebAuthn = browserSupportsWebAuthn;
 window.startAuthentication = startAuthentication;
 window.startRegistration = startRegistration;
-
-window.Alpine = Alpine
-
-Alpine.data('app', () => ({
-    open: false,
-}));
