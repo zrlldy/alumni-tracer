@@ -3,10 +3,17 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Alumni;
+use App\Traits\RoleBasedAccessControl;
 use Filament\Widgets\ChartWidget;
 
 class EmploymentStatus extends ChartWidget
 {
+    use RoleBasedAccessControl;
+    public static function canView(): bool
+    {
+        return static::hasWidgetAccess();
+    }
+
     protected ?string $heading = 'Employment Status';
 
     protected ?string $description = 'Distribution of alumni employment status';

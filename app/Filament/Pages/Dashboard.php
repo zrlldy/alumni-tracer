@@ -14,22 +14,26 @@ use JohnRivera7\FilamentWidgetGrid\Concerns\HasWidgetGrid;
 
 class Dashboard extends BaseDashboard
 {
-    use RoleBasedAccessControl;
-    public static function canAccess(): bool
-    {
-        return self::hasPageAccess();
-    }
+    // use RoleBasedAccessControl;
     use HasWidgetGrid;
+
+    // public static function canAccess(): bool
+    // {
+    //     return static::hasPageAccess();
+    // }
 
     public function getWidgets(): array
     {
-        return [
-            AlumniStats::class,
-            AlumniLineChart::class,
-            AlumniByProgramChart::class,
-            EmploymentStatus::class,
-            TracingProgress::class,
-            RecentlyTraced::class
-        ];
+        return array_values(array_filter(
+            [
+                AlumniStats::class,
+                AlumniLineChart::class,
+                AlumniByProgramChart::class,
+                EmploymentStatus::class,
+                TracingProgress::class,
+                RecentlyTraced::class,
+            ],
+            fn (string $widget): bool => $widget::canView(),
+        ));
     }
 }

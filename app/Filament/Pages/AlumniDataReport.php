@@ -59,7 +59,8 @@ class AlumniDataReport extends Page implements HasTable
                             ? 'alumni-data-report.xlsx'
                             : "alumni-data-report-{$graduationYear}.xlsx"
                     );
-                }),
+                })
+                ->visible(fn () => self::hasPermission('export')),
 
         ];
     }

@@ -4,10 +4,17 @@ namespace App\Filament\Widgets;
 
 use App\Models\Alumni;
 use App\Models\Program;
+use App\Traits\RoleBasedAccessControl;
 use Filament\Widgets\ChartWidget;
 
 class AlumniByProgramChart extends ChartWidget
 {
+    use RoleBasedAccessControl;
+    public static function canView(): bool
+    {
+        return static::hasWidgetAccess();
+    }
+
     protected ?string $heading = 'Alumni by Program';
 
     protected ?string $description = 'Employment status distribution per program';

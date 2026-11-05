@@ -5,8 +5,10 @@ namespace App\Filament\Resources\Alumnis\Tables;
 use App\Exports\AlumniImportTemplateExport;
 use App\Filament\Imports\AlumniImporter;
 use App\Models\Alumni;
+use App\Traits\RoleBasedAccessControl;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
@@ -29,6 +31,7 @@ use Throwable;
 
 class AlumnisTable
 {
+    use RoleBasedAccessControl;
     public static function configure(Table $table): Table
     {
         return $table
@@ -44,7 +47,8 @@ class AlumnisTable
                     ->modalSubmitActionLabel('Create Alumni')
                     ->successNotificationTitle(
                         'Alumni created successfully'
-                    ),
+                    )
+                    ->visible(fn () => self::hasPermission('create')),
 
                 Action::make('import')
                     ->label('Import Excel')
@@ -130,7 +134,8 @@ class AlumnisTable
                                 ->persistent()
                                 ->send();
                         }
-                    }),
+                    })
+                    ->visible(fn () => self::hasPermission('import')),
             ])
             ->heading('Alumni records')
             ->description('Open a record for complete information, or use search and filters to narrow the directory.')
@@ -259,13 +264,24 @@ class AlumnisTable
             ])
 
             ->recordActions([
-                ViewAction::make()
-                    ->iconButton()
-                    ->tooltip('View alumni'),
+                // ActionGroup::make([
 
-                EditAction::make()
-                    ->iconButton()
-                    ->tooltip('Edit alumni'),
+                //     ViewAction::make()
+                //         ->iconButton()
+                //         ->tooltip('View alumni'),
+
+                //     EditAction::make()
+                //         ->iconButton()
+                //         ->tooltip('Edit alumni'),
+
+                // ]),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->visible(fn () => self::hasPermission('view')),
+                    EditAction::make()
+                        ->visible(fn () => self::hasPermission('edit')),
+
+                ]),
             ])
 
             ->toolbarActions([

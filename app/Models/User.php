@@ -13,6 +13,7 @@ use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
 use Filament\Auth\MultiFactor\Email\Concerns\InteractsWithEmailAuthentication;
 use Filament\Auth\MultiFactor\Email\Contracts\HasEmailAuthentication;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -40,7 +41,7 @@ use Spatie\LaravelPasskeys\Models\Concerns\InteractsWithPasskeys;
 ])]
 #[Hidden(['password', 'remember_token'])]
 // class User extends Authenticatable implements HasAppAuthentication, HasEmailAuthentication, MustVerifyEmail
-class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasEmailAuthentication, HasPasskeys, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasAvatar, HasAppAuthentication, HasEmailAuthentication, HasPasskeys, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use InteractsWithAppAuthentication, InteractsWithAppAuthenticationRecovery, InteractsWithEmailAuthentication, InteractsWithPasskeys, HasFactory, Notifiable, SoftDeletes;
@@ -56,6 +57,15 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        $image = $this->avatar_img;
+
+        return filled($image)
+            ? asset('storage/' . ltrim($image, '/'))
+            : null;
     }
 
     protected static function booted(): void

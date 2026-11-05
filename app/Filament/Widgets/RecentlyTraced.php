@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Alumni;
+use App\Traits\RoleBasedAccessControl;
 use Carbon\Carbon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -11,6 +12,12 @@ use Illuminate\Database\Eloquent\Builder;
 
 class RecentlyTraced extends TableWidget
 {
+    use RoleBasedAccessControl;
+    public static function canView(): bool
+    {
+        return static::hasWidgetAccess();
+    }
+
     protected static ?string $heading = 'Recently Traced Alumni';
 
     protected int|string|array $columnSpan = 'full';
