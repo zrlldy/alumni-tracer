@@ -24,6 +24,7 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views; welcome sends on `Verified`; focused array-mailer tests pass |
 | AT-I01 | Staged reviewed legacy/flat import | PLANNED | AT-A02/F01/F02/T01, DEC-04/10 |
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
+| AT-R01-CAMPUS | Campus filter and linked campus XLSX labels | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-CAMPUS.md). Focused SQLite tests pass; connected MariaDB `campuses` schema verified after owner migration; browser acceptance is pending. Does not complete AT-R01 or its security gates. |
 | AT-O01 | Deployment/privacy/end-to-end readiness | PLANNED | Applicable implemented modules and school policy approvals |
 
 ## Decisions pending
@@ -58,3 +59,20 @@ Next foundational task after security decisions: AT-F01. AT-A02 resumes when the
 2. Verified: focused email tests passed (10 tests, 52 assertions); Pint and `git diff --check` passed. The full suite has unrelated failures from a missing Vite manifest and alumni fixtures without required `user_id` (18 passed, 1 failed, 11 errors).
 3. Remaining: live delivery requires a working mail transport and queue worker. Account activation/RBAC remain blocked and survey delivery remains planned under AT-N01.
 4. Exact next recommended task remains AT-F01 after DEC-02/03 are supplied. Resume AT-A02 when the source workbook is available; do not redo completed audit/design/security/bootstrap tasks without a verified reason.
+
+## Latest handoff — AT-R01-CAMPUS, 2026-11-05
+
+1. Completed in source: report campus filter/column and XLSX campus filter, heading and program grouping from linked `programs.campus_id`.
+2. Verified: two focused SQLite-memory regression tests, 10 assertions; Pint and diff check. Existing report/export suite still has 10 baseline `programs.campus_id` fixture errors.
+3. Failed or unavailable: read-only `php artisan db:table campuses --json` reports the table absent on the configured MariaDB connection; no migration or data write was run. Browser rendering was not verified.
+4. Blocked: connected-database and browser acceptance for this increment; broader AT-R01 authorization and scope remain gated by their listed dependencies.
+5. Remaining at handoff: confirm the intended database target and review its migration/backup plan before any schema operation; repair baseline test fixtures separately; verify the report in a browser after schema availability. The later read-only schema recheck below confirms table availability.
+6. Exact next recommended task after schema recheck: verify campus filter/export in the browser; AT-F01 remains the next foundational task after DEC-02/03 approval.
+
+## Schema recheck — 2026-11-05
+
+After the owner reported migrating, read-only `php artisan db:table campuses --json --no-interaction` succeeded on the configured `alumni-tracker` MariaDB schema. It reported the `campuses` table with `id`, `name`, `is_active`, `deleted_at`, `created_at` and `updated_at`. No data was changed. Live report/browser and export behavior remain unverified; AT-R01-CAMPUS stays IMPLEMENTED BUT UNVERIFIED.
+
+## Focused behavior recheck — 2026-11-05
+
+Four selected SQLite-memory tests passed with 16 assertions, including campus-filtered Livewire rows and download, generated XLSX campus heading/grouping, valid XLSX generation, and download dispatch. The full isolated suite ran 64 tests: 52 passed and 12 errored because older fixtures create programs without required `campus_id`. Browser control was unavailable, so rendered UI behavior remains unverified. Pint and diff checks passed. Next: repair the baseline fixtures under a separately scoped change, then verify the report in a browser with an authorized synthetic account; do not run live data writes merely for testing.

@@ -3,8 +3,8 @@
 namespace App\Exports;
 
 use App\Models\Alumni;
+use App\Models\Campus;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Gate;
 use LogicException;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
@@ -17,13 +17,7 @@ use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class AlumniDataExport implements
-    FromQuery,
-    WithColumnWidths,
-    WithEvents,
-    WithHeadings,
-    WithMapping,
-    WithStyles
+class AlumniDataExport implements FromQuery, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles
 {
     private int $rowNumber = 0;
 
@@ -33,16 +27,14 @@ class AlumniDataExport implements
         private readonly ?int $graduationYear = null,
         private readonly ?int $programId = null,
         private readonly ?string $employmentStatus = null,
-    ) {
-    }
+        private readonly ?int $campusId = null,
+    ) {}
 
     public function query(): Builder
     {
-        
-
         $query = Alumni::query()
             ->with([
-                'program',
+                'program.campus',
                 'alumniEmployment',
             ])
             ->orderBy('program_id')
@@ -58,6 +50,10 @@ class AlumniDataExport implements
             $query->forProgram($this->programId);
         }
 
+        if ($this->campusId !== null) {
+            $query->whereHas('program', fn (Builder $programQuery): Builder => $programQuery->where('campus_id', $this->campusId));
+        }
+
         if ($this->employmentStatus !== null) {
             $query->withEmploymentStatus(
                 $this->employmentStatus
@@ -71,7 +67,7 @@ class AlumniDataExport implements
     {
         return [
             [
-                'CTU DAANBANTAYAN- Tabogon Extension Campus',
+                $this->campusId === null ? 'All Campuses' : (Campus::query()->find($this->campusId)?->name ?? 'Campus'),
             ],
             [
                 '',
@@ -98,7 +94,7 @@ class AlumniDataExport implements
 
     public function map($row): array
     {
-        if (!$row instanceof Alumni) {
+        if (! $row instanceof Alumni) {
             throw new LogicException(
                 'Alumni data exports may only map alumni records.'
             );
@@ -111,7 +107,7 @@ class AlumniDataExport implements
         $programName = '';
 
         if ($this->lastProgramId !== $programId) {
-            $programName = $row->program?->program_name ?? '';
+            $programName = collect([$row->program?->campus?->name, $row->program?->program_name])->filter()->implode(' - ');
             $this->lastProgramId = $programId;
         }
 
@@ -119,16 +115,14 @@ class AlumniDataExport implements
         // Otherwise use the most recent available record.
         $employment = $row->alumniEmployment
             ->sortByDesc(
-                fn($item) =>
-                    (string) ($item->date_hired ?? '')
+                fn ($item) => (string) ($item->date_hired ?? '')
             )
             ->firstWhere('is_current', true);
 
         if ($employment === null) {
             $employment = $row->alumniEmployment
                 ->sortByDesc(
-                    fn($item) =>
-                        (string) ($item->date_hired ?? '')
+                    fn ($item) => (string) ($item->date_hired ?? '')
                 )
                 ->first();
         }
@@ -316,7 +310,7 @@ class AlumniDataExport implements
         string $condition,
         string $color
     ): Conditional {
-        $conditional = new Conditional();
+        $conditional = new Conditional;
 
         $conditional
             ->setConditionType(

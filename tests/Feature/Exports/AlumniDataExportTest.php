@@ -4,7 +4,9 @@ use App\Exports\AlumniDataExport;
 use App\Models\Alumni;
 use App\Models\AlumniEducation;
 use App\Models\AlumniEmployment;
+use App\Models\Campus;
 use App\Models\Program;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Excel as ExcelWriter;
 use Maatwebsite\Excel\Facades\Excel;
@@ -12,6 +14,41 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Style\Conditional;
 
 uses(RefreshDatabase::class);
+
+it('exports alumni from a selected campus with its linked campus name', function () {
+    $firstCampus = Campus::query()->create(['name' => 'North Campus']);
+    $secondCampus = Campus::query()->create(['name' => 'South Campus']);
+    $firstProgram = Program::query()->create(['campus_id' => $firstCampus->id, 'program_name' => 'Information Technology']);
+    $secondProgram = Program::query()->create(['campus_id' => $secondCampus->id, 'program_name' => 'Business Administration']);
+    $user = User::factory()->create();
+    $matchingAlumni = Alumni::factory()->for($firstProgram)->create(['user_id' => $user->id]);
+    Alumni::factory()->for($secondProgram)->create(['user_id' => $user->id]);
+
+    $export = new AlumniDataExport(campusId: $firstCampus->id);
+    $record = $export->query()->firstOrFail();
+
+    expect($export->query()->pluck('id')->all())->toBe([$matchingAlumni->id])
+        ->and($export->headings()[0][0])->toBe('North Campus')
+        ->and($export->map($record)[0])->toBe('North Campus - Information Technology');
+
+    $temporaryFile = tempnam(sys_get_temp_dir(), 'campus-report-');
+
+    if ($temporaryFile === false) {
+        throw new RuntimeException('Unable to create a temporary XLSX file.');
+    }
+
+    file_put_contents($temporaryFile, Excel::raw(new AlumniDataExport(campusId: $firstCampus->id), ExcelWriter::XLSX));
+
+    try {
+        $sheet = IOFactory::load($temporaryFile)->getActiveSheet();
+
+        expect($sheet->getCell('A1')->getValue())->toBe('North Campus')
+            ->and($sheet->getCell('A3')->getValue())->toBe('North Campus - Information Technology')
+            ->and($sheet->getHighestDataRow())->toBe(3);
+    } finally {
+        unlink($temporaryFile);
+    }
+});
 
 it('exports alumni data with education and employment history', function () {
     $program = Program::query()->create([

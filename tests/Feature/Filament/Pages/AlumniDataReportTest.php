@@ -5,13 +5,44 @@ use App\Filament\Pages\AlumniDataReport;
 use App\Models\Alumni;
 use App\Models\AlumniEducation;
 use App\Models\AlumniEmployment;
+use App\Models\Campus;
 use App\Models\Program;
+use App\Models\Role;
+use App\Models\User;
+use App\Models\UserAllocation;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Maatwebsite\Excel\Facades\Excel;
 
 uses(RefreshDatabase::class);
+
+it('filters the report and download by linked campus', function () {
+    $firstCampus = Campus::query()->create(['name' => 'North Campus']);
+    $secondCampus = Campus::query()->create(['name' => 'South Campus']);
+    $firstProgram = Program::query()->create(['campus_id' => $firstCampus->id, 'program_name' => 'Information Technology']);
+    $secondProgram = Program::query()->create(['campus_id' => $secondCampus->id, 'program_name' => 'Business Administration']);
+    $role = Role::query()->create(['name' => 'Report Staff', 'action' => ['view', 'export'], 'access_page' => [AlumniDataReport::getSlug()]]);
+    $allocation = UserAllocation::query()->create(['role_id' => $role->id, 'management_scope' => 'all_program', 'max_users' => 10]);
+    $user = User::factory()->create(['user_allocation_id' => $allocation->id]);
+    $matchingAlumni = Alumni::factory()->for($firstProgram)->create(['user_id' => $user->id]);
+    $otherAlumni = Alumni::factory()->for($secondProgram)->create(['user_id' => $user->id]);
+
+    Excel::fake();
+    $this->withoutVite();
+    $this->actingAs($user);
+    Filament::setCurrentPanel('online');
+
+    Livewire::test(AlumniDataReport::class)
+        ->filterTable('campus', ['campus_id' => (string) $firstCampus->id])
+        ->assertCanSeeTableRecords([$matchingAlumni])
+        ->assertCanNotSeeTableRecords([$otherAlumni])
+        ->callAction('exportXlsx');
+
+    Excel::assertDownloaded('alumni-data-report.xlsx', fn (AlumniDataExport $export): bool => $export->query()->pluck('id')->all() === [$matchingAlumni->id]
+        && $export->headings()[0][0] === 'North Campus'
+    );
+});
 
 it('shows only alumni who graduated in the selected year', function () {
     $program = Program::query()->create([
