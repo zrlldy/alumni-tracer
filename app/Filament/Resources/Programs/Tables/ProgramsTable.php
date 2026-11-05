@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Programs\Tables;
 
+use App\Traits\RoleBasedAccessControl;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,6 +17,7 @@ use Filament\Tables\Table;
 
 class ProgramsTable
 {
+    use RoleBasedAccessControl;
     public static function configure(Table $table): Table
     {
         return $table
@@ -60,12 +63,23 @@ class ProgramsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make()
-                    ->iconButton()
-                    ->tooltip('View program'),
-                EditAction::make()
-                    ->iconButton()
-                    ->tooltip('Edit program'),
+                // ActionGroup::make([
+
+                //     ViewAction::make()
+                //         ->iconButton()
+                //         ->tooltip('View program'),
+                //     EditAction::make()
+                //         ->iconButton()
+                //         ->tooltip('Edit program'),
+
+                // ]),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->visible(fn () => self::hasPermission('view')),
+                    EditAction::make()
+                        ->visible(fn () => self::hasPermission('edit')),
+
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

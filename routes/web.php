@@ -4,11 +4,13 @@ use App\Http\Controllers\GoogleAuthController;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthenticateUsingPasskeyController;
+use App\Http\Controllers\WelcomeController;
 use Spatie\LaravelPasskeys\Http\Controllers\GeneratePasskeyAuthenticationOptionsController;
 
-Route::get('/', function (): View {
-    return view('welcome');
-});
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
+
+
+Route::post('/', [WelcomeController::class, 'submit'])->name('welcome.submit');
 
 Route::passkeys();
 

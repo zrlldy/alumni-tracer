@@ -4,7 +4,8 @@ namespace App\Filament\Resources\UserAllocations\Tables;
 
 use App\Models\User;
 use App\Models\UserAllocation;
-// use App\Traits\RoleBasedAccessControl;
+use Filament\Actions\ActionGroup;
+use App\Traits\RoleBasedAccessControl;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -17,7 +18,7 @@ use Filament\Tables\Table;
 
 class UserAllocationsTable
 {
-    // use RoleBasedAccessControl;
+    use RoleBasedAccessControl;
     public static function configure(Table $table): Table
     {
         return $table
@@ -76,10 +77,13 @@ class UserAllocationsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                //     ->visible(fn () => self::hasPermission('view')),
-                EditAction::make()
-                //     ->visible(fn () => self::hasPermission('edit')),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->visible(fn () => self::hasPermission('view')),
+                    EditAction::make()
+                        ->visible(fn () => self::hasPermission('edit')),
+
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

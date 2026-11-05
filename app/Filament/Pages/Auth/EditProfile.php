@@ -109,12 +109,13 @@ class EditProfile extends PagesEditProfile
 
                                         TextInput::make('student_id')
                                             ->label('Student ID')
-                                            ->placeholder('Enter your Student ID')
+                                            // ->placeholder('Enter your Student ID')
                                             ->maxLength(255)
                                             ->autocomplete('off')
-                                            ->helperText(
-                                                'You can update your Student ID here.'
-                                            ),
+                                            ->copyable(copyMessage: 'Copied!', copyMessageDuration: 1500),
+                                            // ->helperText(
+                                            //     'You can update your Student ID here.'
+                                            // ),
 
                                         $this->getNameFormComponent(),
 
@@ -163,9 +164,6 @@ class EditProfile extends PagesEditProfile
             ])
             ->maxSize(5120)
             ->imageEditor()
-            ->imageEditorAspectRatios([
-                '1:1',
-            ])
             ->preventFilePathTampering()
             ->helperText(
                 'Upload a profile picture. JPEG, PNG or WebP. Maximum 5 MB.'

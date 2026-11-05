@@ -20,50 +20,26 @@ use JohnRivera7\FilamentWidgetGrid\Concerns\HasWidgetGrid;
 
 class Dashboard extends BaseDashboard
 {
-    use RoleBasedAccessControl;
-
-    public static function canAccess(): bool
-    {
-        return self::hasPageAccess();
-    }
-
+    // use RoleBasedAccessControl;
     use HasWidgetGrid;
 
-    public function content(Schema $schema): Schema
-    {
-        $canAccess = AlumniInformationForm::canAccess();
-        $user = Auth::user();
-        $allocation = $user?->userAllocation;
-
-        if (SystemSecurity::isBootstrapSuperAdmin($user) || (
-            $allocation !== null
-            && ! $allocation->trashed()
-            && $allocation->role !== null
-            && ! $allocation->role->trashed()
-            && in_array($allocation->management_scope, ['all_program', 'specified_program', 'my_program', 'my_department'], true)
-        )) {
-            return parent::content($schema);
-        }
-
-        return $schema->components([
-            Livewire::make(AlumniInformationForm::class)
-                ->key('alumni-information-form')
-                ->visible($canAccess),
-            Section::make('Alumni information')
-                ->description('Ask the administrator to enable access to your alumni information form.')
-                ->visible(! $canAccess),
-        ]);
-    }
+    // public static function canAccess(): bool
+    // {
+    //     return static::hasPageAccess();
+    // }
 
     public function getWidgets(): array
     {
-        return [
-            AlumniStats::class,
-            AlumniLineChart::class,
-            AlumniByProgramChart::class,
-            EmploymentStatus::class,
-            TracingProgress::class,
-            RecentlyTraced::class,
-        ];
+        return array_values(array_filter(
+            [
+                AlumniStats::class,
+                AlumniLineChart::class,
+                AlumniByProgramChart::class,
+                EmploymentStatus::class,
+                TracingProgress::class,
+                RecentlyTraced::class,
+            ],
+            fn (string $widget): bool => $widget::canView(),
+        ));
     }
 }

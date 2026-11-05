@@ -3,11 +3,18 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Program;
+use App\Traits\RoleBasedAccessControl;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class ProgramStats extends StatsOverviewWidget
 {
+    use RoleBasedAccessControl;
+    public static function canView(): bool
+    {
+        return static::hasWidgetAccess();
+    }
+
     protected ?string $heading = 'Program status snapshot';
 
     protected function getStats(): array

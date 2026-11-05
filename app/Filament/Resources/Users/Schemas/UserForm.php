@@ -72,10 +72,8 @@ class UserForm
                                     ->disabled(fn (?User $record) => $record && in_array($record->email, User::protectedEmails()))
                                     ->dehydrated(),
 
-                                DateTimePicker::make('email_verified_at')
-                                    ->label('Email Verified At')
-                                    ->placeholder('Not verified')
-                                    ->seconds(false),
+                                TextInput::make('student_id')
+                                    ->label('Student ID'),
 
                                 TextInput::make('password')
                                     ->label('Password')

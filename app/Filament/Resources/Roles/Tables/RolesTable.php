@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Roles\Tables;
 
+use App\Traits\RoleBasedAccessControl;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -14,6 +16,7 @@ use Filament\Tables\Table;
 
 class RolesTable
 {
+    use RoleBasedAccessControl;
     public static function configure(Table $table): Table
     {
         return $table
@@ -37,8 +40,14 @@ class RolesTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->visible(fn () => self::hasPermission('view')),
+                    EditAction::make()
+                        ->visible(fn () => self::hasPermission('edit')),
+
+                ]),
+                
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
