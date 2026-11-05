@@ -18,6 +18,8 @@ The owner narrowed implementation to alumni create/update information on the exi
 
 Reuse the existing identity/contact/academic schema in a native Livewire form. Resolve one own record by persisted `alumnis.user_id`; after creation, keep identity/program/graduation fields staff-controlled. Append/update own education/employment without deleting omitted rows. Use existing page/action grants, recheck active role/allocation, lock the account during atomic saves and reject foreign/archived history IDs. Existing matching Student ID/email candidates require administrator review. No live accounts or data are linked by the development session.
 
+On the shared Dashboard, a roleless account may still read the safe access notice. An account with an allocation must pass the Dashboard page grant before it can visit the page; the owned form continues to require its separate Alumni page/action and ownership checks. The staff Alumni Directory remains denied to `my_records` accounts.
+
 Acceptance includes scoped create/update, negative authorization/tampering, history preservation, validation, safe failure/rollback, shared-dashboard integration and staff-grid preservation tests. Visual acceptance requires desktop/mobile browser verification; unavailable control leaves that acceptance IMPLEMENTED BUT UNVERIFIED. Record baseline fixture failures separately from new form checks. Broader tasks below retain their historical proposal/dependency context and need reconciliation with the updated owner policy before execution.
 
 ## Global constraints

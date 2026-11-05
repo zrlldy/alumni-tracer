@@ -57,3 +57,9 @@ Coverage includes shared Dashboard HTTP rendering without staff widgets, staff-g
 - Global RBAC, staff query/export issues, signup/verification/expiry and baseline fixture repairs remain separate tasks. No deployment, commit or push occurred.
 
 Next action: verify desktop/mobile interactions using synthetic data in an isolated environment, repair baseline fixture compatibility in a separate task, and settle linking/verification/expiry details before changing those workflows.
+
+## Browser follow-up, 2026-11-05
+
+Using a synthetic account and disposable SQLite database, native Chrome opened the existing form from the shared Dashboard, saved contact/work edits, showed success feedback and refreshed the work summary. A 390 × 843 responsive viewport showed the editor fields within the visible page width. The directory access leak discovered during this check was corrected in AT-F04-DASH's follow-up record. Focused form/dashboard tests passed 46/188; the full suite still has 12 unrelated campus fixture errors. Keyboard/focus, screen reader and live-environment acceptance remain UNVERIFIED, so this task remains **IMPLEMENTED BUT UNVERIFIED**.
+
+The later Dashboard page-grant alignment did not change form fields or persistence. Its combined focused form/dashboard suite passed 48 tests/189 assertions; allocated users without a Dashboard grant now receive 403 before the form can mount, while roleless accounts retain the page's safe notice.

@@ -25,16 +25,16 @@
             <td class="email-shell" align="center" style="padding:38px 16px;">
                 <table role="presentation" class="email-card" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;border-collapse:collapse;background-color:#FFFFFF;border:1px solid #E4D8D0;">
                     <tr>
-                        <td class="email-header" bgcolor="#FFFDF9" style="padding:26px 44px;background-color:#FFFDF9;">
+                        <td class="email-header" bgcolor="#9D1424" style="padding:26px 44px;background-color:#9D1424;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
                                 <tr>
-                                    <td width="52" valign="middle" style="width:52px;">
-                                        <img src="{{ $logoSource ?? $message->embed(public_path('images/alumni-tracer-email-logo.png')) }}" width="48" height="48" alt="Alumni Tracer" style="display:block;width:48px;height:48px;border:0;">
+                                    <td width="108" valign="middle" style="width:108px;padding:4px;">
+                                        <img src="{{ $logoSource ?? $message->embed(public_path('images/alumni-whitelogo-email.png')) }}" width="100" height="58" alt="Alumni Tracer" style="display:block;width:100px;height:58px;border:0;">
                                     </td>
-                                    <td valign="middle" style="padding-left:13px;color:#003049;">
+                                    {{-- <td valign="middle" style="padding-left:13px;color:#003049;">
                                         <span style="display:block;font-family:Georgia,Times,serif;font-size:20px;font-weight:700;line-height:24px;">Alumni Tracer</span>
                                         <span style="display:block;padding-top:3px;color:#9D1424;font-size:10px;font-weight:700;letter-spacing:1.6px;line-height:15px;">GRADUATE RECORDS</span>
-                                    </td>
+                                    </td> --}}
                                     <td width="76" align="right" valign="middle" style="width:76px;">
                                         <img class="email-mascot" src="{{ $mascotSource ?? $message->embed(public_path('images/alumni-tracer-email-mascot.png')) }}" width="72" height="63" alt="Graduate mascot" style="display:block;width:72px;height:63px;border:0;">
                                     </td>

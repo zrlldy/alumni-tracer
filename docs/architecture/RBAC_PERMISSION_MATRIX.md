@@ -4,6 +4,10 @@ Date: 2026-11-01; implementation note added 2026-11-04. **Proposed future grants
 
 **2026-11-04 implementation note:** newer source includes a role/allocation UI and `RoleBasedAccessControl` trait. AT-F04-FORM consumes that implementation without changing it: existing `alumnis` page access, `view`/`create`/`edit` actions and an active `my_records` allocation govern the self-service form on the shared Dashboard. Dashboard access remains controlled by its existing grant. The form additionally enforces persisted `alumnis.user_id` ownership and rejects deleted grants/foreign histories. No new permission keys, roles or live account grants are provisioned. The namespaced permission matrix below is still a proposed future contract, not the format of current JSON grants. Roleless Dashboard/Settings access and signup/expiry are outside this form task.
 
+**2026-11-05 directory correction:** the same `alumnis` page grant previously exposed the staff Alumni Directory to a `my_records` form account. `AlumniResource::canAccess()` now denies that scope on the resource and its pages while the owned Dashboard form keeps its existing grants. The configured bootstrap Super Administrator exception and permitted staff scopes remain. This correction does not establish the broader AT-F01 staff query, action or policy matrix.
+
+**2026-11-05 Dashboard page correction:** an allocated account now needs its existing Dashboard page grant for the shared page, following `hasPageAccess()` as other Filament pages do. An account with no allocation still reaches the safe notice. The owned form retains its additional Alumni page/action, active allocation and persisted owner checks. This does not assign or change any role grant.
+
 ## Grants
 
 `All` means institutional scope, `Scoped` means explicitly assigned program/alumni, `Own` means the linked registry record or its assignment, `Deny` is the default. School Administrator privileges marked conditional remain denied until approved. Super Administrator is a set of explicit grants, not a blanket Gate bypass over safety/retention or ownership invariants.
