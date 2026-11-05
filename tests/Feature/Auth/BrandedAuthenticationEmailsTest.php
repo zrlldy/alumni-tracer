@@ -31,6 +31,23 @@ it('renders Filament password reset and verification URLs in the branded templat
         ->and($verificationMail->viewData['actionUrl'])->toBe($verification->url);
 });
 
+it('addresses active authentication emails by the recipient name', function () {
+    $user = new User(['name' => 'Maria Cruz', 'email' => 'maria@example.test']);
+    $reset = app(ResetPassword::class, ['token' => 'reset-token']);
+    $reset->url = 'https://example.test/reset';
+    $verification = app(VerifyEmail::class);
+    $verification->url = 'https://example.test/verify';
+
+    foreach ([$reset, $verification, new AlumniEmailOtp('617204', 2)] as $notification) {
+        $mail = $notification->toMail($user);
+        $html = app('mailer')->render($mail->view, $mail->viewData);
+
+        expect($html)
+            ->toContain('Dear Maria Cruz,')
+            ->not->toContain('Dear Alumni,');
+    }
+});
+
 it('sends the Filament email code and expiry through the branded OTP template', function () {
     $user = new User(['name' => 'Jerold', 'email' => 'jerold@example.test']);
     $provider = Filament::getDefaultPanel()->getMultiFactorAuthenticationProviders()['email_code'];

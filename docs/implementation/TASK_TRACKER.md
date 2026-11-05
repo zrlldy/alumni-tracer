@@ -23,7 +23,7 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-V01 | Survey definitions/version/publication | PLANNED | AT-F01/02, DEC-07 |
 | AT-V02 | Survey participation/response isolation | PLANNED | AT-V01/F04 |
 | AT-N01 | Queue delivery/notification outcomes | PLANNED | AT-V01/02, DEC-08 |
-| AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views; welcome sends on `Verified`. All ten Blade email files share a formal graduate-records design with the existing brand colors and inline artwork; focused array-mailer tests and synthetic desktop/phone previews pass. Live inbox/client acceptance remains unverified. |
+| AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views with recipient-name greetings; welcome sends on `Verified`. All ten Blade email files share a formal graduate-records design with the existing brand colors and inline artwork; focused array-mailer tests and synthetic desktop/phone previews pass. Live inbox/client acceptance remains unverified. |
 | AT-I01 | Staged reviewed legacy/flat import | PLANNED | AT-A02/F01/F02/T01, DEC-04/10 |
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
 | AT-R01-CAMPUS | Campus filter and linked campus XLSX labels | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-CAMPUS.md). Focused SQLite tests pass; connected MariaDB `campuses` schema verified after owner migration; browser acceptance is pending. Does not complete AT-R01 or its security gates. |
@@ -147,6 +147,13 @@ AT-D01 follow-up, 2026-11-05: restored the original system flowchart format and 
 ## AT-D01 Mermaid render follow-up — 2026-11-05
 
 Removed three unescaped semicolons from the Owned form sequence message labels in `object-modeling.md`. A Mermaid renderer returned valid SVG with the corrected messages and no parse error; the GitHub browser view itself was unavailable. `git diff --check` passed. This is a documentation fix only; prior feature statuses and next tasks are unchanged.
+
+## AT-N02 recipient-name greeting follow-up — 2026-11-05
+
+1. Updated the active reset, verification and email-code notifications to supply `Dear <recipient name>,` to their existing shared email views. The existing `Alumni` fallback remains for an account without a name; the welcome and legacy views already personalize their greetings. No schema, route, permission, transport or secret changed.
+2. A focused rendered-email regression failed on `Dear Alumni,` before the change and passed after it. The branded authentication and template tests passed 14 tests/95 assertions with SQLite memory, array mail, sync queue and isolated environment loading. Pint and diff checks passed.
+3. The three-file email run passed 14 tests but its signed-link flow returned HTTP 503 from the system license guard under the isolated test configuration. The local `.env` could not be parsed, so the test runner used a temporary bootstrap outside the repository; neither `.env` nor the license configuration was changed. Live inbox/client delivery remains unverified.
+4. AT-N02 remains verified for the source greeting change. Next: validate the signed-link flow under a valid test license configuration, and test actual delivery separately when an authorized mail transport and inbox are available.
 
 ## Latest handoff — AT-F04-DASH/FORM browser and directory follow-up, 2026-11-05
 
