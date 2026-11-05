@@ -78,6 +78,62 @@ Filament resources provide campus, program, alumni, role, allocation and user sc
 
 The report reads non-deleted alumni with campus, graduation calendar year, department/program and employment-status filters; its details modal reads related histories. The XLSX export accepts those four filter values, groups by campus/program, and writes a title plus 18 data columns. It selects a current employment entry when available, otherwise the most recent entry. Table search, sort, page and selected rows do not define export scope. Campus-filtered source tests passed, while browser acceptance and broader export authorization/scope remain open in the tracker. Dashboard widgets are derived from stored records, not separate facts.
 
+## 3. System flowchart
+
+The original operation flow and ASCII drawing are restored here, with labels updated for the current `/online` Dashboard and four report filters.
+
+```mermaid
+flowchart TD
+    S([Start]) --> L[Open online panel]
+    L --> A{Authenticated?}
+    A -->|No| B[Login, registration, or recovery]
+    B --> A
+    A -->|Yes| O{Choose operation}
+    O -->|Maintain records| F[Enter alumni, program, or user fields]
+    F --> V{Form valid?}
+    V -->|No| E[Show field errors]
+    E --> F
+    V -->|Yes| W[Save and show confirmation]
+    O -->|Import| I[Upload XLSX and validate rows]
+    I --> K{Import succeeds?}
+    K -->|No| N[Show row-specific or general failure]
+    K -->|Yes| C[Create alumni and show success]
+    O -->|Dashboard| D{Dashboard content?}
+    D -->|Staff scope| DS[Read aggregates and widget grid]
+    D -->|Owned alumni grant| DA[Read own overview and open editor]
+    D -->|Other| DN[Show access notice]
+    O -->|Report| R[Apply campus, year, program, and status filters]
+    R --> Q{Report action?}
+    Q -->|View| T[Display table or details modal]
+    Q -->|Export| X[Read matching alumni and employment]
+    X --> Y[Generate 18-column XLSX]
+    W --> Z([End])
+    N --> Z
+    C --> Z
+    DS --> Z
+    DA --> Z
+    DN --> Z
+    T --> Z
+    Y --> Z
+```
+
+### ASCII drawing
+
+```text
+[Open online] -> {Authenticated?} -- No --> [Login / register / recover]
+                       | Yes
+                       v
+                {Choose operation}
+                  | Maintain -> [Validate form] -> [Save / field errors]
+                  | Import -> [Validate XLSX] -> [Create / failure]
+                  | Dashboard -> [Staff widgets / own overview / access notice]
+                  + Report -> [Campus / year / program / status filters]
+                                | View -> [Table / details]
+                                + Export -> [Alumni + employment] -> [18-column XLSX]
+```
+
+The import branch shows the intended response path. Successful connected-database import is unverified because the current importer does not supply required `alumnis.user_id`. The alumni editor's ownership, validation, duplicate-match and transaction checks are detailed in the shared-form process above.
+
 ## Data and control rules
 
 - The registry column graduation_year stores an exact date. Department in the report is a Program; there is no department table.
