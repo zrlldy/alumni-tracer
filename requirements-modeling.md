@@ -1,225 +1,67 @@
-# Alumni Tracer - Requirements Modeling
+# Alumni-Tracer requirements modeling
 
-## Scope and notation
+Updated 2026-11-05. This is a view of current source against [REQUIREMENTS](docs/requirements/REQUIREMENTS.md), not a replacement for that approved/pending decision register. [E] means implemented in source, [D] data structures exist without the full workflow, [P] planned, and [U] acceptance unverified. Current panel ID/path is online at /online; /admin and /alumni are required targets but are not current routes. See [task tracker](docs/implementation/TASK_TRACKER.md) for evidence and status.
 
-This document reflects the current working tree, including Alumni Data Report
-and XLSX export. The application currently provides one Filament panel,
-identified as `online`, at `/online`. Its management functions are intended
-for institutional staff. A separate alumni self-service client remains planned.
+## Input-process-output model
 
-- **[E] Implemented**: represented by application code and routes.
-- **[D] Data model only**: tables/models without a complete management workflow.
-- **[P] Planned**: required by the intended two-client design but not implemented.
-
-Implemented functionality does not imply verified production readiness.
-Role permissions and management scopes exist in the schema but are not applied
-to current report/export queries.
-
-## Diagram shapes used
-
-| Shape | Mermaid notation | ASCII notation | Meaning |
-| --- | --- | --- | --- |
-| Rectangle | `[Activity]` | `[Activity]` | Client, activity, input, or output. |
-| Rounded rectangle | `([Start or End])` | `[Start]` / `[End]` | Process boundary. |
-| Diamond | `{Decision?}` | `{Decision?}` | Decision with labelled outcomes. |
-| Cylinder | `[(Data store)]` | `[Data store]` | Persistent application data. |
-| Arrow | `-->` | `-->` | Direction of data or control flow. |
-
-## 1. Input-Process-Output (IPO) model
-
-| Feature | Inputs | Current processing | Outputs | Status |
+| Capability | Inputs | Current processing and stores | Output | Status |
 | --- | --- | --- | --- | --- |
-| Account access | Name, email, password; configured authentication challenges | Shared panel registration/login, password reset, profile settings, app/email MFA configuration | Account, session, or authentication feedback | [E]; Google OAuth routes/buttons and passkey routes/UI are present and require integration verification |
-| Alumni profile maintenance | Student number, name, contacts, program, graduation date, status, tracing fields | Validate the form and create/edit the alumni record | Saved record and confirmation | [E] staff-oriented workflow; alumni ownership enforcement [P] |
-| Alumni tracing | Employment status, `date_traced`, `trace_by`, remarks | Save manually entered values and read them in reports/widgets | Updated tracing fields | [E]; tracer is text, not automatically bound to the signed-in account |
-| Education/employment history | Related history records | Store through models; read existing histories in report details and XLSX output | Education and employment details | [D] maintenance; [E] display/export; editing workflows [P] |
-| Alumni directory | Search, programs, status, exact graduation date, deleted-record filter | Query matching alumni and their programs | Directory, view/edit actions, employment statistics | [E]; statistics count all non-deleted alumni rather than filtered rows |
-| XLSX import | Uploaded spreadsheet with supported headings | Validate rows, check duplicate student numbers, resolve active programs by name, convert Excel dates, create alumni | Success, row-specific validation errors, or failure notification | [E]; existing-record updates and history imports are not supported |
-| Alumni Data Report | Graduation year, department/program, status, table search | Filter non-deleted alumni; load histories into a details modal | Compact table and complete record details | [E] |
-| Alumni data export | Report year, department/program, status filters | Query matching non-deleted alumni and histories; map fixed columns and format XLSX | `alumni-data-report.xlsx` or `alumni-data-report-{year}.xlsx` | [E]; search/selected rows, field selection, role scope, audit logging are not applied |
-| Program administration | Name, active flag, status/deleted-record filters | Create through list action; view/edit, soft-delete, restore, force-delete | Catalog and total/active/inactive statistics | [E]; no separate registered create route |
-| User administration | Account fields and deleted-record filter | Users resource lists, creates, views, edits, deletes, and restores accounts | User records | [E]; role/allocation administration [P] |
-| Analytics | Alumni, programs, statuses, graduation and trace dates | Aggregate counts and read recently traced alumni | Dashboard and directory/program statistics | [E] |
-| Roles and allocations | Permission JSON, scope, code, maximum users | Store roles/allocations and optionally reference an allocation from a user | Access-management data structures | [D]; enforcement and allocation-limit checks [P] |
+| Account and security | Registration/login details, password, MFA or passkey challenge, optional Google OAuth | Users, sessions, reset tokens, passkeys and trusted devices; Filament authentication and route handlers | Account/session or failure feedback; branded auth emails | [E, U] external-provider, delivery and full admission checks |
+| Catalog and access management | Campus/program, role/action/page/widget grants, allocation and scope links, user data | Filament resources write campuses, programs, roles, user_allocations and link tables | Managed records | [E, U] full policy enforcement and bootstrap |
+| Alumni directory | Registry identity/contact, program, graduation date, status and tracing fields | Alumni resource validates/saves alumnis; program relationship | Record/detail, filters and counts | [E] with schema and authorization gaps |
+| Owned alumni form | Authenticated account, own profile and history rows | Dashboard selects AlumniInformationForm for an eligible my_records allocation; writes alumnis plus owned histories in one transaction | Saved overview or validation/review message | [E, U] browser acceptance and broader account-linking policy |
+| Flat XLSX import | Spreadsheet rows and program names | AlumniImporter validates rows, resolves an active program and constructs alumni rows | Import result or errors | [E, U] current required user_id is not supplied by importer; successful live import not established |
+| Dashboard | Alumni/program/tracing records and saved grid layout | Widgets derive metrics, plugin stores layouts/templates/settings | Charts, counts, layout | [E, U] definitions and browser acceptance |
+| Report and XLSX | Campus, graduation year, department/program, employment status | Reads non-deleted alumni; export applies four filters and selects one employment entry | Table/details and title plus 18-column XLSX | [E, U] campus browser check and full authorization/scope audit |
+| Tracing history, reviews, surveys, survey email, staged import, export audit | Future data and decisions | No corresponding domain tables or complete workflow | None yet | [P] |
 
-### IPO data flow
+## Current process and decision model
 
-```mermaid
-flowchart LR
-    U[Panel user] --> I[Account, record, import, and report inputs]
-    I --> P[Laravel application and online panel]
-    P <--> D[(Application database)]
-    P --> O[Records, feedback, analytics, and XLSX downloads]
-    O --> U
-```
-
-### ASCII drawing
-
-```text
-[Panel user] -> [Inputs] -> [Laravel / online panel] <-> [Database]
-     ^                              |
-     +---- records, feedback, analytics, XLSX downloads --------+
-```
-
-## 2. Process model
-
-### Alumni information and tracing update [E]
-
-1. Sign in to the `online` panel and open the Alumni Directory.
-2. Create a record or open an existing record for editing.
-3. Supply identity, contact, program, and graduation data, plus optional
-   employment status, trace date, tracer name, and remarks.
-4. The configured form validates fields and saves the alumni record.
-5. Confirmation is shown; subsequent report/widget queries read the new values.
-
-The form does not edit education/employment histories or derive employment
-status from them. Saving does not automatically set `date_traced` or `trace_by`.
-
-### Bulk import [E]
-
-1. Open **Import Excel** and download `alumni-template.xlsx` if needed.
-2. Complete the XLSX using active program names and Excel date values.
-3. Upload the file. `AlumniImporter` validates rows and checks student-number
-   uniqueness against existing data and duplicates within the import batch.
-4. The importer resolves active programs, converts dates, and creates alumni.
-   It does not update existing records or create history entries.
-5. Success is reported after the import returns successfully. Validation errors
-   identify rows/student numbers; other exceptions produce a failure notification.
-
-The template contains nine headings: `student_number`, `first_name`,
-`middle_name`, `last_name`, `email`, `phone_number`, `program`,
-`graduation_year`, and `current_address`. The importer additionally accepts
-optional employment/tracing columns absent from the template. Validation
-differences between importer, form, and schema remain listed under controls.
-
-### Report and XLSX export [E]
-
-1. Open **Alumni Data Report** under **Reports**.
-2. Optionally filter by graduation year, department, and employment status.
-   Department means the related `Program`, not a separate department entity.
-3. View matching rows or open **View details** for personal data and histories.
-4. **Export Alumni Data** passes the three selected filters to
-   `AlumniDataExport`. No filters means all non-deleted alumni.
-5. The export loads programs and histories and writes one row per alumnus with
-   15 fixed columns. Multiple history entries become multiline cell contents.
-6. Download the workbook with a maroon header, wrapped history columns, yellow
-   unemployed rows, and light red untraced rows.
-
-Table search, sorting, pagination, and row selection do not constrain export.
-No export audit event or management-scope restriction is implemented.
-
-### Current operation flow
-
-```mermaid
+~~~mermaid
 flowchart TD
-    S([Start]) --> A[Sign in to online panel]
-    A --> B{Operation?}
-    B -->|Create or edit| C[Enter record fields]
-    C --> V{Form valid?}
-    V -->|No| E[Show validation messages]
-    E --> C
-    V -->|Yes| D[Save record and show confirmation]
-    B -->|Import| I[Upload XLSX and run importer]
-    I --> R{Import succeeds?}
-    R -->|No| X[Show row errors or failure notification]
-    R -->|Yes| F[Show import success]
-    B -->|Report| Q[Apply report filters and read records]
-    Q --> H{Export requested?}
-    H -->|No| M[Display table or details]
-    H -->|Yes| W[Generate XLSX using three filters]
-    D --> Z([End])
-    X --> Z
-    F --> Z
-    M --> Z
-    W --> Z
-```
+    A([Account reaches /online]) --> B{Dashboard content}
+    B -->|Staff scope or bootstrap account| C[Staff widget grid]
+    B -->|Active my_records and page/action grants| F[Owned alumni form]
+    B -->|Other or missing grants| N[Restricted information state]
+    F --> O{Exactly zero or one active owned alumnis row?}
+    O -->|No| R[Administrator review needed]
+    O -->|Yes| V[Validate editable fields and owned history IDs]
+    V --> M{Another active or archived ID/email match?}
+    M -->|Yes| R
+    M -->|No| T[Transaction: lock user; save registry and histories]
+    T --> S[Saved overview: core 0 or 100 percent; status, jobs and studies separate]
+~~~
 
-### ASCII drawing
+The persisted alumnis.user_id relationship is the form ownership key. Student number and email are candidate matching signals, not proof of ownership. The form can create a first record or update one owned record, but no self-service flow links an existing unowned record. Existing identity/program/graduation fields are read-only to the alumni form after creation. The same-page editor opens from the overview. Its core-profile completion is 0% or 100% across eight required fields; employment status, jobs and education are shown separately without inferred school verification. Education requires ended_at and employment requires supported_documents, so some intended future history states cannot yet be entered.
 
-```text
-[Sign in] -> {Operation?}
-  | Create/edit -> [Enter fields] -> {Valid?} -> [Save / confirmation]
-  |                                  | No
-  |                                  +-> [Field errors] -> [Enter fields]
-  | Import -> [Run XLSX importer] -> [Success or row/failure notification]
-  + Report -> [Read filtered records] -> [Table / details / XLSX]
-```
+Staff resource and report access uses the existing RBAC trait and page/action fields. That code must not be presented as the fully approved staff security model: resource, direct action, export and record-scope coverage still need targeted verification. User::canAccessPanel also has current domain/bootstrap admission behavior that remains part of AT-F01 review.
 
-## 3. Control model
+## Requirement-to-evidence matrix
 
-### Current controls and planned boundaries
-
-| Area | Current implementation | Remaining requirement |
+| Requirement | Current evidence | Remaining acceptance / dependency |
 | --- | --- | --- |
-| Panel access | Filament authentication middleware | Enforce staff permissions before treating the panel as admin-only [P] |
-| Registration/identity | Shared registration; nullable `users.student_id` | Bind alumni accounts to exactly one alumni record and separate alumni/staff access [P] |
-| Roles/scope | Permission fields, `management_scope`, `max_users` exist | Apply role/page/action/widget permissions, record scope, allocation limits [P] |
-| Ownership | No user-to-alumni relationship or ownership filter in reports/exports | Check ownership on every alumni self-service request [P] |
-| Required data | Form requires student number, first/last names, email, phone, address, program, graduation date | Align form/import rules with non-null schema columns, including optional middle name/contact import values [P] |
-| Student-number uniqueness | Import checks uniqueness and import-batch duplicates | Add equivalent form validation and database uniqueness; neither exists currently [P] |
-| Employment status | Form choices and database enum: employed, unemployed, untraced; null allowed | Validate imported values against the same set [P] |
-| Programs | Foreign key; active-only template/import lookup | Validate active programs consistently; alumni form choices are not restricted to active programs [P] |
-| History dates | Education/employment dates stored | Add maintenance forms and chronological validation [P] |
-| Tracing | Manually entered date, tracer text, remarks | Record responsible account automatically and retain change history [P] |
-| Export | Three filters, fixed columns, deleted alumni excluded | Enforce permission/scope and record export events; optional field selection [P] |
-| Recovery | User, Program, Alumni models use soft deletes; resource actions restore/force-delete | History tables have `deleted_at` but their models lack `SoftDeletes`; forced program/alumni deletion can cascade to dependents |
-| Email verification | User implements `MustVerifyEmail` | Panel email-verification enforcement is not configured [P] |
+| REQ-02 official registry identity | alumnis, programs, campuses and required user_id exist | Stable text ID/UUID, nullable unknown dates, uniqueness and safe history constraints need AT-F02 and DEC-04/05 |
+| REQ-03 registration and linking | Public registration exists; own form refuses ambiguous matches | Owner-approved candidate review, roleless lifecycle and expiry are separate; identity proof details remain unresolved |
+| REQ-04 own-record isolation | Shared form resolves authenticated user relation, rechecks grants, scopes histories and rejects foreign IDs | Broader HTTP/Livewire/resource/export authorization matrix and browser acceptance remain |
+| REQ-05 roles and allocations | Role/allocation resources, JSON grants, campus/program links and RBAC trait exist | School-approved staff scopes, bootstrap and negative authorization checks under AT-F01/DEC-02/03 |
+| REQ-06 profile maintenance | Alumni form supports first-entry and owned contact/status/history updates | Existing-record linking, source/review state and full portal acceptance remain |
+| REQ-07/08 employment and study | Two history tables and shared form editor exist | Verification/provenance, optional ongoing-study end date and safe deletion model under AT-T01/02 |
+| REQ-09 tracing | Mutable date_traced, trace_by, remarks on alumnis | Independent dated trace-event and actor/review history under AT-T01 |
+| REQ-10/11/12 surveys | No survey tables in connected schema | Definition/version/assignment/response implementation and DEC-07 |
+| REQ-13 survey notifications | Queue infrastructure and branded auth email templates exist | Survey recipient ledger, approval, worker and delivery outcome under AT-N01/DEC-08 |
+| REQ-15 reports | Dashboard, report, campus/program/year/status filters and XLSX exist | Approved denominators, scope, export audit, browser and MariaDB acceptance under AT-R01/DEC-09 |
+| REQ-16 import | Flat importer/template exist | Original workbook inspection, staged review, required owner link and safe apply under AT-A02/I01/DEC-10 |
+| REQ-17/18 privacy and operations | Framework controls, auth devices, queue tables and firewall log minimization | Retention, deployment, worker/recovery and full security verification under AT-O01 and school decisions |
 
-### Implemented validation checkpoint
+REQ-01, REQ-19 and REQ-20 govern audit, tracking and session practice. They are process requirements, not claims that the application modules above are complete.
 
-```mermaid
-flowchart LR
-    R[Panel request] --> A{Authenticated?}
-    A -->|No| L[Login or recovery]
-    A -->|Yes| O{Write or read?}
-    O -->|Write| V[Apply form or import validation]
-    V --> D[(Database constraints)]
-    D --> C[Saved record or surfaced error]
-    O -->|Read or export| F[Apply configured filters]
-    F --> Q[Display records or generate XLSX]
-```
+## Acceptance checks for the current modeling baseline
 
-### ASCII drawing
+- Schema: confirm every current table/column and FK in [data dictionary.md](data%20dictionary.md) and [ERD](entity-relationship-diagram.md) against a read-only schema inspection. Distinguish database nullability from form requirements.
+- Routes: confirm current /online resource routes and absence of /admin and /alumni routes. Do not rename the internal online panel or saved layouts in documentation.
+- Ownership: verify source and focused tests for first creation, one owned record, multiple/archived records, duplicate candidate, foreign history ID and revocation. Browser acceptance remains separate.
+- Report: check campus/year/program/status filters and the actual 18-column export against source and focused tests. Report search/selection and security scope are independent acceptance questions.
+- Import: do not claim the flat import works against the current required user_id or that the unavailable legacy workbook has been analyzed.
+- Policy: DEC-01..10 remain pending unless an attributable school decision is entered in REQUIREMENTS. Unknown/untraced alumni are never silently classified as unemployed.
 
-```text
-[Request] -> {Authenticated?} -- No --> [Login / recovery]
-                     | Yes
-                     v
-               {Write or read?}
-                 | Write -> [Validation] -> [Database] -> [Result / error]
-                 + Read  -> [Configured filters] -> [Records / XLSX]
-```
-
-Role/scope and ownership checks are planned, not implemented checkpoints.
-
-## Acceptance criteria
-
-### Current workflows
-
-- Alumni creation/editing, search, program/status/date filters, and recovery
-  actions are available in the directory.
-- Import validation failures identify the row/student number.
-- The report's three filters also constrain XLSX export.
-- Report details and exported rows include existing education/employment data.
-- XLSX uses 15 fixed columns and employment-status row highlighting.
-- Reports/statistics use non-deleted alumni by default.
-
-### Planned two-client design [P]
-
-- Alumni can access only their bound profile and histories through all requests.
-- Staff actions, reports, and exports enforce role and management scope.
-- History maintenance validates required data and chronological ranges.
-- Alumni uniqueness and form/import/database validation are consistent.
-- Exports record requester, filters, fields, record count, and timestamp.
-- Tracing and self-service edits retain accountable change history.
-
-## Implementation references
-
-- Panel/authentication: `app/Providers/Filament/AlumniPanelProvider.php`,
-  `routes/web.php`, `app/Models/User.php`.
-- Forms/import: `app/Filament/Resources/Alumnis/Schemas/AlumniForm.php`,
-  `app/Filament/Resources/Alumnis/Tables/AlumnisTable.php`,
-  `app/Filament/Imports/AlumniImporter.php`.
-- Reports/export: `app/Filament/Pages/AlumniDataReport.php`,
-  `app/Exports/AlumniDataExport.php`.
-- Data definitions: `database/migrations/`.
+The current project plan and decision register may describe future features absent from the schema. [Data and process modeling](data-and-process-modeling.md) shows current flows; [object modeling](object-modeling.md) shows current classes and interactions.
