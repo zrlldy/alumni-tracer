@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Exports\AlumniDataExport;
 use App\Models\Alumni;
+use App\Models\Campus;
 use App\Models\Program;
 use App\Traits\RoleBasedAccessControl;
 use BackedEnum;
@@ -24,10 +25,12 @@ use Maatwebsite\Excel\Facades\Excel;
 class AlumniDataReport extends Page implements HasTable
 {
     use RoleBasedAccessControl;
+
     public static function canAccess(): bool
     {
         return self::hasPageAccess();
     }
+
     use InteractsWithTable;
 
     protected static ?string $title = 'Alumni Data Report';
@@ -49,11 +52,13 @@ class AlumniDataReport extends Page implements HasTable
                 ->color('success')
                 ->action(function () {
                     $graduationYear = $this->selectedGraduationYear();
+
                     return Excel::download(
                         new AlumniDataExport(
                             graduationYear: $graduationYear,
                             programId: $this->selectedDepartmentId(),
                             employmentStatus: $this->selectedEmploymentStatus(),
+                            campusId: $this->selectedCampusId(),
                         ),
                         $graduationYear === null
                             ? 'alumni-data-report.xlsx'
@@ -69,10 +74,28 @@ class AlumniDataReport extends Page implements HasTable
         return $table
             ->query(
                 Alumni::query()
-                    ->with('program')
+                    ->with('program.campus')
                     ->orderBy('id')
             )
             ->filters([
+                Filter::make('campus')
+                    ->label('Campus')
+                    ->schema([
+                        Select::make('campus_id')
+                            ->label('Campus')
+                            ->options(fn (): array => Campus::query()->orderBy('name')->pluck('name', 'id')->all())
+                            ->searchable()
+                            ->placeholder('All campuses'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $campusId = $data['campus_id'] ?? null;
+
+                        if (! is_string($campusId) || ! ctype_digit($campusId)) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('program', fn (Builder $programQuery): Builder => $programQuery->where('campus_id', (int) $campusId));
+                    }),
                 Filter::make('graduation_year')
                     ->label('Graduation Year')
                     ->schema([
@@ -148,6 +171,9 @@ class AlumniDataReport extends Page implements HasTable
                     ->sortable()
                     ->limit(28)
                     ->tooltip(fn (?string $state): ?string => $state),
+                TextColumn::make('program.campus.name')
+                    ->label('Campus')
+                    ->sortable(),
                 TextColumn::make('graduation_year')
                     ->label('Graduated')
                     ->date('Y')
@@ -253,6 +279,17 @@ class AlumniDataReport extends Page implements HasTable
         }
 
         return (int) $programId;
+    }
+
+    private function selectedCampusId(): ?int
+    {
+        $campusId = $this->getTableFilterState('campus')['campus_id'] ?? null;
+
+        if (! is_string($campusId) || ! ctype_digit($campusId)) {
+            return null;
+        }
+
+        return (int) $campusId;
     }
 
     private function selectedEmploymentStatus(): ?string
