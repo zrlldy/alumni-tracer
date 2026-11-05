@@ -15,16 +15,19 @@
             </button>
             <a class="landing-button landing-button-small hidden sm:inline-flex" href="{{ route('filament.online.auth.login') }}">Sign in</a>
             <button class="landing-menu-button lg:hidden" type="button" data-landing-menu aria-expanded="false" aria-controls="landing-mobile-navigation" hidden>
+                <span class="landing-menu-icon" aria-hidden="true"></span>
                 <span data-landing-menu-label>Menu</span>
             </button>
         </div>
-        <nav id="landing-mobile-navigation" class="landing-mobile-navigation lg:hidden" aria-label="Mobile navigation">
+        <nav id="landing-mobile-navigation" class="landing-mobile-navigation lg:hidden" aria-label="Mobile navigation" hidden>
             <a href="#about">The platform</a>
             <a href="#connection">Your next chapter</a>
             <a href="#how-it-works">How it works</a>
             <a href="#questions">Questions</a>
-            <a href="{{ route('filament.online.auth.login') }}">Sign in</a>
-            <a href="{{ route('filament.online.auth.register') }}">Create an account</a>
+            <div class="landing-mobile-navigation-actions">
+                <a href="{{ route('filament.online.auth.login') }}" class="landing-button">Sign in</a>
+                <a href="{{ route('filament.online.auth.register') }}" class="landing-text-link">Create an account</a>
+            </div>
         </nav>
     </div>
 </header>

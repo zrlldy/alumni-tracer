@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Filament\Pages\Dashboard;
 use App\Filament\Resources\Alumnis\AlumniResource;
 use App\Filament\Resources\Alumnis\Schemas\AlumniForm;
 use App\Models\Alumni;
@@ -46,6 +47,12 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
     #[Locked]
     public bool $hasRecord = false;
 
+    /** @var array<string, mixed> */
+    #[Locked]
+    public array $overview = [];
+
+    public bool $editing = false;
+
     public bool $saved = false;
 
     public static function getSlug(): string
@@ -71,6 +78,7 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
             && $allocation->management_scope === 'my_records'
             && $role !== null
             && ! $role->trashed()
+            && static::canAccessPageSlug(Dashboard::getSlug())
             && static::hasPageAccess()
             && (static::hasPermission('view') || static::hasPermission('create') || static::hasPermission('edit'));
     }
@@ -90,6 +98,12 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
     {
         return static::canAccess()
             && static::hasPermission($this->hasRecord ? 'edit' : 'create');
+    }
+
+    public function openEditor(): void
+    {
+        $this->authorizeAccess();
+        $this->editing = true;
     }
 
     public function form(Schema $schema): Schema
@@ -249,6 +263,15 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
             'id', 'company_name', 'position', 'company_address', 'industry', 'employment_type', 'is_course_related',
             'date_hired', 'starting_date', 'ended_at', 'supported_documents', 'is_current',
         ])->all() ?? [];
+
+        $coreFields = ['student_number', 'first_name', 'last_name', 'email', 'phone_number', 'current_address', 'program_id', 'graduation_year'];
+        $this->overview = [
+            'profileCompletion' => $record !== null && collect($coreFields)->every(fn (string $field): bool => filled($data[$field] ?? null)) ? 100 : 0,
+            'employmentStatus' => $record?->employment_status,
+            'currentJobs' => array_values(array_filter($data['employments'], fn (array $job): bool => (bool) $job['is_current'])),
+            'pastJobs' => array_values(array_filter($data['employments'], fn (array $job): bool => ! $job['is_current'])),
+            'education' => $data['education'],
+        ];
 
         $this->cacheSchema('form', null);
         $this->form->fill($data);

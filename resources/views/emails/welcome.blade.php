@@ -1,10 +1,11 @@
 @include('emails.notification', [
     'title' => $title ?? 'Welcome to Alumni Tracer',
+    'eyebrow' => $eyebrow ?? 'Alumni account',
     'greeting' => $greeting ?? 'Hi there,',
     'heading' => $heading ?? 'Welcome to Alumni Tracer',
-    'bodyText' => $bodyText ?? 'We are glad you are part of our alumni community. Update your profile and stay connected with fellow alumni.',
+    'bodyText' => $bodyText ?? 'Your email is confirmed. Sign in to see the account features available to you.',
     'actionUrl' => $actionUrl ?? null,
-    'actionText' => $actionText ?? 'Complete your profile',
+    'actionText' => $actionText ?? 'Visit Alumni Tracer',
     'note' => $note ?? null,
     'footer' => $footer ?? null,
 ])
