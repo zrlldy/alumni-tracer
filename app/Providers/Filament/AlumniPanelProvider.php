@@ -32,6 +32,8 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use JohnRivera7\FilamentWidgetGrid\FilamentWidgetGridPlugin;
 use Livewire\Livewire;
@@ -107,6 +109,29 @@ class AlumniPanelProvider extends PanelProvider
                     .(app(TurnstileClientContract::class)->isConfigured()
                         ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" defer></script>'
                         : ''),
+            )
+            ->renderHook(
+                PanelsRenderHook::HEAD_START,
+                fn (): string => '
+                    <link rel="manifest" href="/manifest.webmanifest">
+                    <meta name="theme-color" content="#0f172a">
+                    <meta name="mobile-web-app-capable" content="yes">
+                    <meta name="apple-mobile-web-app-capable" content="yes">
+                    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+                    <link rel="apple-touch-icon" href="/images/favicon.png">
+                '
+            )
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): HtmlString => new HtmlString(
+                    '<script type="module" src="' .
+                    Vite::asset('resources/js/filament-fullscreen.js') .
+                    '"></script>'
+                )
+            )
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn () => view('filament.hooks.fullscreen-button'),
             )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

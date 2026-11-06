@@ -81,18 +81,18 @@ class RoleForm
                                     // $set('action', []);
                                 }),
 
-                            Select::make('access_subpage')
-                                ->label('Sub Pages')
-                                ->multiple()
-                                ->searchable()
-                                ->preload()
-                                ->options(Role::accessSubPageOptions())
-                                ->helperText('Pages nested under a main administrative page')
-                                ->placeholder('Select sub page permissions')
-                                ->reactive()
-                                ->disabled(fn (callable $get) =>
-                                    in_array('super_admin', (array) $get('access_page'))
-                                ),
+                            // Select::make('access_subpage')
+                            //     ->label('Sub Pages')
+                            //     ->multiple()
+                            //     ->searchable()
+                            //     ->preload()
+                            //     ->options(Role::accessSubPageOptions())
+                            //     ->helperText('Pages nested under a main administrative page')
+                            //     ->placeholder('Select sub page permissions')
+                            //     ->reactive()
+                            //     ->disabled(fn (callable $get) =>
+                            //         in_array('super_admin', (array) $get('access_page'))
+                            //     ),
 
 
                              Select::make('access_widget')

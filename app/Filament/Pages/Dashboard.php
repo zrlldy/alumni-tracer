@@ -23,6 +23,9 @@ class Dashboard extends BaseDashboard
     use HasWidgetGrid;
     use RoleBasedAccessControl;
 
+    /**
+     * Determine whether the user can access the dashboard.
+     */
     public static function canAccess(): bool
     {
         $user = Auth::user()?->fresh();
@@ -31,26 +34,96 @@ class Dashboard extends BaseDashboard
             return false;
         }
 
-        if ($user->user_allocation_id === null) {
+        // Bootstrap Super Admin bypasses all dashboard restrictions.
+        if (SystemSecurity::isBootstrapSuperAdmin($user)) {
             return true;
         }
 
-        return self::hasPageAccess();
+        // Allow the initial page request so mount() can redirect.
+        // Prevent subsequent Livewire requests from accessing the page.
+        if ($user->user_allocation_id === null) {
+            return ! request()->hasHeader('X-Livewire');
+        }
+
+        return static::hasPageAccess();
     }
 
+    /**
+     * Redirect users without an allocation to onboarding.
+     */
+    public function mount(): void
+    {
+        $user = Auth::user()?->fresh();
+
+        if ($user === null) {
+            return;
+        }
+
+        // Never redirect Bootstrap Super Admin.
+        if (SystemSecurity::isBootstrapSuperAdmin($user)) {
+            return;
+        }
+
+        if ($user->user_allocation_id === null) {
+            $this->redirect('online/get-started');
+
+            return;
+        }
+    }
+
+    /**
+     * Control dashboard navigation visibility.
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user()?->fresh();
+
+        if ($user === null) {
+            return false;
+        }
+
+        // Always show dashboard navigation for Bootstrap Super Admin.
+        if (SystemSecurity::isBootstrapSuperAdmin($user)) {
+            return true;
+        }
+
+        return $user->user_allocation_id !== null;
+    }
+
+    /**
+     * Dashboard content.
+     */
     public function content(Schema $schema): Schema
     {
-        $user = Auth::user();
+        $user = Auth::user()?->fresh();
+
+        // Bootstrap Super Admin always receives the default dashboard.
+        if (
+            $user !== null &&
+            SystemSecurity::isBootstrapSuperAdmin($user)
+        ) {
+            return parent::content($schema);
+        }
+
         $allocation = $user?->userAllocation;
         $role = $allocation?->role;
 
-        if (SystemSecurity::isBootstrapSuperAdmin($user) || (
+        if (
             $allocation !== null
             && ! $allocation->trashed()
             && $role !== null
             && ! $role->trashed()
-            && in_array($allocation->management_scope, ['all_program', 'specified_program', 'my_program', 'my_department'], true)
-        )) {
+            && in_array(
+                $allocation->management_scope,
+                [
+                    'all_program',
+                    'specified_program',
+                    'my_program',
+                    'my_department',
+                ],
+                true
+            )
+        ) {
             return parent::content($schema);
         }
 
@@ -60,12 +133,18 @@ class Dashboard extends BaseDashboard
             Livewire::make(AlumniInformationForm::class)
                 ->key('alumni-information-form')
                 ->visible($canAccessAlumni),
+
             Section::make('Alumni information')
-                ->description('Ask the administrator to enable access to your alumni information form.')
+                ->description(
+                    'Ask the administrator to enable access to your alumni information form.'
+                )
                 ->visible(! $canAccessAlumni),
         ]);
     }
 
+    /**
+     * Get dashboard widgets.
+     */
     public function getWidgets(): array
     {
         return array_values(array_filter(

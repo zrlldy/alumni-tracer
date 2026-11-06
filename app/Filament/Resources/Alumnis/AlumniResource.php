@@ -27,12 +27,7 @@ class AlumniResource extends Resource
 
     public static function canAccess(): bool
     {
-        $user = Auth::user()?->fresh();
-
-        return $user !== null
-            && self::hasPageAccess()
-            && (SystemSecurity::isBootstrapSuperAdmin($user)
-                || $user->userAllocation?->management_scope !== 'my_records');
+        return self::hasPageAccess();
     }
 
     protected static ?string $model = Alumni::class;
