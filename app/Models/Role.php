@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Filament\Pages\GetStarted;
 use Filament\Clusters\Cluster;
 use Filament\Facades\Filament;
 use Illuminate\Support\Str;
@@ -67,9 +68,9 @@ class Role extends Model
         /*
         * Profile
         */
-        if ($panel->hasProfile()) {
-            $pages['settings'] = 'Settings';
-        }
+        // if ($panel->hasProfile()) {
+        //     $pages['settings'] = 'Settings';
+        // }
 
         /*
         * Pages
@@ -77,6 +78,10 @@ class Role extends Model
         foreach ($panel->getPages() as $page) {
 
             if (is_subclass_of($page, Cluster::class)) {
+                continue;
+            }
+
+            if ($page === GetStarted::class) {
                 continue;
             }
 

@@ -126,6 +126,7 @@ return [
     'system_key' => env('SYSTEM_KEY'),
 
     'super_admin_emails_encrypted' => env('SUPER_ADMIN_EMAILS'),
-
+    
+    'assets_url' => env('ASSETS_URL'),
 
 ];

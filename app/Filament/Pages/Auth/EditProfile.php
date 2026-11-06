@@ -33,22 +33,10 @@ use Livewire\Attributes\On;
 
 class EditProfile extends PagesEditProfile
 {
-    use RoleBasedAccessControl;
 
     protected static null|string $slug = 'settings';
 
     protected static ?string $title = 'Settings';
-
-    /*
-    |--------------------------------------------------------------------------
-    | Access Control
-    |--------------------------------------------------------------------------
-    */
-
-    public static function canAccess(): bool
-    {
-        return self::hasPageAccess();
-    }
 
     /*
     |--------------------------------------------------------------------------
