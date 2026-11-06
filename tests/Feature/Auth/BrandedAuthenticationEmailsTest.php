@@ -31,6 +31,23 @@ it('renders Filament password reset and verification URLs in the branded templat
         ->and($verificationMail->viewData['actionUrl'])->toBe($verification->url);
 });
 
+it('addresses active authentication emails by the recipient name', function () {
+    $user = new User(['name' => 'Maria Cruz', 'email' => 'maria@example.test']);
+    $reset = app(ResetPassword::class, ['token' => 'reset-token']);
+    $reset->url = 'https://example.test/reset';
+    $verification = app(VerifyEmail::class);
+    $verification->url = 'https://example.test/verify';
+
+    foreach ([$reset, $verification, new AlumniEmailOtp('617204', 2)] as $notification) {
+        $mail = $notification->toMail($user);
+        $html = app('mailer')->render($mail->view, $mail->viewData);
+
+        expect($html)
+            ->toContain('Dear Maria Cruz,')
+            ->not->toContain('Dear Alumni,');
+    }
+});
+
 it('sends the Filament email code and expiry through the branded OTP template', function () {
     $user = new User(['name' => 'Jerold', 'email' => 'jerold@example.test']);
     $provider = Filament::getDefaultPanel()->getMultiFactorAuthenticationProviders()['email_code'];
@@ -54,7 +71,7 @@ it('sends the Filament email code and expiry through the branded OTP template', 
     });
 });
 
-it('embeds both branded images as inline PNGs when a notification is sent', function () {
+it('embeds the white wordmark and PNG mascot when a notification is sent', function () {
     $user = new User(['name' => 'Jerold', 'email' => 'jerold@example.test']);
     $user->notifyNow(new AlumniEmailOtp('617204', 2));
 
@@ -64,11 +81,15 @@ it('embeds both branded images as inline PNGs when a notification is sent', func
 
     expect($mime)
         ->toContain('multipart/related')
+        ->toContain('alumni-whitelogo-email.png')
+        ->toContain('alumni-whitelogo-email@alumnitracer')
         ->toContain('image/png')
-        ->toContain('alumni-tracer-email-logo@alumnitracer')
         ->toContain('alumni-tracer-email-mascot@alumnitracer');
 
-    expect($email->getHtmlBody())->toContain('617204');
+    expect($email->getHtmlBody())
+        ->toContain('617204')
+        ->toContain('src="cid:alumni-whitelogo-email@alumnitracer"');
+    expect(substr_count($mime, 'Content-ID:'))->toBe(2);
 });
 
 it('sends the alumni welcome only after the user is verified', function () {

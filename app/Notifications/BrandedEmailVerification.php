@@ -10,6 +10,7 @@ class BrandedEmailVerification extends FilamentVerifyEmail
     public function toMail($notifiable): MailMessage
     {
         return BrandedEmailMessage::make('emails.verify-email', [
+            'greeting' => 'Dear '.($notifiable->name ?: 'Alumni').',',
             'actionUrl' => $this->url,
             'actionText' => 'Verify Email',
         ], 'Verify your email');

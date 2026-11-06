@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\GetStarted;
 use App\Filament\Resources\Alumnis\AlumniResource;
 use App\Filament\Widgets\RecentlyTraced;
 use App\Livewire\AlumniInformationForm;
@@ -617,11 +618,11 @@ it('refreshes the overview after saving an alumni profile and histories', functi
         ->assertSee('Synthetic Graduate School');
 });
 
-it('shows a safe dashboard notice to roleless accounts', function () {
+it('redirects roleless dashboard users to get started without alumni records', function () {
     $user = User::factory()->create(['user_allocation_id' => null]);
 
     Livewire::actingAs($user)->test(Dashboard::class)
-        ->assertSee('Ask the administrator to enable access')
+        ->assertRedirect(GetStarted::getUrl())
         ->assertDontSeeLivewire(AlumniInformationForm::class)
         ->assertDontSee('class="fi-wg"', escape: false);
 });
@@ -634,7 +635,51 @@ it('renders the shared login page for guests', function () {
     $this->get('/online/login')->assertOk();
 });
 
-it('shows only the access notice to a roleless account through the shared dashboard route', function () {
+it('keeps the staff alumni directory inaccessible to an alumni form account', function () {
+    config()->set('allowed-email.domains', ['example.test']);
+    config()->set('app.developer_host', 'developer.example.test');
+
+    $user = createInformationFormUser();
+    $program = createInformationFormProgram();
+    $foreignUser = User::factory()->create(['email' => 'other@example.test']);
+    $foreignAlumni = Alumni::factory()->create([
+        'user_id' => $foreignUser->id,
+        'program_id' => $program->id,
+        'email' => 'other@example.test',
+    ]);
+
+    $this->actingAs($user)->get('/online')
+        ->assertOk()
+        ->assertSeeLivewire(AlumniInformationForm::class)
+        ->assertDontSee(AlumniResource::getUrl(), escape: false);
+
+    foreach (['/online/alumnis', '/online/alumnis/create', "/online/alumnis/{$foreignAlumni->id}", "/online/alumnis/{$foreignAlumni->id}/edit"] as $url) {
+        $this->get($url)->assertForbidden();
+    }
+});
+
+it('keeps the alumni directory available to a permitted staff scope', function () {
+    config()->set('allowed-email.domains', ['example.test']);
+    config()->set('app.developer_host', 'developer.example.test');
+
+    $user = createInformationFormUser();
+    $user->userAllocation->update(['management_scope' => 'all_program']);
+
+    $this->actingAs($user)->get('/online/alumnis')->assertOk();
+});
+
+it('preserves configured bootstrap access to the alumni directory', function () {
+    config()->set('app.system_key', 'synthetic-test-key');
+    config()->set('app.super_admin_emails_encrypted', SystemEncrypter::encryptSuperAdminData('alumni@example.test'));
+    config()->set('system.seal', SystemEncrypter::getSeal());
+    config()->set('app.developer_host', 'developer.example.test');
+
+    $user = createInformationFormUser();
+
+    $this->actingAs($user)->get('/online/alumnis')->assertOk();
+});
+
+it('redirects a roleless account to get started through the shared dashboard route', function () {
     config()->set('app.system_key', 'synthetic-test-key');
     config()->set('app.super_admin_emails_encrypted', SystemEncrypter::encryptSuperAdminData(''));
     config()->set('system.seal', SystemEncrypter::getSeal());
@@ -645,20 +690,42 @@ it('shows only the access notice to a roleless account through the shared dashbo
     ]);
 
     $this->actingAs($user)->get('/online')
-        ->assertOk()
-        ->assertSee('Ask the administrator to enable access')
+        ->assertRedirect(GetStarted::getUrl());
+
+    $this->get(GetStarted::getUrl())
+        ->assertSee('Waiting for a role')
         ->assertDontSeeLivewire(AlumniInformationForm::class)
         ->assertDontSee('class="fi-wg"', escape: false);
 });
 
-it('does not mount the alumni dashboard without its page grant', function () {
+it('denies the shared dashboard route when an allocated account lacks its page grant', function () {
+    config()->set('allowed-email.domains', ['example.test']);
+    config()->set('app.developer_host', 'developer.example.test');
+
+    $user = createInformationFormUser();
+    $user->userAllocation->role->update(['access_page' => [AlumniResource::getSlug()]]);
+
+    $this->actingAs($user)->get('/online')->assertForbidden();
+});
+
+it('keeps the shared dashboard route available to staff with its page grant', function () {
+    config()->set('allowed-email.domains', ['example.test']);
+    config()->set('app.developer_host', 'developer.example.test');
+
+    $user = createInformationFormUser();
+    $user->userAllocation->update(['management_scope' => 'all_program']);
+
+    $this->actingAs($user)->get('/online')
+        ->assertOk()
+        ->assertDontSeeLivewire(AlumniInformationForm::class);
+});
+
+it('denies the alumni dashboard component without its page grant', function () {
     $user = createInformationFormUser();
     $user->userAllocation->role->update(['access_page' => [AlumniResource::getSlug()]]);
 
     Livewire::actingAs($user)->test(Dashboard::class)
-        ->assertSee('Ask the administrator to enable access')
-        ->assertDontSeeLivewire(AlumniInformationForm::class)
-        ->assertDontSee('class="fi-wg"', escape: false);
+        ->assertForbidden();
 });
 
 it('denies direct alumni form access without the dashboard page grant', function () {

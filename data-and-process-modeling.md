@@ -62,7 +62,7 @@ flowchart LR
 
 ### Shared alumni information form [E, acceptance incomplete]
 
-1. A signed-in account reaches the Dashboard at /online. Dashboard displays the form only when the account has an active my_records allocation, active role, Dashboard and alumni page grants, and a relevant action grant.
+1. A signed-in account without an allocation reaches a safe Dashboard notice at /online. An allocated account needs the Dashboard page grant to reach the page. Dashboard displays the form only when the account has an active my_records allocation, active role, Alumni page grant, and a relevant action grant.
 2. AlumniInformationForm resolves the record through alumnis.user_id. It refuses multiple owned rows or an archived owned row. Student number or email similarity never silently transfers ownership.
 3. On first submission, the account supplies identity, contact and academic fields. Existing identity, program and graduation fields are read-only in this form. The account may edit contact details, reported employment status and owned education/employment entries.
 4. Save rechecks access, locks the user and owned rows, validates the submitted form, rejects foreign or archived history IDs, and writes the registry and child rows in one transaction. Omitting a saved history row does not delete it. A match against another active or archived alumni row requires administrator review.

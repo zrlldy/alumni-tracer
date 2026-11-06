@@ -13,23 +13,23 @@ final class BrandedEmailMessage
      */
     public static function make(string $view, array $data, string $subject): MailMessage
     {
-        $data['logoSource'] = 'cid:alumni-tracer-email-logo@alumnitracer';
-        $data['mascotSource'] = 'cid:alumni-tracer-email-mascot@alumnitracer';
+        // $data['logoSource'] = 'cid:alumni-whitelogo-email@alumnitracer';
+        // $data['mascotSource'] = 'cid:alumni-tracer-email-mascot@alumnitracer';
 
         return (new MailMessage)
             ->subject($subject)
-            ->view($view, $data)
-            ->withSymfonyMessage(function (Email $email): void {
-                foreach ([
-                    'alumni-tracer-email-logo@alumnitracer' => 'alumni-tracer-email-logo.png',
-                    'alumni-tracer-email-mascot@alumnitracer' => 'alumni-tracer-email-mascot.png',
-                ] as $contentId => $filename) {
-                    $email->addPart(
-                        DataPart::fromPath(public_path("images/{$filename}"), $filename, 'image/png')
-                            ->asInline()
-                            ->setContentId($contentId),
-                    );
-                }
-            });
+            ->view($view, $data);
+            // ->withSymfonyMessage(function (Email $email): void {
+            //     foreach ([
+            //         'alumni-whitelogo-email@alumnitracer' => 'alumni-whitelogo-email.png',
+            //         'alumni-tracer-email-mascot@alumnitracer' => 'alumni-tracer-email-mascot.png',
+            //     ] as $contentId => $filename) {
+            //         $email->addPart(
+            //             DataPart::fromPath(public_path("images/{$filename}"), $filename, 'image/png')
+            //                 ->asInline()
+            //                 ->setContentId($contentId),
+            //         );
+            //     }
+            // });
     }
 }

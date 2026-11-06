@@ -4,6 +4,10 @@ Date: 2026-11-01; implementation note added 2026-11-04. **Proposed future grants
 
 **2026-11-04 implementation note:** newer source includes a role/allocation UI and `RoleBasedAccessControl` trait. AT-F04-FORM consumes that implementation without changing it: existing `alumnis` page access, `view`/`create`/`edit` actions and an active `my_records` allocation govern the self-service form on the shared Dashboard. Dashboard access remains controlled by its existing grant. The form additionally enforces persisted `alumnis.user_id` ownership and rejects deleted grants/foreign histories. No new permission keys, roles or live account grants are provisioned. The namespaced permission matrix below is still a proposed future contract, not the format of current JSON grants. Roleless Dashboard/Settings access and signup/expiry are outside this form task.
 
+**2026-11-05 directory correction:** the same `alumnis` page grant previously exposed the staff Alumni Directory to a `my_records` form account. `AlumniResource::canAccess()` now denies that scope on the resource and its pages while the owned Dashboard form keeps its existing grants. The configured bootstrap Super Administrator exception and permitted staff scopes remain. This correction does not establish the broader AT-F01 staff query, action or policy matrix.
+
+**2026-11-05 Dashboard page correction:** an allocated account now needs its existing Dashboard page grant for the shared page, following `hasPageAccess()` as other Filament pages do. An account with no allocation still reaches the safe notice. The owned form retains its additional Alumni page/action, active allocation and persisted owner checks. This does not assign or change any role grant.
+
 ## Grants
 
 `All` means institutional scope, `Scoped` means explicitly assigned program/alumni, `Own` means the linked registry record or its assignment, `Deny` is the default. School Administrator privileges marked conditional remain denied until approved. Super Administrator is a set of explicit grants, not a blanket Gate bypass over safety/retention or ownership invariants.
@@ -67,3 +71,7 @@ Foundation provisioning creates a dedicated Alumni role/allocation with `managem
 ## Security verification required
 
 Test anonymous, unverified, disabled, unallocated, Super Administrator, School Administrator, Tracer and Alumni actors. Use separate synthetic users/alumni; repair factory uniqueness before multi-user tests. Exercise HTTP panel middleware as well as direct/crafted Livewire actions, bulk actions and downloads. Test role/scope revocation while a component is mounted; changing public IDs, search filters or submitted arrays must not widen access. Verify target `/admin` and deliberate legacy `/online` handling during AT-F01; a 404 at the currently unused `/admin` alone proves nothing. For every conditional grant test both explicit approval and default denial.
+
+## Get Started UI increment — 2026-11-06
+
+AT-UI03 preserves the existing Get Started gate: authenticated, email-verified users with no `user_allocation_id` may read orientation; configured bootstrap administrators are exempt. A new allocation removes the navigation item and denies direct and hydrated Livewire access. The Dashboard generates the correct onboarding destination through `GetStarted::getUrl()`. No role, grant, ownership rule, panel path or cleanup permission is changed. The displayed 30-day policy is informational; deletion enforcement remains pending.

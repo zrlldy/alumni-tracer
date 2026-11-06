@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/css/filament/online/theme.css',
                 'resources/js/app.js',
+                'resources/js/filament-fullscreen.js',
             ],
 
             refresh: true,

@@ -9,6 +9,8 @@ it('renders each named email template', function (string $template, array $data,
     expect($html)
         ->toContain($expectedContent)
         ->toContain('#FCBF49')
+        ->toContain('class="email-header" bgcolor="#9D1424"')
+        ->not->toContain('bgcolor="#003049"')
         ->toContain('viewport')
         ->toContain('data:image/png;base64,')
         ->not->toContain('<svg')
@@ -51,13 +53,13 @@ it('renders every legacy auth email with the shared graduate design', function (
         $html = app('mailer')->render("emails.{$template}", $data);
 
         expect($html)
-            ->toContain('GRADUATE RECORDS')
+            ->toContain('alt="Alumni Tracer"')
             ->toContain($expectedContent)
             ->toContain('data:image/png;base64,');
     }
 });
 
-it('sends the logo and mascot as inline PNG attachments', function () {
+it('sends the white wordmark and mascot as inline PNG attachments', function () {
     $sent = Mail::mailer('array')->send('emails.otp', ['otpCode' => '617204'], function ($message) {
         $message->to('preview@example.test')->subject('Email template test');
     });
@@ -65,8 +67,18 @@ it('sends the logo and mascot as inline PNG attachments', function () {
 
     expect($mime)
         ->toContain('multipart/related')
+        ->toContain('alumni-whitelogo-email.png')
         ->toContain('image/png')
         ->toContain('Content-ID:');
 
     expect(substr_count($mime, 'Content-ID:'))->toBe(2);
+});
+
+it('keeps the email wordmark white and transparent', function () {
+    $logo = imagecreatefrompng(public_path('images/alumni-whitelogo-email.png'));
+
+    expect([imagesx($logo), imagesy($logo)])->toBe([880, 507]);
+    expect(imagecolorsforindex($logo, imagecolorat($logo, 0, 0))['alpha'])->toBe(127);
+    expect(imagecolorsforindex($logo, imagecolorat($logo, 200, 200)))
+        ->toMatchArray(['red' => 255, 'green' => 255, 'blue' => 255, 'alpha' => 0]);
 });
