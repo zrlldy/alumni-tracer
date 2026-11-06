@@ -1,6 +1,6 @@
 # Alumni-Tracer task tracker
 
-Updated: 2026-11-05. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
+Updated: 2026-11-06. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.
 
@@ -28,6 +28,7 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
 | AT-R01-CAMPUS | Campus filter and linked campus XLSX labels | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-CAMPUS.md). Focused SQLite tests pass; connected MariaDB `campuses` schema verified after owner migration; browser acceptance is pending. Does not complete AT-R01 or its security gates. |
 | AT-UI01 | Landing page mobile navigation and placement | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI01.md). Focused tests/build and closed 390px render passed; static open-panel render inspected. Live menu interaction remains unverified. |
+| AT-UI02 | Signed-in email verification prompt redesign | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI02.md). Eight isolated tests/34 assertions pass; desktop/tablet/long-email phone renders inspected; synthetic performance has 0 failures/7 warnings. Live keyboard/screen-reader and inbox acceptance remain unverified. Existing signed-link and resend limits are preserved. |
 | AT-O01 | Deployment/privacy/end-to-end readiness | PLANNED | Applicable implemented modules and school policy approvals |
 
 ## Decisions pending
@@ -217,3 +218,12 @@ Removed three unescaped semicolons from the Owned form sequence message labels i
 4. Blocked: actual inbox/client rendering and delivery remain UNVERIFIED; the browser host was unavailable for an email preview.
 5. Remaining: inspect a newly sent synthetic message in the intended client to confirm its logo and header colors. Previously received messages keep their earlier MIME content.
 6. Exact next recommended task: verify a new test email in Gmail, then repair the independent campus fixtures before relying on a green full suite.
+
+## Latest handoff — AT-UI02 verification prompt, 2026-11-06
+
+1. Completed in source: redesigned the signed-in `/online/email-verification/prompt` screen with a prominent account email, full-width resend button, inbox guidance and CSRF-protected sign-out. Added `App\Livewire\VerifyEmail` as a thin subclass of the installed Filament prompt, with its own responsive layout. Other authentication screens retain their layouts.
+2. Verified: the new prompt-copy regression failed before implementation. Isolated SQLite-memory/array-mail tests pass eight tests/34 assertions, covering prompt rendering, guest and verified redirects, escaping, signed branded resend, unchanged account state, existing account rate limiting, logout and the existing signed-link completion flow. Pint, Vite build and diff checks passed. Synthetic desktop light/dark, 1024px desktop, 820px/768px tablet and long-email phone snapshots were inspected. The same artwork was encoded as a 372 KiB JPEG and excluded from mobile downloads; the final synthetic performance check reports 0 failures/7 inherited asset/transfer warnings.
+3. Failed or unavailable: Taste Skill's layout checker crashed with `Cannot read properties of undefined (reading 'map')` on this auth-page structure. An earlier broader email check reported seven failures in unchanged email asset/CID assertions. No full-suite pass is claimed.
+4. Database/security impact: read-only `users` metadata confirmed nullable `email_verified_at` and unique email. No connected record reads, data writes, migrations, account approval, allocation change, real email or secret change occurred. The existing backend still verifies the mailbox through the signed link; resending does not mark it verified.
+5. Remaining: live keyboard/focus, screen-reader and actual inbox acceptance. The full application suite and existing campus fixtures/email asset assertions remain separate work. AT-UI02 stays IMPLEMENTED BUT UNVERIFIED for these acceptance limits.
+6. Exact next recommended task: check the redesigned prompt with a synthetic account using keyboard navigation, then inspect its resent verification link in an approved test inbox. Preserve AT-F01/F03 policy gates.

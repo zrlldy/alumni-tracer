@@ -10,6 +10,309 @@
 @source '../../../../resources/views/vendor/passkeys/**/*.blade.php';
 @source '../../../../vendor/diogogpinto/filament-auth-ui-enhancer/resources/**/*.blade.php';
 
+/* Dedicated verification screen; other authentication pages keep their layout. */
+.verification-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    min-height: 100svh;
+    background: #ffffff;
+    color: #003049;
+}
+
+.verification-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2rem;
+    padding: 2rem clamp(1.5rem, 4vw, 5rem);
+}
+
+.verification-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+.verification-header img {
+    width: 4.5rem;
+    height: 3rem;
+    object-fit: contain;
+}
+
+.verification-logo-dark {
+    display: none;
+}
+
+.verification-main {
+    display: grid;
+    flex: 1;
+    align-items: center;
+    padding-block: 2rem;
+    outline: none;
+}
+
+.verification-prompt {
+    width: 100%;
+    max-width: 27rem;
+    margin-inline: auto;
+}
+
+.verification-mark {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 2rem;
+    border: 1px solid #f5d5d5;
+    border-radius: 1rem;
+    background: #fff4f3;
+    color: #b72121;
+}
+
+.verification-mark > span {
+    position: absolute;
+    right: -0.375rem;
+    bottom: -0.375rem;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    background: #003049;
+    color: #ffffff;
+}
+
+.verification-prompt h1 {
+    font-size: clamp(2rem, 3vw, 2.625rem);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 1.15;
+}
+
+.verification-lead {
+    margin-top: 1rem;
+    color: #526371;
+    font-size: 1rem;
+    line-height: 1.65;
+}
+
+.verification-address {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    padding: 1rem;
+    border: 1px solid #dce4e9;
+    border-radius: 0.625rem;
+    background: #f7f9fb;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+}
+
+.verification-address strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+.verification-instructions {
+    margin-top: 1.25rem;
+    color: #526371;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+}
+
+.verification-instructions strong {
+    color: #003049;
+    font-weight: 600;
+}
+
+.verification-prompt .verification-resend {
+    width: 100%;
+    min-height: 3.25rem;
+    margin-top: 1.75rem;
+    border-radius: 0.625rem;
+    background: #d62828;
+    color: #ffffff;
+    transition: background-color 150ms, transform 150ms;
+}
+
+.verification-prompt .verification-resend:hover {
+    background: #b72121;
+}
+
+.verification-prompt .verification-resend .fi-icon {
+    color: inherit;
+}
+
+.verification-prompt .verification-resend:active {
+    transform: translateY(1px);
+}
+
+.verification-help {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    margin-top: 1rem;
+    color: #526371;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+}
+
+.verification-switch {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.375rem;
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e4e9ed;
+    color: #526371;
+    font-size: 0.8125rem;
+}
+
+.verification-switch button {
+    min-height: 2.75rem;
+    color: #003049;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    cursor: pointer;
+}
+
+.verification-switch button:hover {
+    color: #b72121;
+}
+
+.verification-switch button:focus-visible,
+.verification-prompt .verification-resend:focus-visible {
+    outline: 2px solid #003049;
+    outline-offset: 4px;
+}
+
+.verification-footer {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.verification-community {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    margin: 1rem 1rem 1rem 0;
+    border-radius: 1rem;
+    background: #003049;
+    color: #ffffff;
+}
+
+.verification-artwork {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 60% center;
+}
+
+.verification-community-copy {
+    position: relative;
+    max-width: 26rem;
+    padding: clamp(2rem, 4vw, 4rem);
+}
+
+.verification-community h2 {
+    font-size: clamp(2rem, 3vw, 2.75rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+}
+
+.dark .verification-layout {
+    background: #071923;
+    color: #f8fafc;
+}
+
+.dark .verification-logo-light {
+    display: none;
+}
+
+.dark .verification-logo-dark {
+    display: block;
+}
+
+.dark .verification-address {
+    border-color: #29414e;
+    background: #0c2330;
+}
+
+.dark .verification-mark {
+    border-color: #563d3d;
+    background: #30282b;
+    color: #ff9a8f;
+}
+
+.dark .verification-mark > span {
+    border-color: #071923;
+    background: #fcbf49;
+    color: #003049;
+}
+
+.dark .verification-lead,
+.dark .verification-instructions,
+.dark .verification-help,
+.dark .verification-switch,
+.dark .verification-footer {
+    color: #aabac5;
+}
+
+.dark .verification-instructions strong,
+.dark .verification-switch button {
+    color: #f8fafc;
+}
+
+.dark .verification-switch {
+    border-color: #29414e;
+}
+
+.dark .verification-switch button:focus-visible,
+.dark .verification-prompt .verification-resend:focus-visible {
+    outline-color: #fcbf49;
+}
+
+@media (max-width: 1023px) {
+    .verification-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .verification-community {
+        display: none;
+    }
+
+    .verification-content {
+        min-height: 100svh;
+        padding: 1.5rem;
+        gap: 1.5rem;
+    }
+
+    .verification-main {
+        padding-block: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .verification-prompt .verification-resend {
+        transition: none;
+    }
+
+    .verification-prompt .verification-resend:active {
+        transform: none;
+    }
+}
+
 /* =========================================================
    ALUMNI TRACER THEME
    Filament v5 + Auth UI Enhancer

@@ -20,6 +20,8 @@ Use existing `roles -> user_allocations -> users` instead of installing a permis
 
 ## Boundaries and source of truth
 
+The 2026-11-06 AT-UI02 redesign registers `App\Livewire\VerifyEmail` for the existing `/online/email-verification/prompt` route. This thin Filament prompt subclass provides a dedicated responsive layout and restyles the inherited resend action. Signed-link fulfillment, authentication, resend limits and the branded notification binding remain unchanged. Mailbox verification continues to use `users.email_verified_at`; the screen does not approve alumni identity or assign roles. See [AT-UI02](../implementation/completed/AT-UI02.md) for verification limits.
+
 | Boundary | Responsibility | Enforcement |
 | --- | --- | --- |
 | Public landing/authentication | Marketing, existing-account login/recovery, approved activation | CSRF, per-account/IP rate limits, generic claim failures; no arbitrary user creation |
