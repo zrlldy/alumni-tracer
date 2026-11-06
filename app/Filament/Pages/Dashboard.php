@@ -8,13 +8,10 @@ use App\Filament\Widgets\AlumniStats;
 use App\Filament\Widgets\EmploymentStatus;
 use App\Filament\Widgets\RecentlyTraced;
 use App\Filament\Widgets\TracingProgress;
-use App\Livewire\AlumniInformationForm;
 use App\Support\SystemSecurity;
 use App\Traits\RoleBasedAccessControl;
+use Filament\Facades\Filament;
 use Filament\Pages\Dashboard as BaseDashboard;
-use Filament\Schemas\Components\Livewire;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use JohnRivera7\FilamentWidgetGrid\Concerns\HasWidgetGrid;
 
@@ -28,20 +25,22 @@ class Dashboard extends BaseDashboard
      */
     public static function canAccess(): bool
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
 
         if ($user === null) {
             return false;
         }
 
-        // Bootstrap Super Admin bypasses all dashboard restrictions.
+        $user->refresh();
+
+        // Bootstrap Super Admin always has access.
         if (SystemSecurity::isBootstrapSuperAdmin($user)) {
             return true;
         }
 
-        // Allow the initial page request so mount() can redirect.
-        // Prevent subsequent Livewire requests from accessing the page.
-        if ($user->user_allocation_id === null) {
+        // Allow the initial request so mount() can redirect
+        // users who have no administrative Dashboard access.
+        if (static::shouldRedirectToGetStarted($user)) {
             return ! request()->hasHeader('X-Livewire');
         }
 
@@ -49,23 +48,76 @@ class Dashboard extends BaseDashboard
     }
 
     /**
-     * Redirect users without an allocation to onboarding.
+     * Determine whether the user must be redirected to Get Started.
+     *
+     * Uses the dynamic UserAllocation -> Role relationship.
+     */
+        
+    /**
+     * Shared check for users who should be redirected to Get Started.
+     *
+     * Uses the current UserAllocation and its assigned Role.
+     */
+    public static function shouldRedirectToGetStarted(): bool
+    {
+        $user = Auth::user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        $user->refresh();
+
+        // Bootstrap Super Admin never needs onboarding.
+        if (SystemSecurity::isBootstrapSuperAdmin($user)) {
+            return false;
+        }
+
+        $allocation = $user->userAllocation;
+        $role = $allocation?->role;
+
+        // Missing or inactive allocation.
+        if (
+            $user->user_allocation_id === null
+            || $allocation === null
+            || $allocation->trashed()
+        ) {
+            return true;
+        }
+
+        // Missing or inactive role.
+        if (
+            $role === null
+            || $role->trashed()
+        ) {
+            return true;
+        }
+
+        // Redirect when the assigned role does not grant Dashboard access.
+        return ! static::hasPageAccess();
+    }
+
+
+    /**
+     * Redirect users without Dashboard administrative access.
      */
     public function mount(): void
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
 
         if ($user === null) {
             return;
         }
+
+        $user->refresh();
 
         // Never redirect Bootstrap Super Admin.
         if (SystemSecurity::isBootstrapSuperAdmin($user)) {
             return;
         }
 
-        if ($user->user_allocation_id === null) {
-            $this->redirect(GetStarted::getUrl());
+        if (static::shouldRedirectToGetStarted($user)) {
+            $this->redirect('online/get-started');
 
             return;
         }
@@ -76,74 +128,52 @@ class Dashboard extends BaseDashboard
      */
     public static function shouldRegisterNavigation(): bool
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
 
         if ($user === null) {
             return false;
         }
 
-        // Always show dashboard navigation for Bootstrap Super Admin.
+        $user->refresh();
+
         if (SystemSecurity::isBootstrapSuperAdmin($user)) {
             return true;
         }
 
-        return $user->user_allocation_id !== null;
+        return ! static::shouldRedirectToGetStarted($user);
     }
 
     /**
-     * Dashboard content.
+     * Dynamic dashboard heading.
      */
-    public function content(Schema $schema): Schema
+    public function getHeading(): string
     {
-        $user = Auth::user()?->fresh();
+        $user = Auth::user();
 
-        // Bootstrap Super Admin always receives the default dashboard.
-        if (
-            $user !== null &&
-            SystemSecurity::isBootstrapSuperAdmin($user)
-        ) {
-            return parent::content($schema);
+        if ($user === null) {
+            return parent::getHeading();
         }
 
-        $allocation = $user?->userAllocation;
-        $role = $allocation?->role;
+        $user->refresh();
+
+        $allocation = $user->userAllocation;
 
         if (
-            $allocation !== null
+            ! SystemSecurity::isBootstrapSuperAdmin($user)
+            && $allocation !== null
             && ! $allocation->trashed()
-            && $role !== null
-            && ! $role->trashed()
-            && in_array(
-                $allocation->management_scope,
-                [
-                    'all_program',
-                    'specified_program',
-                    'my_program',
-                    'my_department',
-                ],
-                true
-            )
+            && $allocation->management_scope === 'my_records'
         ) {
-            return parent::content($schema);
+            return 'My alumni dashboard';
         }
 
-        $canAccessAlumni = AlumniInformationForm::canAccess();
-
-        return $schema->components([
-            Livewire::make(AlumniInformationForm::class)
-                ->key('alumni-information-form')
-                ->visible($canAccessAlumni),
-
-            Section::make('Alumni information')
-                ->description(
-                    'Ask the administrator to enable access to your alumni information form.'
-                )
-                ->visible(! $canAccessAlumni),
-        ]);
+        return parent::getHeading();
     }
 
     /**
-     * Get dashboard widgets.
+     * Dashboard widgets.
+     *
+     * Each widget follows its own access_widget permission.
      */
     public function getWidgets(): array
     {
@@ -159,4 +189,135 @@ class Dashboard extends BaseDashboard
             fn (string $widget): bool => $widget::canView(),
         ));
     }
+
+
+
+    /**
+     * Find the first page or resource the current user is allowed to access.
+     *
+     * Follows the currently assigned UserAllocation and Role.
+     */
+    public static function getFirstAllowedPageUrl(): ?string
+    {
+        $user = Auth::user();
+
+        if ($user === null) {
+            return null;
+        }
+
+        $user->refresh();
+
+        $panel = Filament::getCurrentPanel();
+
+        if ($panel === null) {
+            return null;
+        }
+
+        // Bootstrap Super Admin always goes to Dashboard.
+        if (SystemSecurity::isBootstrapSuperAdmin($user)) {
+            return static::getUrl(panel: $panel->getId());
+        }
+
+        $allocation = $user->userAllocation;
+        $role = $allocation?->role;
+
+        // Require a valid allocation and active role.
+        if (
+            $allocation === null
+            || $allocation->trashed()
+            || $role === null
+            || $role->trashed()
+        ) {
+            return null;
+        }
+
+        $allowedPages = (array) ($role->access_page ?? []);
+
+        $hasSuperAdminAccess = in_array(
+            'super_admin',
+            $allowedPages,
+            true
+        );
+
+        /*
+        * 1. Check registered Filament pages.
+        */
+        foreach ($panel->getPages() as $page) {
+
+            // Never redirect back to Get Started.
+            if ($page === GetStarted::class) {
+                continue;
+            }
+
+            $slug = $page::getSlug();
+
+            // Check the role's administrative permissions.
+            if (
+                ! $hasSuperAdminAccess
+                && ! in_array($slug, $allowedPages, true)
+            ) {
+                continue;
+            }
+
+            // Respect the page's own authorization.
+            if (
+                method_exists($page, 'canAccess')
+                && ! $page::canAccess()
+            ) {
+                continue;
+            }
+
+            return $page::getUrl(
+                panel: $panel->getId()
+            );
+        }
+
+        /*
+        * 2. Check registered Filament resources.
+        */
+        foreach ($panel->getResources() as $resource) {
+
+            $slug = $resource::getSlug();
+
+            if (
+                ! $hasSuperAdminAccess
+                && ! in_array($slug, $allowedPages, true)
+            ) {
+                continue;
+            }
+
+            // Respect resource-level authorization.
+            if (
+                method_exists($resource, 'canAccess')
+                && ! $resource::canAccess()
+            ) {
+                continue;
+            }
+
+            $resourcePages = $resource::getPages();
+
+            if (empty($resourcePages)) {
+                continue;
+            }
+
+            // Prefer the List / Index page.
+            $pageName = array_key_exists('index', $resourcePages)
+                ? 'index'
+                : array_key_first($resourcePages);
+
+            if (blank($pageName)) {
+                continue;
+            }
+
+            return $resource::getUrl(
+                $pageName,
+                panel: $panel->getId()
+            );
+        }
+
+        // No permitted administrative destination.
+        return null;
+    }
+
+
 }

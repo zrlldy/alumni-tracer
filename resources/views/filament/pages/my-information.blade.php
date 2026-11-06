@@ -1,3 +1,3 @@
 <x-filament-panels::page>
-    {{-- Page content --}}
+    @livewire(\App\Livewire\AlumniInformationForm::class)
 </x-filament-panels::page>
