@@ -1,6 +1,6 @@
 <div class="space-y-6">
     <header class="space-y-1">
-        <h2 class="text-2xl font-semibold text-gray-950 dark:text-white">My alumni dashboard</h2>
+        {{-- <h2 class="text-2xl font-semibold text-gray-950 dark:text-white">My information</h2> --}}
         <p class="text-sm text-gray-600 dark:text-gray-400">Your profile, work, and further education in one place.</p>
     </header>
 

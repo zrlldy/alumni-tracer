@@ -2,8 +2,8 @@
 
 namespace App\Livewire;
 
-use App\Filament\Pages\Dashboard;
-use App\Filament\Resources\Alumnis\AlumniResource;
+use App\Filament\Pages\MyInformation;
+use App\Support\SystemSecurity;
 use App\Filament\Resources\Alumnis\Schemas\AlumniForm;
 use App\Models\Alumni;
 use App\Models\User;
@@ -55,11 +55,18 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
 
     public bool $saved = false;
 
+    /**
+     * Use the My Information page slug for role-based page authorization.
+     */
     public static function getSlug(): string
     {
-        return AlumniResource::getSlug();
+        return MyInformation::getSlug();
     }
 
+    /**
+     * A user needs access to the My Information page and at least one
+     * permitted action. Bootstrap super-admins retain their global bypass.
+     */
     public static function canAccess(): bool
     {
         $user = Auth::user();
@@ -68,19 +75,33 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
             return false;
         }
 
+        // Refresh the authenticated instance too, since the shared access
+        // trait reads the current user from Auth during its permission checks.
         $user->refresh();
+
+        if ($user->trashed()) {
+            return false;
+        }
+
+        if (SystemSecurity::isBootstrapSuperAdmin($user)) {
+            return true;
+        }
+
         $allocation = $user->userAllocation;
         $role = $allocation?->role;
 
-        return ! $user->trashed()
-            && $allocation !== null
+        return $allocation !== null
             && ! $allocation->trashed()
-            && $allocation->management_scope === 'my_records'
+            && filled($allocation->management_scope)
+            && $allocation->management_scope !== 'no_access'
             && $role !== null
             && ! $role->trashed()
-            && static::canAccessPageSlug(Dashboard::getSlug())
             && static::hasPageAccess()
-            && (static::hasPermission('view') || static::hasPermission('create') || static::hasPermission('edit'));
+            && (
+                static::hasPermission('view')
+                || static::hasPermission('create')
+                || static::hasPermission('edit')
+            );
     }
 
     public function mount(): void
