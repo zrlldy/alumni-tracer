@@ -65,7 +65,7 @@ class Dashboard extends BaseDashboard
         }
 
         if ($user->user_allocation_id === null) {
-            $this->redirect('online/get-started');
+            $this->redirect(GetStarted::getUrl());
 
             return;
         }

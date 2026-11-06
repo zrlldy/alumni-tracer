@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\GetStarted;
 use App\Filament\Resources\Alumnis\AlumniResource;
 use App\Filament\Widgets\RecentlyTraced;
 use App\Livewire\AlumniInformationForm;
@@ -617,11 +618,11 @@ it('refreshes the overview after saving an alumni profile and histories', functi
         ->assertSee('Synthetic Graduate School');
 });
 
-it('shows a safe dashboard notice to roleless accounts', function () {
+it('redirects roleless dashboard users to get started without alumni records', function () {
     $user = User::factory()->create(['user_allocation_id' => null]);
 
     Livewire::actingAs($user)->test(Dashboard::class)
-        ->assertSee('Ask the administrator to enable access')
+        ->assertRedirect(GetStarted::getUrl())
         ->assertDontSeeLivewire(AlumniInformationForm::class)
         ->assertDontSee('class="fi-wg"', escape: false);
 });
@@ -678,7 +679,7 @@ it('preserves configured bootstrap access to the alumni directory', function () 
     $this->actingAs($user)->get('/online/alumnis')->assertOk();
 });
 
-it('shows only the access notice to a roleless account through the shared dashboard route', function () {
+it('redirects a roleless account to get started through the shared dashboard route', function () {
     config()->set('app.system_key', 'synthetic-test-key');
     config()->set('app.super_admin_emails_encrypted', SystemEncrypter::encryptSuperAdminData(''));
     config()->set('system.seal', SystemEncrypter::getSeal());
@@ -689,8 +690,10 @@ it('shows only the access notice to a roleless account through the shared dashbo
     ]);
 
     $this->actingAs($user)->get('/online')
-        ->assertOk()
-        ->assertSee('Ask the administrator to enable access')
+        ->assertRedirect(GetStarted::getUrl());
+
+    $this->get(GetStarted::getUrl())
+        ->assertSee('Waiting for a role')
         ->assertDontSeeLivewire(AlumniInformationForm::class)
         ->assertDontSee('class="fi-wg"', escape: false);
 });

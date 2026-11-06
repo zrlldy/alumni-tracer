@@ -3,12 +3,16 @@
 namespace App\Filament\Pages;
 
 use App\Support\SystemSecurity;
+use BackedEnum;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 
 class GetStarted extends Page
 {
     protected string $view = 'filament.pages.get-started';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
 
     public static function canAccess(): bool
     {
