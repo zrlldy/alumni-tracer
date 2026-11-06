@@ -71,3 +71,7 @@ Foundation provisioning creates a dedicated Alumni role/allocation with `managem
 ## Security verification required
 
 Test anonymous, unverified, disabled, unallocated, Super Administrator, School Administrator, Tracer and Alumni actors. Use separate synthetic users/alumni; repair factory uniqueness before multi-user tests. Exercise HTTP panel middleware as well as direct/crafted Livewire actions, bulk actions and downloads. Test role/scope revocation while a component is mounted; changing public IDs, search filters or submitted arrays must not widen access. Verify target `/admin` and deliberate legacy `/online` handling during AT-F01; a 404 at the currently unused `/admin` alone proves nothing. For every conditional grant test both explicit approval and default denial.
+
+## Get Started UI increment — 2026-11-06
+
+AT-UI03 preserves the existing Get Started gate: authenticated, email-verified users with no `user_allocation_id` may read orientation; configured bootstrap administrators are exempt. A new allocation removes the navigation item and denies direct and hydrated Livewire access. The Dashboard generates the correct onboarding destination through `GetStarted::getUrl()`. No role, grant, ownership rule, panel path or cleanup permission is changed. The displayed 30-day policy is informational; deletion enforcement remains pending.
