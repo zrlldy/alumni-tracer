@@ -6,6 +6,7 @@ use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Register;
 use App\Http\Middleware\RepairFilamentAlpineExpressions;
+use App\Livewire\VerifyEmail;
 use App\Notifications\AlumniEmailOtp;
 use App\Support\PluginAccess;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
@@ -73,7 +74,7 @@ class AlumniPanelProvider extends PanelProvider
             // ->registration()
             ->registration(Register::class)
             ->passwordReset()
-            ->emailVerification()
+            ->emailVerification(VerifyEmail::class)
             ->colors([
                 'primary' => Color::hex('#D62828'), // Brand red
                 'success' => Color::Green,          // Successful actions
@@ -124,8 +125,8 @@ class AlumniPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): HtmlString => new HtmlString(
-                    '<script type="module" src="' .
-                    Vite::asset('resources/js/filament-fullscreen.js') .
+                    '<script type="module" src="'.
+                    Vite::asset('resources/js/filament-fullscreen.js').
                     '"></script>'
                 )
             )
