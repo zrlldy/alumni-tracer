@@ -10,6 +10,7 @@ class BrandedPasswordReset extends FilamentResetPassword
     public function toMail($notifiable): MailMessage
     {
         return BrandedEmailMessage::make('emails.password-reset', [
+            'greeting' => 'Dear '.($notifiable->name ?: 'Alumni').',',
             'actionUrl' => $this->url,
             'actionText' => 'Reset Password',
             'expiry' => trans_choice(

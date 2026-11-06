@@ -1,6 +1,6 @@
 # Alumni-Tracer task tracker
 
-Updated: 2026-11-05. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
+Updated: 2026-11-06. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.
 
@@ -23,11 +23,13 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-V01 | Survey definitions/version/publication | PLANNED | AT-F01/02, DEC-07 |
 | AT-V02 | Survey participation/response isolation | PLANNED | AT-V01/F04 |
 | AT-N01 | Queue delivery/notification outcomes | PLANNED | AT-V01/02, DEC-08 |
-| AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views; welcome sends on `Verified`. All ten Blade email files share a formal graduate-records design with the existing brand colors and inline artwork; focused array-mailer tests and synthetic desktop/phone previews pass. Live inbox/client acceptance remains unverified. |
+| AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views with recipient-name greetings; welcome sends on `Verified`. All ten Blade email files share a formal graduate-records design with the existing brand colors and inline artwork; focused array-mailer tests and synthetic desktop/phone previews pass. Live inbox/client acceptance remains unverified. |
 | AT-I01 | Staged reviewed legacy/flat import | PLANNED | AT-A02/F01/F02/T01, DEC-04/10 |
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
 | AT-R01-CAMPUS | Campus filter and linked campus XLSX labels | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-CAMPUS.md). Focused SQLite tests pass; connected MariaDB `campuses` schema verified after owner migration; browser acceptance is pending. Does not complete AT-R01 or its security gates. |
 | AT-UI01 | Landing page mobile navigation and placement | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI01.md). Focused tests/build and closed 390px render passed; static open-panel render inspected. Live menu interaction remains unverified. |
+| AT-UI02 | Signed-in email verification prompt redesign | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI02.md). Eight isolated tests/34 assertions pass; desktop/tablet/long-email phone renders inspected; synthetic performance has 0 failures/7 warnings. Live keyboard/screen-reader and inbox acceptance remain unverified. Existing signed-link and resend limits are preserved. |
+| AT-UI03 | Roleless Get Started orientation | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI03.md). Alumni/staff guidance, system administrator contact, 30-day notice and generated Dashboard redirect. Focused auth/onboarding tests 14/56 plus two roleless cases 2/9 pass; synthetic desktop/phone/tablet inspected. Live accessibility, broader directory-navigation failure and deletion enforcement remain separate. |
 | AT-O01 | Deployment/privacy/end-to-end readiness | PLANNED | Applicable implemented modules and school policy approvals |
 
 ## Decisions pending
@@ -148,6 +150,13 @@ AT-D01 follow-up, 2026-11-05: restored the original system flowchart format and 
 
 Removed three unescaped semicolons from the Owned form sequence message labels in `object-modeling.md`. A Mermaid renderer returned valid SVG with the corrected messages and no parse error; the GitHub browser view itself was unavailable. `git diff --check` passed. This is a documentation fix only; prior feature statuses and next tasks are unchanged.
 
+## AT-N02 recipient-name greeting follow-up — 2026-11-05
+
+1. Updated the active reset, verification and email-code notifications to supply `Dear <recipient name>,` to their existing shared email views. The existing `Alumni` fallback remains for an account without a name; the welcome and legacy views already personalize their greetings. No schema, route, permission, transport or secret changed.
+2. A focused rendered-email regression failed on `Dear Alumni,` before the change and passed after it. The branded authentication and template tests passed 14 tests/95 assertions with SQLite memory, array mail, sync queue and isolated environment loading. Pint and diff checks passed.
+3. The three-file email run passed 14 tests but its signed-link flow returned HTTP 503 from the system license guard under the isolated test configuration. The local `.env` could not be parsed, so the test runner used a temporary bootstrap outside the repository; neither `.env` nor the license configuration was changed. Live inbox/client delivery remains unverified.
+4. AT-N02 remains verified for the source greeting change. Next: validate the signed-link flow under a valid test license configuration, and test actual delivery separately when an authorized mail transport and inbox are available.
+
 ## Latest handoff — AT-F04-DASH/FORM browser and directory follow-up, 2026-11-05
 
 1. Completed on branch `test` from a clean tree: reused the existing shared Dashboard and owned form. Native Chrome with a disposable SQLite fixture confirmed the synthetic alumni overview, editor open/save and refreshed work summary at desktop width; a 390 × 843 responsive view showed the overview and editor fields without observed clipping. Discovered that the same account could enter the staff Alumni Directory; denied `my_records` at `AlumniResource::canAccess()` while retaining the owned form and permitted staff access. The local server was stopped and the disposable database removed.
@@ -210,3 +219,21 @@ Removed three unescaped semicolons from the Owned form sequence message labels i
 4. Blocked: actual inbox/client rendering and delivery remain UNVERIFIED; the browser host was unavailable for an email preview.
 5. Remaining: inspect a newly sent synthetic message in the intended client to confirm its logo and header colors. Previously received messages keep their earlier MIME content.
 6. Exact next recommended task: verify a new test email in Gmail, then repair the independent campus fixtures before relying on a green full suite.
+
+## Latest handoff — AT-UI02 verification prompt, 2026-11-06
+
+1. Completed in source: redesigned the signed-in `/online/email-verification/prompt` screen with a prominent account email, full-width resend button, inbox guidance and CSRF-protected sign-out. Added `App\Livewire\VerifyEmail` as a thin subclass of the installed Filament prompt, with its own responsive layout. Other authentication screens retain their layouts.
+2. Verified: the new prompt-copy regression failed before implementation. Isolated SQLite-memory/array-mail tests pass eight tests/34 assertions, covering prompt rendering, guest and verified redirects, escaping, signed branded resend, unchanged account state, existing account rate limiting, logout and the existing signed-link completion flow. Pint, Vite build and diff checks passed. Synthetic desktop light/dark, 1024px desktop, 820px/768px tablet and long-email phone snapshots were inspected. The same artwork was encoded as a 372 KiB JPEG and excluded from mobile downloads; the final synthetic performance check reports 0 failures/7 inherited asset/transfer warnings.
+3. Failed or unavailable: Taste Skill's layout checker crashed with `Cannot read properties of undefined (reading 'map')` on this auth-page structure. An earlier broader email check reported seven failures in unchanged email asset/CID assertions. No full-suite pass is claimed.
+4. Database/security impact: read-only `users` metadata confirmed nullable `email_verified_at` and unique email. No connected record reads, data writes, migrations, account approval, allocation change, real email or secret change occurred. The existing backend still verifies the mailbox through the signed link; resending does not mark it verified.
+5. Remaining: live keyboard/focus, screen-reader and actual inbox acceptance. The full application suite and existing campus fixtures/email asset assertions remain separate work. AT-UI02 stays IMPLEMENTED BUT UNVERIFIED for these acceptance limits.
+6. Exact next recommended task: check the redesigned prompt with a synthetic account using keyboard navigation, then inspect its resent verification link in an approved test inbox. Preserve AT-F01/F03 policy gates.
+
+## Latest handoff — AT-UI03 Get Started, 2026-11-06
+
+1. Completed in source: populated the existing roleless Get Started page with audience/access instructions, signed-in email, owner-selected system administrator contact and a prominent 30-day deletion notice. Added a dock icon and repaired the relative Dashboard redirect with `GetStarted::getUrl()`. Existing assignment and bootstrap gates remain unchanged.
+2. Verified: new tests failed before the UI/redirect correction. Final isolated onboarding/verification tests passed 14/56; updated roleless Dashboard tests passed 2/9. Pint, build and diff checks passed. Synthetic 1440px light/dark, 390px dark and 768px light screenshots were inspected.
+3. Failed: broader four-file tests passed 61/62; the existing assigned-alumni directory-navigation assertion found the directory URL in Dashboard HTML. No resource/RBAC source was changed. Taste Skill's layout checker crashed on the Filament structure; consistency checking produced no report before interruption. Static performance reported 5 failures/4 warnings for inherited image markup/assets and missing preview requests. No automated visual/performance pass is claimed.
+4. Data/security: no configured database write, schema change, role grant, secret edit or external message. Synthetic SQLite-memory tests/rendering only. The displayed deletion rule does not create a scheduler or delete accounts; expiry clock, method, exceptions and linked-record retention remain unresolved.
+5. Remaining: live keyboard/focus/screen-reader acceptance, the separate directory-navigation investigation, and separately approved lifecycle enforcement. AT-UI03 remains IMPLEMENTED BUT UNVERIFIED. Broader policy/workbook blockers retain their statuses.
+6. Exact next recommended task: inspect Get Started using a synthetic account, investigate the assigned-alumni directory-navigation failure, then clarify lifecycle details before implementing 30-day deletion.
