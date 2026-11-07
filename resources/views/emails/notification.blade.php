@@ -29,6 +29,13 @@
                 </td>
             </tr>
         </table>
+
+        @if ($showActionLink ?? false)
+            <p style="margin:0 0 8px;color:#5F676C;font-size:13px;line-height:20px;">If the button does not work, use this verification link:</p>
+            <p style="margin:0 0 25px;font-size:13px;line-height:20px;word-break:break-all;overflow-wrap:anywhere;">
+                <a href="{{ $actionUrl }}" style="color:#9D1424;text-decoration:underline;">{{ $actionUrl }}</a>
+            </p>
+        @endif
     @endisset
 
     @isset($note)

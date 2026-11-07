@@ -8,6 +8,8 @@ Date: 2026-11-01; implementation note added 2026-11-04. **Proposed future grants
 
 **2026-11-05 Dashboard page correction:** an allocated account now needs its existing Dashboard page grant for the shared page, following `hasPageAccess()` as other Filament pages do. An account with no allocation still reaches the safe notice. The owned form retains its additional Alumni page/action, active allocation and persisted owner checks. This does not assign or change any role grant.
 
+**2026-11-07 explicit Alumni account linking:** the Alumni table's `Link Account` record action uses the existing `edit` grant and `canAccessRecord()` management-scope check both when displayed and when submitted. It is available only for active unlinked rows. A confirmed match only sets `alumnis.user_id`; it does not alter the selected user's allocation, role or grants.
+
 ## Grants
 
 `All` means institutional scope, `Scoped` means explicitly assigned program/alumni, `Own` means the linked registry record or its assignment, `Deny` is the default. School Administrator privileges marked conditional remain denied until approved. Super Administrator is a set of explicit grants, not a blanket Gate bypass over safety/retention or ownership invariants.
