@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Campus;
 use App\Models\Program;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,8 +19,9 @@ class ProgramFactory extends Factory
     public function definition(): array
     {
         return [
-            "program_name" => fake()->name(),
-            "is_active" => fake()->boolean(),
+            'campus_id' => Campus::factory(),
+            'program_name' => fake()->name(),
+            'is_active' => fake()->boolean(),
         ];
     }
 }

@@ -33,6 +33,7 @@ class AlumniDataExport implements FromQuery, WithColumnWidths, WithEvents, WithH
     public function query(): Builder
     {
         $query = Alumni::query()
+            ->latestPerAccount()
             ->with([
                 'program.campus',
                 'alumniEmployment',

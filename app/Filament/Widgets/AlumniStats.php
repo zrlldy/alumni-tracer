@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Alumni;
+use App\Support\AlumniDashboardData;
 use App\Traits\RoleBasedAccessControl;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -10,62 +10,56 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class AlumniStats extends StatsOverviewWidget
 {
     use RoleBasedAccessControl;
+
     public static function canView(): bool
     {
         return static::hasWidgetAccess();
     }
-    
-    protected ?string $heading = 'Employment & tracing snapshot';
+
+    protected ?string $heading = 'Reported Status & Tracing Snapshot';
 
     protected function getStats(): array
     {
-        $total = Alumni::count();
-
-        $statusCounts = Alumni::query()
-            ->selectRaw('employment_status, COUNT(*) as total')
-            ->groupBy('employment_status')
-            ->pluck('total', 'employment_status');
-
-        $employed = (int) ($statusCounts['employed'] ?? 0);
-        $unemployed = (int) ($statusCounts['unemployed'] ?? 0);
-        $untraced = (int) ($statusCounts['untraced'] ?? 0);
-
-        $percentage = fn (int $count): string => $total > 0
-            ? number_format(($count / $total) * 100, 1).'% of alumni'
-            : 'No alumni records';
+        $summary = app(AlumniDashboardData::class)->summary();
+        $employmentRate = $summary['employment_rate'];
+        $knownEmploymentTotal = $summary['known_employment_total'];
+        $employmentRateValue = $employmentRate === null ? 'Unavailable' : number_format($employmentRate, 1).'%';
+        $employmentRateDescription = $employmentRate === null
+            ? 'No alumni have reported being employed or unemployed'
+            : $summary['statuses']['employed'].' employed out of '.$knownEmploymentTotal.' alumni who reported employed or unemployed';
+        $tracingCoverage = $summary['tracing_coverage'] === null
+            ? 'Unavailable'
+            : number_format($summary['tracing_coverage'], 1).'%';
+        $tracingDescription = $summary['total'] > 0
+            ? $summary['traced'].' of '.$summary['total'].' alumni traced'
+            : 'No alumni records to trace';
 
         return [
             Stat::make(
                 'Total Alumni',
-                number_format($total)
+                number_format($summary['total'])
             )
                 ->description('All registered alumni')
                 ->descriptionIcon('heroicon-m-academic-cap')
                 ->color('primary'),
 
-            Stat::make(
-                'Employed',
-                number_format($employed)
-            )
-                ->description($percentage($employed))
+            Stat::make('Employment Rate', $employmentRateValue)
+                ->description($employmentRateDescription)
                 ->descriptionIcon('heroicon-m-briefcase')
                 ->color('success'),
 
-            Stat::make(
-                'Unemployed',
-                number_format($unemployed)
-            )
-                ->description($percentage($unemployed))
-                ->descriptionIcon('heroicon-m-user-minus')
-                ->color('danger'),
-
-            Stat::make(
-                'Untraced',
-                number_format($untraced)
-            )
-                ->description($percentage($untraced))
+            Stat::make('Alumni Traced', $tracingCoverage)
+                ->description($tracingDescription)
                 ->descriptionIcon('heroicon-m-magnifying-glass')
                 ->color('warning'),
+
+            Stat::make(
+                'Missing or Unrecognized Status',
+                number_format($summary['statuses']['unknown'])
+            )
+                ->description('Includes blank or unrecognized status values')
+                ->descriptionIcon('heroicon-m-question-mark-circle')
+                ->color('gray'),
         ];
     }
 }

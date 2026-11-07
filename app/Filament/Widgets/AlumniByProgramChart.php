@@ -2,22 +2,22 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Alumni;
-use App\Models\Program;
+use App\Support\AlumniDashboardData;
 use App\Traits\RoleBasedAccessControl;
 use Filament\Widgets\ChartWidget;
 
 class AlumniByProgramChart extends ChartWidget
 {
     use RoleBasedAccessControl;
+
     public static function canView(): bool
     {
         return static::hasWidgetAccess();
     }
 
-    protected ?string $heading = 'Alumni by Program';
+    protected ?string $heading = 'Employment Status by Program';
 
-    protected ?string $description = 'Employment status distribution per program';
+    protected ?string $description = 'Bars show the percentage in each status, including missing or unrecognized status. Program labels show the total number of alumni, including archived programs.';
 
     protected ?string $maxHeight = '400px';
 
@@ -28,78 +28,15 @@ class AlumniByProgramChart extends ChartWidget
 
     protected function getData(): array
     {
-        $programs = Program::query()
-            ->whereHas('alumni')
-            ->orderBy('program_name')
-            ->get();
-
-        $counts = Alumni::query()
-            ->selectRaw('program_id, employment_status, COUNT(*) as total')
-            ->groupBy('program_id', 'employment_status')
-            ->get();
-
-        $employed = $programs->map(function ($program) use ($counts) {
-            return (int)($counts
-                ->where('program_id', $program->id)
-                ->where('employment_status', 'employed')
-                ->first()?->total ?? 0);
-        });
-
-        $unemployed = $programs->map(function ($program) use ($counts) {
-            return (int)($counts
-                ->where('program_id', $program->id)
-                ->where('employment_status', 'unemployed')
-                ->first()?->total ?? 0);
-        });
-
-        $untraced = $programs->map(function ($program) use ($counts) {
-            return (int)($counts
-                ->where('program_id', $program->id)
-                ->where('employment_status', 'untraced')
-                ->first()?->total ?? 0);
-        });
+        $programData = app(AlumniDashboardData::class)->employmentByProgram();
 
         return [
-            'labels' => $programs
-                ->pluck('program_name')
-                ->toArray(),
-
+            'labels' => $programData['labels'],
             'datasets' => [
-                [
-                    'label' => 'Employed',
-                    'data' => $employed->toArray(),
-                    'backgroundColor' => '#22C55E',
-                    'borderColor' => '#16A34A',
-                    'borderWidth' => 1,
-                    'borderRadius' => 5,
-                    'borderSkipped' => false,
-                    'barThickness' => 45,
-                    'maxBarThickness' => 55,
-                ],
-
-                [
-                    'label' => 'Unemployed',
-                    'data' => $unemployed->toArray(),
-                    'backgroundColor' => '#3B82F6',
-                    'borderColor' => '#2563EB',
-                    'borderWidth' => 1,
-                    'borderRadius' => 5,
-                    'borderSkipped' => false,
-                    'barThickness' => 45,
-                    'maxBarThickness' => 55,
-                ],
-
-                [
-                    'label' => 'Untraced',
-                    'data' => $untraced->toArray(),
-                    'backgroundColor' => '#F59E0B',
-                    'borderColor' => '#D97706',
-                    'borderWidth' => 1,
-                    'borderRadius' => 5,
-                    'borderSkipped' => false,
-                    'barThickness' => 45,
-                    'maxBarThickness' => 55,
-                ],
+                ['label' => 'Employed', 'data' => $programData['percentages']['employed'], 'backgroundColor' => '#22C55E'],
+                ['label' => 'Unemployed', 'data' => $programData['percentages']['unemployed'], 'backgroundColor' => '#3B82F6'],
+                ['label' => 'Untraced', 'data' => $programData['percentages']['untraced'], 'backgroundColor' => '#F59E0B'],
+                ['label' => 'Unknown', 'data' => $programData['percentages']['unknown'], 'backgroundColor' => '#9CA3AF'],
             ],
         ];
     }
@@ -109,62 +46,14 @@ class AlumniByProgramChart extends ChartWidget
         return [
             'responsive' => true,
             'maintainAspectRatio' => false,
-
-            'interaction' => [
-                'mode' => 'index',
-                'intersect' => false,
-            ],
-
+            'indexAxis' => 'y',
             'plugins' => [
-                'legend' => [
-                    'display' => true,
-                    'position' => 'bottom',
-
-                    'labels' => [
-                        'usePointStyle' => true,
-                        'pointStyle' => 'rectRounded',
-                        'padding' => 20,
-                    ],
-                ],
-
-                'tooltip' => [
-                    'mode' => 'index',
-                    'intersect' => false,
-                ],
+                'legend' => ['display' => true, 'position' => 'bottom'],
+                'tooltip' => ['mode' => 'index', 'intersect' => false, 'axis' => 'y'],
             ],
-
             'scales' => [
-                'x' => [
-                    'stacked' => true,
-
-                    'grid' => [
-                        'display' => false,
-                    ],
-
-                    'ticks' => [
-                        'maxRotation' => 0,
-                        'minRotation' => 0,
-                        'autoSkip' => false,
-                    ],
-                ],
-
-                'y' => [
-                    'stacked' => true,
-                    'beginAtZero' => true,
-
-                    'ticks' => [
-                        'precision' => 0,
-                        'stepSize' => 1,
-                    ],
-
-                    'grid' => [
-                        'color' => 'rgba(156, 163, 175, 0.15)',
-                    ],
-
-                    'border' => [
-                        'display' => false,
-                    ],
-                ],
+                'x' => ['stacked' => true, 'min' => 0, 'max' => 100],
+                'y' => ['stacked' => true],
             ],
         ];
     }

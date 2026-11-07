@@ -22,7 +22,9 @@ it('exports alumni from a selected campus with its linked campus name', function
     $secondProgram = Program::query()->create(['campus_id' => $secondCampus->id, 'program_name' => 'Business Administration']);
     $user = User::factory()->create();
     $matchingAlumni = Alumni::factory()->for($firstProgram)->create(['user_id' => $user->id]);
-    Alumni::factory()->for($secondProgram)->create(['user_id' => $user->id]);
+    Alumni::factory()->for($secondProgram)->create([
+        'user_id' => User::factory()->create(['email' => 'other-campus-alumni@example.test'])->id,
+    ]);
 
     $export = new AlumniDataExport(campusId: $firstCampus->id);
     $record = $export->query()->firstOrFail();

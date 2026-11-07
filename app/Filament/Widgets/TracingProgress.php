@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Alumni;
+use App\Support\AlumniDashboardData;
 use App\Traits\RoleBasedAccessControl;
 use Filament\Widgets\ChartWidget;
 
@@ -17,7 +17,7 @@ class TracingProgress extends ChartWidget
 
     protected ?string $heading = 'Tracing Progress';
 
-    protected ?string $description = 'Progress of traced and untraced alumni';
+    protected ?string $description = 'Shows how many alumni have a staff tracing date recorded.';
 
     protected ?string $maxHeight = '300px';
 
@@ -33,34 +33,21 @@ class TracingProgress extends ChartWidget
 
     protected function getData(): array
     {
-        $statusCounts = Alumni::query()
-            ->selectRaw('employment_status, COUNT(*) as total')
-            ->groupBy('employment_status')
-            ->pluck('total', 'employment_status');
+        $summary = app(AlumniDashboardData::class)->summary();
 
-        $employed = (int)($statusCounts['employed'] ?? 0);
-        $unemployed = (int)($statusCounts['unemployed'] ?? 0);
-        $untraced = (int)($statusCounts['untraced'] ?? 0);
+        if ($summary['total'] === 0) {
+            return [];
+        }
 
-        $traced = $employed + $unemployed;
-
-        $total = $traced + $untraced;
-
-        $tracedPercentage = $total > 0
-            ? round(($traced / $total) * 100, 1)
-            : 0;
-
-        $untracedPercentage = $total > 0
-            ? round(($untraced / $total) * 100, 1)
-            : 0;
+        $notTracedPercentage = round(($summary['not_traced'] / $summary['total']) * 100, 1);
 
         return [
             'datasets' => [
                 [
                     'label' => 'Tracing Progress',
                     'data' => [
-                        $tracedPercentage,
-                        $untracedPercentage,
+                        $summary['traced'],
+                        $summary['not_traced'],
                     ],
 
                     'backgroundColor' => [
@@ -76,8 +63,8 @@ class TracingProgress extends ChartWidget
             ],
 
             'labels' => [
-                "Traced ({$tracedPercentage}%)",
-                "Untraced ({$untracedPercentage}%)",
+                'Traced: '.$summary['traced'].' of '.$summary['total'].' alumni ('.number_format($summary['tracing_coverage'], 1).'%)',
+                'Not yet traced: '.$summary['not_traced'].' of '.$summary['total'].' alumni ('.number_format($notTracedPercentage, 1).'%)',
             ],
         ];
     }
