@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 
 class Alumni extends Model
 {
@@ -30,6 +31,23 @@ class Alumni extends Model
         return $query->where('employment_status', $employmentStatus);
     }
 
+    public function scopeLatestPerAccount(Builder $query): Builder
+    {
+        return $query->whereNotExists(function (QueryBuilder $newerAlumni): void {
+            $newerAlumni->selectRaw('1')
+                ->from('alumnis as newer_alumni')
+                ->whereColumn('newer_alumni.user_id', 'alumnis.user_id')
+                ->whereNull('newer_alumni.deleted_at')
+                ->where(function (QueryBuilder $timestamp): void {
+                    $timestamp->whereColumn('newer_alumni.updated_at', '>', 'alumnis.updated_at')
+                        ->orWhere(function (QueryBuilder $tie): void {
+                            $tie->whereColumn('newer_alumni.updated_at', 'alumnis.updated_at')
+                                ->whereColumn('newer_alumni.id', '>', 'alumnis.id');
+                        });
+                });
+        });
+    }
+
     public function program(): BelongsTo
     {
         return $this->belongsTo(Program::class);
@@ -49,6 +67,4 @@ class Alumni extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    
 }

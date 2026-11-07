@@ -2,10 +2,14 @@
 
 namespace App\Filament\Resources\Alumnis\Schemas;
 
+use App\Models\Alumni;
+use App\Models\Campus;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -93,12 +97,35 @@ class AlumniForm
                 ->description('Program and graduation details.')
                 ->icon('heroicon-o-academic-cap')
                 ->schema([
-                    Select::make('program_id')
+                    Select::make('campus_id')
                         ->disabled($lockIdentity)
-                        ->label('Program')
-                        ->relationship('program', 'program_name', modifyQueryUsing: fn (Builder $query): Builder => $lockIdentity ? $query->withTrashed() : $query)
+                        ->label('Campus')
+                        ->options(fn (): array => Campus::query()
+                            ->when($lockIdentity, fn (Builder $query): Builder => $query->withTrashed())
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->all())
                         ->searchable()
                         ->preload()
+                        ->live()
+                        ->required()
+                        ->dehydrated(false)
+                        ->afterStateHydrated(fn (Select $component, ?Alumni $record) => $component->state($record?->program?->campus_id))
+                        ->afterStateUpdated(fn (Set $set) => $set('program_id', null)),
+
+                    Select::make('program_id')
+                        ->disabled($lockIdentity)
+                        ->label('Department')
+                        ->relationship(
+                            'program',
+                            'program_name',
+                            modifyQueryUsing: fn (Builder $query, Get $get): Builder => $query
+                                ->where('campus_id', $get('campus_id'))
+                                ->when($lockIdentity, fn (Builder $query): Builder => $query->withTrashed()),
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->disabled(fn (Get $get): bool => blank($get('campus_id')) && ! $lockIdentity)
                         ->required(),
 
                     DatePicker::make('graduation_year')

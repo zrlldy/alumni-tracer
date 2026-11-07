@@ -2,85 +2,61 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Alumni;
+use App\Support\AlumniDashboardData;
 use App\Traits\RoleBasedAccessControl;
 use Filament\Widgets\ChartWidget;
 
 class AlumniLineChart extends ChartWidget
 {
     use RoleBasedAccessControl;
+
     public static function canView(): bool
     {
         return static::hasWidgetAccess();
     }
 
-    protected ?string $heading = 'Employment Status';
+    protected ?string $heading = 'Employment Rate by Graduation Year';
+
+    protected ?string $description = 'Percentage employed among alumni who reported being employed or unemployed. Labels show how many alumni are included in each rate.';
+
+    protected ?string $maxHeight = '300px';
 
     protected function getData(): array
     {
-        $years = range(2015, now()->year);
-
-        $employed = [];
-        $unemployed = [];
-        $untraced = [];
-
-        foreach ($years as $year) {
-            $employed[] = Alumni::whereYear('graduation_year', $year)
-                ->where('employment_status', 'employed')
-                ->count();
-
-            $unemployed[] = Alumni::whereYear('graduation_year', $year)
-                ->where('employment_status', 'unemployed')
-                ->count();
-
-            $untraced[] = Alumni::whereYear('graduation_year', $year)
-                ->where('employment_status', 'untraced')
-                ->count();
-        }
+        $cohorts = app(AlumniDashboardData::class)->employmentByGraduationYear();
 
         return [
-            'datasets' => [
-                [
-                    'label' => 'Employed',
-                    'data' => $employed,
-                    'borderColor' => '#10b981',
-                    'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
-                    'borderWidth' => 3,
-                    'tension' => 0.4,
-                    'pointRadius' => 3,
-                    'fill' => true,
-                ],
-
-                [
-                    'label' => 'Unemployed',
-                    'data' => $unemployed,
-                    'borderColor' => '#ef4444',
-                    'backgroundColor' => 'rgba(239, 68, 68, 0.05)',
-                    'borderWidth' => 3,
-                    'tension' => 0.4,
-                    'pointRadius' => 3,
-                    'fill' => true,
-                ],
-
-                [
-                    'label' => 'Untraced',
-                    'data' => $untraced,
-                    'borderColor' => '#f59e0b',
-                    'backgroundColor' => 'rgba(245, 158, 11, 0.05)',
-                    'borderWidth' => 2,
-                    'borderDash' => [6, 6],
-                    'tension' => 0.4,
-                    'pointRadius' => 3,
-                    'fill' => true,
-                ],
-            ],
-
-            'labels' => $years,
+            'datasets' => [[
+                'label' => 'Percent employed',
+                'data' => $cohorts['rates'],
+                'borderColor' => '#10b981',
+                'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                'borderWidth' => 3,
+                'tension' => 0.3,
+                'pointRadius' => 3,
+                'spanGaps' => false,
+            ]],
+            'labels' => $cohorts['labels'],
         ];
     }
 
     protected function getType(): string
     {
         return 'line';
+    }
+
+    protected function getOptions(): array
+    {
+        return [
+            'responsive' => true,
+            'maintainAspectRatio' => false,
+            'scales' => [
+                'y' => [
+                    'min' => 0,
+                    'max' => 100,
+                    'ticks' => ['stepSize' => 20],
+                ],
+            ],
+        ];
     }
 }
