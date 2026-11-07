@@ -5,10 +5,11 @@ namespace App\Exports;
 use App\Models\Campus;
 use App\Models\Program;
 use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class AlumniImportTemplateExport implements WithMultipleSheets
+class AlumniImportTemplateExport implements Export, WithMultipleSheets
 {
     /**
      * @return array<AlumniImportTemplateSheetExport>
