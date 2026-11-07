@@ -75,6 +75,7 @@ class AlumniDataReport extends Page implements HasTable
         return $table
             ->query(
                 Alumni::query()
+                    ->latestPerAccount()
                     ->with('program.campus')
                     ->orderBy('id')
             )

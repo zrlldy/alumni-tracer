@@ -4,6 +4,7 @@ namespace App\Filament\Imports;
 
 use App\Models\Alumni;
 use App\Models\Program;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -12,12 +13,33 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class AlumniImporter implements ToModel, WithHeadingRow, WithValidation
 {
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    public function prepareForValidation(array $row, int $index): array
+    {
+        $campusName = trim((string) ($row['campus'] ?? ''));
+        $departmentName = trim((string) ($row['department'] ?? ''));
+        $programIds = Program::query()
+            ->where('program_name', $departmentName)
+            ->where('is_active', true)
+            ->whereHas('campus', fn (Builder $query): Builder => $query
+                ->where('name', $campusName)
+                ->where('is_active', true))
+            ->limit(2)
+            ->pluck('id');
+
+        return [
+            ...$row,
+            'campus' => $campusName,
+            'department' => $departmentName,
+            'program_id' => $programIds->count() === 1 ? $programIds->first() : null,
+        ];
+    }
+
     public function model(array $row): Alumni
     {
-        $program = Program::where('program_name', $row['program'])
-            ->where('is_active', true)
-            ->first();
-
         $dateTraced = ! empty($row['date_traced'])
             ? Date::excelToDateTimeObject($row['date_traced'])->format('Y-m-d')
             : null;
@@ -34,7 +56,7 @@ class AlumniImporter implements ToModel, WithHeadingRow, WithValidation
             'email' => $row['email'] ?? null,
             'phone_number' => $row['phone_number'] ?? null,
             'current_address' => $row['current_address'] ?? null,
-            'program_id' => $program->id,
+            'program_id' => $row['program_id'],
             'graduation_year' => $graduationYear,
             'employment_status' => $row['employment_status'] ?? null,
             'remarks' => $row['remarks'] ?? null,
@@ -89,9 +111,19 @@ class AlumniImporter implements ToModel, WithHeadingRow, WithValidation
                 'max:255',
             ],
 
-            'program' => [
+            'campus' => [
+                'required',
+                'exists:campuses,name',
+            ],
+
+            'department' => [
                 'required',
                 'exists:programs,program_name',
+            ],
+
+            'program_id' => [
+                'required',
+                'exists:programs,id',
             ],
 
             'graduation_year' => [
@@ -130,6 +162,12 @@ class AlumniImporter implements ToModel, WithHeadingRow, WithValidation
             'student_number.distinct' => 'This student number appears more than once in the Excel file.',
 
             'student_number.required' => 'Student number is required.',
+            'program_id.required' => 'The selected department must belong to the selected campus.',
         ];
+    }
+
+    public function customValidationAttributes(): array
+    {
+        return ['program_id' => 'department'];
     }
 }

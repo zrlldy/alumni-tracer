@@ -114,7 +114,7 @@ class GoogleAuthController extends Controller
             ($userByEmail && $userByEmail->trashed())
         ) {
             return $this->failure(
-                'This account has been deactivated. Please contact HR/Admin.'
+                'This account has been deactivated. Please contact Admin.'
             );
         }
 
@@ -125,7 +125,7 @@ class GoogleAuthController extends Controller
             $userByGoogleId->id !== $userByEmail->id
         ) {
             return $this->failure(
-                'Your Google account and email are associated with different user profiles. Please contact HR/Admin.'
+                'Your Google account and email are associated with different user profiles. Please contact Admin.'
             );
         }
 
@@ -139,7 +139,7 @@ class GoogleAuthController extends Controller
                 Str::lower(trim((string) $userByGoogleId->email)) !== $email
             ) {
                 return $this->failure(
-                    'Your Google account email does not match the email registered in your profile. Please contact HR/Admin.'
+                    'Your Google account email does not match the email registered in your profile. Please contact Admin.'
                 );
             }
 
@@ -149,7 +149,7 @@ class GoogleAuthController extends Controller
                 ! hash_equals((string) $user->google_id, $googleId)
             ) {
                 return $this->failure(
-                    'This Google account does not match the one linked to your profile. Please contact HR/Admin.'
+                    'This Google account does not match the one linked to your profile. Please contact Admin.'
                 );
             }
 
@@ -175,24 +175,24 @@ class GoogleAuthController extends Controller
 
             // Do not create another account when the Google name is already
             // used. A name match is never sufficient to link accounts.
-            $existingNameUser = User::withTrashed()
-                ->whereRaw(
-                    'LOWER(TRIM(name)) = ?',
-                    [Str::lower($name)]
-                )
-                ->first();
+            // $existingNameUser = User::withTrashed()
+            //     ->whereRaw(
+            //         'LOWER(TRIM(name)) = ?',
+            //         [Str::lower($name)]
+            //     )
+            //     ->first();
 
-            if ($existingNameUser) {
-                if ($existingNameUser->trashed()) {
-                    return $this->failure(
-                        'A deactivated account already uses this name. Please contact HR/Admin.'
-                    );
-                }
+            // if ($existingNameUser) {
+            //     if ($existingNameUser->trashed()) {
+            //         return $this->failure(
+            //             'A deactivated account already uses this name. Please contact Admin.'
+            //         );
+            //     }
 
-                return $this->failure(
-                    'An account with this name already exists. For security, Google sign-in cannot automatically link accounts using a name alone. Please use your registered email address or contact HR/Admin.'
-                );
-            }
+            //     return $this->failure(
+            //         'An account with this name already exists. For security, Google sign-in cannot automatically link accounts using a name alone. Please use your registered email address or contact Admin.'
+            //     );
+            // }
 
             try {
                 $user = User::query()->create([
@@ -208,7 +208,7 @@ class GoogleAuthController extends Controller
                 report($exception);
 
                 return $this->failure(
-                    'An account using this email, name, or Google identity already exists. Please sign in with your registered account or contact HR/Admin.'
+                    'An account using this email, name, or Google identity already exists. Please sign in with your registered account or contact Admin.'
                 );
             }
         }

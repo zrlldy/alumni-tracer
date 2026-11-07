@@ -26,7 +26,9 @@ it('filters the report and download by linked campus', function () {
     $allocation = UserAllocation::query()->create(['role_id' => $role->id, 'management_scope' => 'all_program', 'max_users' => 10]);
     $user = User::factory()->create(['user_allocation_id' => $allocation->id]);
     $matchingAlumni = Alumni::factory()->for($firstProgram)->create(['user_id' => $user->id]);
-    $otherAlumni = Alumni::factory()->for($secondProgram)->create(['user_id' => $user->id]);
+    $otherAlumni = Alumni::factory()->for($secondProgram)->create([
+        'user_id' => User::factory()->create(['email' => 'other-report-alumni@example.test'])->id,
+    ]);
 
     Excel::fake();
     $this->withoutVite();
@@ -42,6 +44,68 @@ it('filters the report and download by linked campus', function () {
     Excel::assertDownloaded('alumni-data-report.xlsx', fn (AlumniDataExport $export): bool => $export->query()->pluck('id')->all() === [$matchingAlumni->id]
         && $export->headings()[0][0] === 'North Campus'
     );
+});
+
+it('shows and exports only the latest active alumni record per account', function () {
+    $campus = Campus::query()->create(['name' => 'North Campus']);
+    $program = Program::query()->create([
+        'campus_id' => $campus->id,
+        'program_name' => 'Information Technology',
+    ]);
+    $role = Role::query()->create([
+        'name' => 'Report Staff',
+        'action' => ['view', 'export'],
+        'access_page' => [AlumniDataReport::getSlug()],
+    ]);
+    $allocation = UserAllocation::query()->create([
+        'role_id' => $role->id,
+        'management_scope' => 'all_program',
+        'max_users' => 10,
+    ]);
+    $staff = User::factory()->create([
+        'email' => 'report-staff@example.test',
+        'user_allocation_id' => $allocation->id,
+    ]);
+    $account = User::factory()->create(['email' => 'alumni-owner@example.test']);
+
+    $older = Alumni::factory()->for($program)->create([
+        'user_id' => $account->id,
+        'employment_status' => 'unemployed',
+        'updated_at' => '2026-10-01 10:00:00',
+    ]);
+    $sameTimeOlder = Alumni::factory()->for($program)->create([
+        'user_id' => $account->id,
+        'employment_status' => 'unemployed',
+        'updated_at' => '2026-10-02 10:00:00',
+    ]);
+    $latestActive = Alumni::factory()->for($program)->create([
+        'user_id' => $account->id,
+        'employment_status' => 'employed',
+        'updated_at' => '2026-10-02 10:00:00',
+    ]);
+    $archivedNewer = Alumni::factory()->for($program)->create([
+        'user_id' => $account->id,
+        'employment_status' => 'untraced',
+        'updated_at' => '2026-10-03 10:00:00',
+    ]);
+    $archivedNewer->delete();
+
+    Excel::fake();
+    $this->withoutVite();
+    $this->actingAs($staff);
+    Filament::setCurrentPanel('online');
+
+    Livewire::test(AlumniDataReport::class)
+        ->assertCanSeeTableRecords([$latestActive])
+        ->assertCanNotSeeTableRecords([$older, $sameTimeOlder, $archivedNewer])
+        ->callAction('exportXlsx');
+
+    Excel::assertDownloaded('alumni-data-report.xlsx', function (AlumniDataExport $export) use ($latestActive): bool {
+        $record = $export->query()->sole();
+
+        return $record->is($latestActive)
+            && $export->map($record)[4] === 'Employed';
+    });
 });
 
 it('shows only alumni who graduated in the selected year', function () {
