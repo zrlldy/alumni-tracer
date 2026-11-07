@@ -4,22 +4,52 @@ namespace App\Exports;
 
 use App\Models\Campus;
 use App\Models\Program;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class AlumniImportTemplateExport implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
+class AlumniImportTemplateExport implements WithMultipleSheets
 {
-    public function array(): array
+    /**
+     * @return array<AlumniImportTemplateSheetExport>
+     */
+    public function sheets(): array
     {
-        return [];
+        return [
+            $this->alumniSheet(),
+            new AlumniImportTemplateSheetExport('Education', [
+                'student_number',
+                'institution',
+                'program',
+                'degree_level',
+                'units_completed',
+                'status',
+                'started_at',
+                'ended_at',
+            ]),
+            new AlumniImportTemplateSheetExport('Employment', [
+                'student_number',
+                'company_name',
+                'position',
+                'company_address',
+                'industry',
+                'employment_type',
+                'is_course_related',
+                'date_hired',
+                'starting_date',
+                'ended_at',
+                'supported_documents',
+                'is_current',
+            ], [
+                ['heading' => 'is_course_related', 'options' => ['Yes', 'No'], 'label' => 'Course relation'],
+                ['heading' => 'is_current', 'options' => ['Yes', 'No'], 'label' => 'Current employment'],
+            ]),
+        ];
     }
 
+    /**
+     * @return array<string>
+     */
     public function headings(): array
     {
         return [
@@ -40,58 +70,21 @@ class AlumniImportTemplateExport implements FromArray, ShouldAutoSize, WithHeadi
         ];
     }
 
-    public function styles(Worksheet $sheet): ?array
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public function styles(Worksheet $sheet): array
     {
-        $campuses = Campus::query()->where('is_active', true)->orderBy('name')->pluck('name')->all();
-        $programs = Program::query()->where('is_active', true)->orderBy('program_name')->pluck('program_name')->all();
+        return $this->alumniSheet()->styles($sheet);
+    }
 
-        // Text format for student_number, including A2 and all rows below.
-        $sheet->getStyle('A:A')
-            ->getNumberFormat()
-            ->setFormatCode('@');
-
-        // Enable Excel's quote-prefix style.
-        $sheet->getStyle('A:A')->setQuotePrefix(true);
-
-        foreach ([['H', $campuses, 'Campus'], ['I', $programs, 'Department']] as [$column, $options, $label]) {
-            if ($options === []) {
-                continue;
-            }
-
-            $range = "{$column}2:{$column}1048576";
-
-            $validation = new DataValidation;
-
-            $validation
-                ->setType(DataValidation::TYPE_LIST)
-                ->setErrorStyle(DataValidation::STYLE_STOP)
-                ->setAllowBlank(false)
-                ->setShowDropDown(true)
-                ->setShowInputMessage(true)
-                ->setShowErrorMessage(true)
-                ->setPromptTitle("Select {$label}")
-                ->setPrompt('Choose a '.$label.' from the dropdown.')
-                ->setErrorTitle("Invalid {$label}")
-                ->setError('Please select a '.$label.' from the list.')
-                ->setFormula1(
-                    '"'.str_replace('"', '""', implode(',', $options)).'"'
-                )
-                ->setSqref($range);
-
-            $sheet->setDataValidation($range, $validation);
-        }
-
-        return [
-            'A1:'.Coordinate::stringFromColumnIndex(count($this->headings())).'1' => [
-                'font' => [
-                    'bold' => true,
-                    'color' => ['rgb' => 'FFFFFF'],
-                ],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '800000'],
-                ],
-            ],
-        ];
+    private function alumniSheet(): AlumniImportTemplateSheetExport
+    {
+        return new AlumniImportTemplateSheetExport('Alumni', $this->headings(), [
+            ['heading' => 'campus', 'options' => Campus::query()->where('is_active', true)->orderBy('name')->pluck('name')->all(), 'label' => 'Campus'],
+            ['heading' => 'department', 'options' => Program::query()->where('is_active', true)
+                ->whereHas('campus', fn (Builder $query): Builder => $query->where('is_active', true))
+                ->orderBy('program_name')->pluck('program_name')->all(), 'label' => 'Department'],
+        ]);
     }
 }

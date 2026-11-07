@@ -6,13 +6,44 @@ use App\Models\Alumni;
 use App\Models\Program;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class AlumniImporter implements ToModel, WithHeadingRow, WithValidation
+class AlumniImporter implements SkipsUnknownSheets, ToModel, WithHeadingRow, WithMultipleSheets, WithValidation
 {
+    /** @var array<string, true> */
+    private array $importedStudentNumbers = [];
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    public function sheets(): array
+    {
+        return [
+            0 => $this,
+            'Alumni' => $this,
+            'Education' => new AlumniEducationImporter($this),
+            'Employment' => new AlumniEmploymentImporter($this),
+        ];
+    }
+
+    public function onUnknownSheet(string|int $sheetName): void
+    {
+        // Older import files may not include the optional history worksheets.
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function importedStudentNumbers(): array
+    {
+        return array_keys($this->importedStudentNumbers);
+    }
+
     /**
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>
@@ -47,6 +78,8 @@ class AlumniImporter implements ToModel, WithHeadingRow, WithValidation
         $graduationYear = ! empty($row['graduation_year'])
             ? Date::excelToDateTimeObject($row['graduation_year'])->format('Y-m-d')
             : null;
+
+        $this->importedStudentNumbers[(string) $row['student_number']] = true;
 
         return new Alumni([
             'student_number' => $row['student_number'],

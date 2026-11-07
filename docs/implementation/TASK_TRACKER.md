@@ -30,6 +30,7 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views with recipient-name greetings; welcome sends on `Verified`. All ten Blade email files share a formal graduate-records design with the existing brand colors and inline artwork; focused array-mailer tests and synthetic desktop/phone previews pass. Live inbox/client acceptance remains unverified. |
 | AT-N02-LINK | Verification email URL fallback | IMPLEMENTED BUT UNVERIFIED | The active verification email now displays its escaped verification URL as a text hyperlink below the button. Other notification templates do not opt into the extra link. `git diff --check` passed; template rendering and inbox delivery were not checked. |
 | AT-I01 | Staged reviewed legacy/flat import | PLANNED | AT-A02/F01/F02/T01, DEC-04/10 |
+| AT-I01-TEMPLATE | Direct Alumni template import with campus, education and employment sheets | IMPLEMENTED BUT UNVERIFIED | Adds history sheets to the current template/importer and links rows by student number within the same workbook. Does not close AT-I01 or support the unavailable legacy workbook/staged review workflow. |
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
 | AT-R01-DASH | Dashboard analytics accuracy and chart fit | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-DASH.md). Status/tracing denominators and chart types corrected; cohort rates and program percentages have explicit sample sizes. Focused tests pass; browser rendering and management-scope isolation remain unverified. Full AT-R01 is still planned. |
 | AT-R01-LATEST | Latest active record per account in Alumni Data Report/export | VERIFIED COMPLETED | [Record](completed/AT-R01-LATEST.md). Focused report/export behavior, timestamp ties, archived rows and campus-filter preservation passed on SQLite memory. This does not complete AT-R01. |
@@ -327,3 +328,10 @@ Removed three unescaped semicolons from the Owned form sequence message labels i
 
 1. Grouped user identity, profile/sign-in information, and timestamps into sections. Student ID and email are copyable; the stored public avatar path now renders as a circular profile picture. No account or access behavior changed.
 2. Pint, PHP syntax validation and `git diff --check` passed. Tests and browser rendering were not run.
+
+## Latest handoff — AT-I01-TEMPLATE current Alumni workbook, 2026-11-07
+
+1. Added `Education` and `Employment` sheets to the existing XLSX template and import path. Multiple history rows reference the `student_number` of an Alumni row in the same workbook. The Alumni sheet retains its existing campus/department dropdowns; both references must resolve to existing active records. Blank optional course-related flags normalize to null.
+2. Verification: Pint passed on the five changed PHP files; PHP syntax validation passed on all five; `git diff --check` passed. Automated tests were not run. No import was executed and no database records were changed.
+3. Limits: education end date, employment date hired, company address and supporting document reference remain required because the current schema requires them. Current direct import remains insert-only; existing alumni numbers are rejected. Leading-zero/string student IDs remain limited by the existing integer column/import validation.
+4. AT-A02 remains BLOCKED until the source workbook is supplied; AT-I01 remains PLANNED behind its stated policy/schema/security dependencies. No legacy workbook parsing or staged preview/apply support is claimed.
