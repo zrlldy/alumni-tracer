@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Alumnis\Tables;
 use App\Exports\AlumniImportTemplateExport;
 use App\Filament\Imports\AlumniImporter;
 use App\Models\Alumni;
+use App\Models\User;
 use App\Traits\RoleBasedAccessControl;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -18,6 +19,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -25,6 +27,9 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException as LaravelValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Throwable;
@@ -32,6 +37,7 @@ use Throwable;
 class AlumnisTable
 {
     use RoleBasedAccessControl;
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -42,7 +48,7 @@ class AlumnisTable
                     ->color('primary')
                     ->modalHeading('Create Alumni Record')
                     ->modalDescription(
-                        'Enter the information of the new alumnus below.'
+                        'Create an admin-managed alumni record. Account linking is handled separately. Education and work history are optional.'
                     )
                     ->modalSubmitActionLabel('Create Alumni')
                     ->successNotificationTitle(
@@ -280,6 +286,73 @@ class AlumnisTable
                         ->visible(fn () => self::hasPermission('view')),
                     EditAction::make()
                         ->visible(fn () => self::hasPermission('edit')),
+                    Action::make('linkAccount')
+                        ->label('Link Account')
+                        ->icon('heroicon-o-link')
+                        ->modalHeading('Link an Alumni Account')
+                        ->modalDescription('Review the matching email or student ID, then confirm the account link. This does not create an account.')
+                        ->modalSubmitActionLabel('Link Account')
+                        ->schema([
+                            Select::make('user_id')
+                                ->label('Matching User Account')
+                                ->options(fn (Alumni $record): array => self::matchingAccounts($record)
+                                    ->orderBy('name')
+                                    ->get(['id', 'name', 'email', 'student_id'])
+                                    ->mapWithKeys(fn (User $user): array => [
+                                        $user->id => collect([$user->name, $user->email, $user->student_id])
+                                            ->filter()
+                                            ->implode(' · '),
+                                    ])
+                                    ->all())
+                                ->searchable()
+                                ->required()
+                                ->helperText('Candidates match by email or student ID. Verify the person before linking.'),
+                        ])
+                        ->action(function (array $data, Alumni $record): void {
+                            abort_unless(self::hasPermission('edit') && self::canAccessRecord($record), 403);
+
+                            try {
+                                DB::transaction(function () use ($data, $record): void {
+                                    $alumni = Alumni::withTrashed()
+                                        ->lockForUpdate()
+                                        ->findOrFail($record->id);
+
+                                    if ($alumni->trashed() || $alumni->user_id !== null) {
+                                        throw LaravelValidationException::withMessages([
+                                            'user_id' => 'This alumni record is no longer available for linking.',
+                                        ]);
+                                    }
+
+                                    abort_unless(self::canAccessRecord($alumni), 403);
+
+                                    $user = User::query()
+                                        ->lockForUpdate()
+                                        ->find($data['user_id']);
+
+                                    if (! $user || ! self::matchingAccounts($alumni)->whereKey($user->id)->exists()) {
+                                        throw LaravelValidationException::withMessages([
+                                            'user_id' => 'Select an active, unlinked account whose email or student ID matches this record.',
+                                        ]);
+                                    }
+
+                                    $alumni->user()->associate($user);
+                                    $alumni->save();
+                                });
+                            } catch (ModelNotFoundException) {
+                                throw LaravelValidationException::withMessages([
+                                    'user_id' => 'Select an active, unlinked account whose email or student ID matches this record.',
+                                ]);
+                            }
+
+                            Notification::make()
+                                ->title('Alumni account linked')
+                                ->success()
+                                ->send();
+                        })
+                        ->visible(fn (Alumni $record): bool => self::hasPermission('edit')
+                            && self::canAccessRecord($record)
+                            && $record->user_id === null
+                            && ! $record->trashed()),
 
                 ]),
             ])
@@ -306,5 +379,18 @@ class AlumnisTable
             ->emptyStateDescription(
                 'Create a new alumni record or import records from an Excel file.'
             );
+    }
+
+    private static function matchingAccounts(Alumni $alumni): Builder
+    {
+        $email = mb_strtolower(trim((string) $alumni->email));
+        $studentNumber = (string) $alumni->student_number;
+
+        return User::query()
+            ->where(function (Builder $query) use ($email, $studentNumber): void {
+                $query->whereRaw('LOWER(TRIM(email)) = ?', [$email])
+                    ->orWhereRaw('TRIM(student_id) = ?', [$studentNumber]);
+            })
+            ->whereDoesntHave('alumnis', fn (Builder $query): Builder => $query->withTrashed());
     }
 }

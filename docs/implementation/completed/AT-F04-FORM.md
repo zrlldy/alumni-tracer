@@ -63,3 +63,8 @@ Next action: verify desktop/mobile interactions using synthetic data in an isola
 Using a synthetic account and disposable SQLite database, native Chrome opened the existing form from the shared Dashboard, saved contact/work edits, showed success feedback and refreshed the work summary. A 390 × 843 responsive viewport showed the editor fields within the visible page width. The directory access leak discovered during this check was corrected in AT-F04-DASH's follow-up record. Focused form/dashboard tests passed 46/188; the full suite still has 12 unrelated campus fixture errors. Keyboard/focus, screen reader and live-environment acceptance remain UNVERIFIED, so this task remains **IMPLEMENTED BUT UNVERIFIED**.
 
 The later Dashboard page-grant alignment did not change form fields or persistence. Its combined focused form/dashboard suite passed 48 tests/189 assertions; allocated users without a Dashboard grant now receive 403 before the form can mount, while roleless accounts retain the page's safe notice.
+
+## 2026-11-07 staff manual history entry follow-up
+
+- Added optional relationship-backed education and employment repeaters to the staff AlumniResource create/edit form, including the table's Create Alumni modal. Existing history rows are not removable through these repeaters, and archived education rows are excluded because the education model does not apply Laravel's soft-delete scope.
+- Formatting and PHP syntax checks passed. No automated tests or browser/persistence checks were run for this follow-up; it remains unverified.

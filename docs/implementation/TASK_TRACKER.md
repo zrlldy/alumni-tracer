@@ -1,6 +1,6 @@
 # Alumni-Tracer task tracker
 
-Updated: 2026-11-06. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
+Updated: 2026-11-07. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.
 
@@ -15,15 +15,20 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-F01 | Staff bootstrap, panel/RBAC and policies | BLOCKED | Broader policies/path transition and approved scope decisions remain open. Newer commits add existing RBAC/role UI; earlier empty-role/account observations are historical, not current verified counts. AT-F04-FORM does not certify or replace that implementation. |
 | AT-F02 | Registry/string ID/schema expansion | PLANNED | DEC-04/05; reviewed forward migrations and rollout target; AT-F01 before exposure |
 | AT-F03 | Approved activation/authenticator repair | BLOCKED | AT-F01/02, DEC-01/token lifetime/contact proof; no approval assumed |
-| AT-F04 | Owned alumni portal/profile | IMPLEMENTED BUT UNVERIFIED | Scoped shared-panel form and dashboard are implemented. Synthetic desktop/phone checks passed for overview and save; keyboard/focus, live acceptance and broader account linking/lifecycle remain outstanding. Earlier separate-layout plan is superseded for this increment. |
-| AT-F04-FORM | Shared-panel alumni information create/update form | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-FORM.md). Combined focused form/dashboard suite 48/189; synthetic Chrome open/save and 390px field layout observed before the Dashboard page-grant correction. Keyboard/focus and live acceptance remain. Full suite has 12 baseline campus fixture errors. |
+| AT-F04 | Owned alumni portal/profile | IMPLEMENTED BUT UNVERIFIED | Scoped shared-panel form and dashboard are implemented. Synthetic desktop/phone checks passed for overview and save; keyboard/focus, live acceptance and broader account lifecycle remain outstanding. Explicit admin account linking is tracked separately below. Earlier separate-layout plan is superseded for this increment. |
+| AT-F04-FORM | Shared-panel alumni information create/update form | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-FORM.md). Staff AlumniResource create/edit forms now include optional education and employment relationship repeaters. Pint and PHP syntax checks passed; form persistence and browser rendering for this update remain unverified. Prior focused form/dashboard suite was 48/189; prior full suite had 12 baseline campus fixture errors. |
+| AT-F04-STAFF-UI | Compact staff Alumni history form | VERIFIED COMPLETED | [Record](completed/AT-F04-STAFF-UI.md). Staff-only history sections collapse by default, repeaters have clearer actions and entry labels, and deletion remains disabled. Focused staff tests pass 4/31; Pint, syntax and diff checks pass. Browser rendering remains unverified because the browser host is unavailable. |
+| AT-F04-SELF-SERVICE-TRIAGE | Existing alumni form/dashboard test and access gaps | PLANNED | Separate from the staff UI change. Findings and exact failures are in the latest handoff below. Any route, authorization, campus hydration or dashboard behavior changes require a separate approved task. |
 | AT-F04-DASH | Shared alumni progress dashboard and form entry | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-DASH.md). Allocated accounts now require the Dashboard page grant; roleless notice and `my_records` staff-directory denial remain. Focused suite 48/189; full isolated suite has 12 unrelated campus fixture errors. Prior synthetic Chrome desktop/390px overview and save observed; keyboard/focus and live acceptance remain. |
+| AT-F04-UNLINKED | Create admin-managed alumni without a linked account | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-UNLINKED.md). Forward migration makes `alumnis.user_id` nullable; SQLite feature test creates an unlinked alumni with education and employment rows (3 tests/22 assertions). Configured MariaDB migration and browser acceptance were not run. |
+| AT-F04-LINK | Explicitly link an existing matching user account | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-F04-LINK.md). Edit-authorized, scope-checked row action lists unlinked active accounts matching email or student ID, rechecks under locks, and rejects mismatches/already-linked users. Focused SQLite tests pass; browser and connected-DB acceptance remain unverified. |
 | AT-T01 | History/status/provenance model | PLANNED | AT-F02, DEC-05/06 |
 | AT-T02 | History editors/staff review | PLANNED | AT-T01/F04 |
 | AT-V01 | Survey definitions/version/publication | PLANNED | AT-F01/02, DEC-07 |
 | AT-V02 | Survey participation/response isolation | PLANNED | AT-V01/F04 |
 | AT-N01 | Queue delivery/notification outcomes | PLANNED | AT-V01/02, DEC-08 |
 | AT-N02 | Branded authentication email templates | VERIFIED COMPLETED | Filament reset, verification and email MFA use branded views with recipient-name greetings; welcome sends on `Verified`. All ten Blade email files share a formal graduate-records design with the existing brand colors and inline artwork; focused array-mailer tests and synthetic desktop/phone previews pass. Live inbox/client acceptance remains unverified. |
+| AT-N02-LINK | Verification email URL fallback | IMPLEMENTED BUT UNVERIFIED | The active verification email now displays its escaped verification URL as a text hyperlink below the button. Other notification templates do not opt into the extra link. `git diff --check` passed; template rendering and inbox delivery were not checked. |
 | AT-I01 | Staged reviewed legacy/flat import | PLANNED | AT-A02/F01/F02/T01, DEC-04/10 |
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
 | AT-R01-DASH | Dashboard analytics accuracy and chart fit | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-DASH.md). Status/tracing denominators and chart types corrected; cohort rates and program percentages have explicit sample sizes. Focused tests pass; browser rendering and management-scope isolation remain unverified. Full AT-R01 is still planned. |
@@ -255,3 +260,70 @@ Removed three unescaped semicolons from the Owned form sequence message labels i
 4. Limits: the earlier combined dashboard/report/export run, before the chart-fit changes, had **21 tests: 11 passed, 10 errors** from report/export fixtures missing required `programs.campus_id`. Existing dashboard management-scope isolation was not changed or certified. No live DB queries/writes, migration or production data were used.
 5. Status: AT-R01 remains PLANNED for scoped reporting/export consistency and its other dependencies; DEC-09 remains open for future exclusions. AT-R01-DASH remains IMPLEMENTED BUT UNVERIFIED pending rendered browser acceptance.
 6. Exact next recommended task: render the staff dashboard at desktop and phone widths with a synthetic authorized account, then continue full AT-R01 only after its authorization and policy prerequisites are resolved.
+
+## Latest handoff — AT-F04-UNLINKED admin-managed Alumni create, 2026-11-07
+
+1. Completed: added a forward migration allowing `alumnis.user_id` to be NULL and kept the existing FK. The staff Create Alumni action now describes the unlinked admin-managed flow and can save a registry row with manual education/employment entries without creating or matching an account.
+2. Verified: isolated SQLite feature tests passed **3 tests / 22 assertions**; the create action persisted the unlinked Alumni row and both history records. Pint and `git diff --check` passed.
+3. Not run: migration was not applied to the configured MariaDB, and browser acceptance was not performed. No connected data was changed. The migration rollback refuses to restore `NOT NULL` while unlinked rows exist.
+4. Security: NULL `user_id` yields no account ownership; existing alumni self-service resolution remains bound to `user_id`. Admin access still requires existing role/page/action grants.
+5. Exact next recommended task: apply the migration only to a confirmed intended environment with the required database authorization and backup/recovery readiness; then verify Create Alumni in the browser.
+
+
+## Latest handoff — AT-F04-LINK account linking, 2026-11-07
+
+1. Completed: added a staff-only `Link Account` row action for active Alumni rows without a user. It presents active accounts matching normalized email or exact student ID for explicit review and selection.
+2. Verified: focused table/form SQLite feature tests passed **6 tests / 43 assertions**. Tests cover both reference types, linking, mismatched candidate rejection, no-edit visibility, and unlinked creation with history. Pint and `git diff --check` passed.
+3. Security: the action rechecks edit permission and record scope, locks the Alumni and User, revalidates the match, and rejects accounts linked to any other active or archived Alumni. It creates no account and changes no RBAC grants.
+4. Not run: browser acceptance and configured MariaDB migration/linking. The nullable `user_id` migration remains pending on that database.
+5. Exact next recommended task: apply the migration only to the approved intended target, then verify the create and link flows in the browser with synthetic accounts.
+
+## Latest handoff — AT-F04-STAFF-UI and separate self-service triage, 2026-11-07
+
+1. Completed: staff Alumni create/edit history sections are collapsible and collapsed by default; education/employment repeaters use descriptive add labels and institution/company entry headings. `deletable(false)` and all self-service schema methods remain unchanged.
+2. Verified: staff schema suite passed **4 tests / 31 assertions**, including creating histories, updating existing history rows under collapsed sections, preserving row IDs and avoiding duplicates. Pint, PHP syntax checks and `git diff --check` passed.
+3. Self-service test fixture corrections: the shared test user now receives the current `MyInformation` page grant, and form input includes the required `campus_id` while model fixtures omit this non-persisted field. The historical invalid-snapshot errors from denied component mounting reduced to one lifecycle error after these corrections. Self-service suite now reports **39 passed, 8 failed, 1 error**.
+4. Individually reproduced outstanding self-service cases; each is pre-existing and outside the staff-only schema path:
+   - `it does not insert duplicate alumni or history records on repeated save` — existing form hydration defect: `fillForm()` omits `campus_id`, so the campus-filtered program field fails validation on the next save.
+   - `it denies the alumni form outside the self-record scope` — authorization/security inconsistency: `AlumniInformationForm::canAccess()` admits `all_program`; `.ai/rules/pages.md` limits the owned overview to `my_records`.
+   - `it shows the alumni form on the shared dashboard without administrative widgets` — existing integration/documentation mismatch: the requirement and test expect the owned form on Dashboard, but current source serves it from My Information.
+   - `it keeps the staff alumni directory inaccessible to an alumni form account` — fails at the same stale Dashboard form assertion before reaching its direct-directory URL assertions; rerun those URLs separately after the Dashboard integration is reconciled.
+   - `it denies the shared dashboard route when an allocated account lacks its page grant` and `it denies the alumni dashboard component without its page grant` — outdated 403 expectations; Dashboard intentionally redirects these users to Get Started.
+   - `it does not show private dashboard records after the alumni allocation is revoked` — Livewire test lifecycle mismatch: the first refresh redirects, then a second refresh is sent with no valid component snapshot.
+   - `it keeps the archived program label visible for an existing alumni record` — same existing campus hydration defect: `fillForm()` omits campus state required by the campus-filtered program options.
+   - `it shows an access notice instead of staff widgets for a no-access scope` — existing Dashboard integration/UX gap; current source has no notice content for this allocated `no_access` case, despite the test and prior AT-F04-DASH record expecting one.
+   No failure was attributable to the staff-only `historySections()` path; no self-service application behavior was changed.
+5. Browser rendering was attempted twice in this session; the browser access host was unavailable. The collapsed state, expansion interaction and rendered repeater headings are therefore visually unverified. Automated completion applies only to the staff UI subtask; broader AT-F04 and self-service triage remain open.
+6. Next: schedule AT-F04-SELF-SERVICE-TRIAGE separately, starting with `my_records` authorization and campus hydration. Do not fold those behavior changes into the staff UI task.
+
+## Latest handoff — AT-N02 verification URL fallback, 2026-11-07
+
+1. Updated the active verification email template to show the signed verification URL as a readable hyperlink below the existing Verify Email button. The shared notification view renders it only when the verification wrapper opts in; reset, welcome and other action emails keep their existing layout.
+2. `git diff --check` passed. Template tests and rendered inbox/browser checks were not run. No routes, signatures, delivery settings or account behavior changed.
+
+## Latest handoff — AT-F04 staff form layout polish, 2026-11-07
+
+1. Adjusted the staff form to use full-width sections throughout; Contact and Academic fields use their regular two-column field layout. Optional education and employment histories remain full-width and collapsed by default. The shared alumni self-service schema, field definitions, persistence and history deletion setting are unchanged.
+2. Pint, PHP syntax validation and `git diff --check` passed. Tests were not run for this presentation-only change.
+3. Browser verification remains unavailable because the browser access host is unavailable. Existing staff form persistence verification is recorded in [AT-F04-STAFF-UI](completed/AT-F04-STAFF-UI.md).
+
+## Latest handoff — Campus detail infolist UI, 2026-11-07
+
+1. Grouped the campus name and active status into a clear Campus Information section; status now uses readable Active/Inactive badges. Record timestamps are in a collapsible Record Information section, with deletion time shown only for archived campuses. No fields, queries or actions changed.
+2. Pint, PHP syntax validation and `git diff --check` passed. Tests and browser rendering were not run.
+
+## Latest handoff — Role detail infolist UI, 2026-11-07
+
+1. Grouped role identity, permission lists and record timestamps into separate sections. Permission values use the existing Role option labels where available and fall back to readable headings for unknown values. No permission values, access rules or persistence changed.
+2. Fixed the permission formatter to accept each scalar item passed by `listWithLineBreaks()`, avoiding the array type error reported on the Role view.
+3. Pint, PHP syntax validation and `git diff --check` passed. Tests and browser rendering were not run.
+
+## Latest handoff — User Allocation detail infolist UI, 2026-11-07
+
+1. Grouped allocation details, specified campus/program coverage, and timestamps into readable sections. Scope codes use human-readable labels and colors; allocation code can be copied. No access rules, stored values, queries or actions changed.
+2. Pint, PHP syntax validation and `git diff --check` passed. Tests and browser rendering were not run.
+
+## Latest handoff — User detail infolist UI, 2026-11-07
+
+1. Grouped user identity, profile/sign-in information, and timestamps into sections. Student ID and email are copyable; the stored public avatar path now renders as a circular profile picture. No account or access behavior changed.
+2. Pint, PHP syntax validation and `git diff --check` passed. Tests and browser rendering were not run.

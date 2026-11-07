@@ -2,6 +2,7 @@
 
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\GetStarted;
+use App\Filament\Pages\MyInformation;
 use App\Filament\Resources\Alumnis\AlumniResource;
 use App\Filament\Widgets\RecentlyTraced;
 use App\Livewire\AlumniInformationForm;
@@ -33,7 +34,7 @@ function createInformationFormUser(): User
     $role = Role::query()->create([
         'name' => 'Alumni',
         'action' => ['view', 'create', 'edit'],
-        'access_page' => [Dashboard::getSlug(), AlumniResource::getSlug()],
+        'access_page' => [Dashboard::getSlug(), MyInformation::getSlug(), AlumniResource::getSlug()],
         'access_subpage' => [],
         'access_widget' => [],
     ]);
@@ -75,6 +76,7 @@ function informationFormData(Program $program): array
         'email' => 'alumni@example.test',
         'phone_number' => '09123456789',
         'current_address' => 'Sample City',
+        'campus_id' => $program->campus_id,
         'program_id' => $program->id,
         'graduation_year' => '2024-06-15',
         'employment_status' => 'employed',
@@ -119,7 +121,7 @@ function informationEmploymentData(): array
 function createInformationFormAlumni(User $user, Program $program, array $attributes = []): Alumni
 {
     $data = informationFormData($program);
-    unset($data['education'], $data['employments']);
+    unset($data['campus_id'], $data['education'], $data['employments']);
 
     return Alumni::factory()->create([
         ...$data,
@@ -168,7 +170,7 @@ it('updates permitted contacts and owned history without changing official ident
     $data['first_name'] = 'Unapproved';
     $data['middle_name'] = 'Identity';
     $data['last_name'] = 'Change';
-    $data['program_id'] = createInformationFormProgram()->id;
+    $data['program_id'] = Program::factory()->for($program->campus)->create()->id;
     $data['graduation_year'] = '2025-06-15';
     $data['current_address'] = 'Updated Sample City';
     $data['phone_number'] = '09987654321';
