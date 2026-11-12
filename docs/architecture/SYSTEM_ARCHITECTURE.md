@@ -79,6 +79,8 @@ Stage private XLSX uploads and parsed candidate rows; inspect grouped sections b
 
 Preserve current report behavior while applying staff scope/permissions and minimized fields. Centralize a reporting filter object/query scope used by widgets/table/export. Definitions distinguish registry, accounts, reported/verified outcomes, tracing year and graduation batch. Count distinct alumni, not history rows. Unknowns remain in coverage denominators; employment rates explicitly exclude unknown labor status. Keep saved widget identities/grid and verify rendered output before UI completion.
 
+AT-R01-PDF (2026-11-12) adds a second report download using the existing Excel query/mapping and current page/export grant. Its report-specific Dompdf writer renders the populated sheet through an escaped A3 landscape Blade print template; XLSX behavior and package writer registrations remain unchanged. The owner approved Dompdf 3.1.6. This format increment does not complete the broader scope, minimization or audit requirements above; live browser acceptance remains unverified.
+
 ## Delivery and rollout boundaries
 
 All schema changes are proposed in [DATABASE_DESIGN](DATABASE_DESIGN.md). Expand first, backfill only verified facts in resumable batches, deploy compatible code, validate constraints, switch reads/writes deliberately, and retain rollback columns until a later approved contract step. Do not run a migration on an unknown target. Production infrastructure, backups, advisory audits, queue supervision, email delivery and browser behavior require separate verification.

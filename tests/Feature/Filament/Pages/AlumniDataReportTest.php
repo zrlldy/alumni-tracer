@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\AlumniDataExport;
+use App\Exports\AlumniDataPdfExport;
 use App\Filament\Pages\AlumniDataReport;
 use App\Models\Alumni;
 use App\Models\AlumniEducation;
@@ -16,6 +17,96 @@ use Livewire\Livewire;
 use Maatwebsite\Excel\Facades\Excel;
 
 uses(RefreshDatabase::class);
+
+function createAlumniReportPdfUser(array $actions = ['view', 'export']): User
+{
+    $role = Role::query()->create([
+        'name' => 'PDF Report Staff',
+        'action' => $actions,
+        'access_page' => [AlumniDataReport::getSlug()],
+    ]);
+    $allocation = UserAllocation::query()->create([
+        'role_id' => $role->id,
+        'management_scope' => 'all_program',
+        'max_users' => 10,
+    ]);
+
+    return User::factory()->create(['user_allocation_id' => $allocation->id]);
+}
+
+describe('PDF exports', function () {
+    beforeEach(function () {
+        $this->withoutVite();
+        Filament::setCurrentPanel('online');
+    });
+
+    it('downloads the report as a PDF alongside the existing Excel action', function () {
+        $this->actingAs(createAlumniReportPdfUser());
+
+        $page = Livewire::test(AlumniDataReport::class)
+            ->assertActionVisible('exportXlsx')
+            ->assertActionVisible('exportPdf')
+            ->callAction('exportPdf')
+            ->assertFileDownloaded('alumni-data-report.pdf', contentType: 'application/pdf');
+
+        expect(base64_decode($page->effects['download']['content']))->toStartWith('%PDF-');
+    });
+
+    it('downloads the PDF using all report filters and the latest active record', function () {
+        $program = Program::factory()->create(['is_active' => true]);
+        $otherProgram = Program::factory()->create(['is_active' => true]);
+        $account = User::factory()->create();
+        Alumni::factory()->for($program)->create([
+            'user_id' => $account->id,
+            'graduation_year' => '2024-06-01',
+            'employment_status' => 'employed',
+            'updated_at' => '2026-11-01 10:00:00',
+        ]);
+        $matchingAlumni = Alumni::factory()->for($program)->create([
+            'user_id' => $account->id,
+            'graduation_year' => '2024-06-01',
+            'employment_status' => 'employed',
+            'updated_at' => '2026-11-02 10:00:00',
+        ]);
+        Alumni::factory()->for($program)->create(['graduation_year' => '2025-06-01', 'employment_status' => 'employed']);
+        Alumni::factory()->for($program)->create(['graduation_year' => '2024-06-01', 'employment_status' => 'untraced']);
+        Alumni::factory()->for($otherProgram)->create(['graduation_year' => '2024-06-01', 'employment_status' => 'employed']);
+        $this->actingAs(createAlumniReportPdfUser());
+        Excel::fake();
+
+        Livewire::test(AlumniDataReport::class)
+            ->filterTable('campus', ['campus_id' => (string) $program->campus_id])
+            ->filterTable('graduation_year', ['year' => '2024'])
+            ->filterTable('department', ['program_id' => (string) $program->id])
+            ->filterTable('employment_status', ['status' => 'employed'])
+            ->callAction('exportPdf');
+
+        Excel::assertDownloaded('alumni-data-report-2024.pdf', function (AlumniDataPdfExport $export) use ($matchingAlumni, $program): bool {
+            return $export->query()->pluck('id')->all() === [$matchingAlumni->id]
+                && $export->headings()[0][0] === $program->campus->name;
+        });
+    });
+
+    it('does not allow a PDF download without export permission', function () {
+        $this->actingAs(createAlumniReportPdfUser(['view']));
+
+        Livewire::test(AlumniDataReport::class)
+            ->assertActionExists('exportPdf')
+            ->assertActionHidden('exportPdf')
+            ->call('mountAction', 'exportPdf')
+            ->assertNoFileDownloaded();
+    });
+
+    it('does not allow a PDF download after export permission is revoked', function () {
+        $staff = createAlumniReportPdfUser();
+        $this->actingAs($staff);
+        $page = Livewire::test(AlumniDataReport::class)->assertActionVisible('exportPdf');
+        $staff->userAllocation->role->update(['action' => ['view']]);
+        $this->actingAs($staff->fresh());
+
+        $page->call('mountAction', 'exportPdf')->assertNoFileDownloaded();
+    });
+});
 
 it('filters the report and download by linked campus', function () {
     $firstCampus = Campus::query()->create(['name' => 'North Campus']);
