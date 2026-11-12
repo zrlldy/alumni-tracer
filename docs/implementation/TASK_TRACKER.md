@@ -1,6 +1,6 @@
 # Alumni-Tracer task tracker
 
-Updated: 2026-11-07. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
+Updated: 2026-11-12. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.
 
@@ -32,6 +32,7 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-I01 | Staged reviewed legacy/flat import | PLANNED | AT-A02/F01/F02/T01, DEC-04/10 |
 | AT-I01-TEMPLATE | Direct Alumni template import with campus, education and employment sheets | IMPLEMENTED BUT UNVERIFIED | Adds history sheets to the current template/importer and links rows by student number within the same workbook. Does not close AT-I01 or support the unavailable legacy workbook/staged review workflow. |
 | AT-R01 | Scoped analytics/export | PLANNED | AT-F01/02/T01/V02 for relevant metrics, DEC-09 |
+| AT-R01-PDF | Alumni Data Report PDF download | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-PDF.md). Owner-approved Dompdf 3.1.6; same report query/fields/filters, A3 landscape print template and current page/export grant. Seven PDF tests pass 7/41; focused PDF/XLSX regression passes 12/65; two-page synthetic PDF inspected. Live browser acceptance and broader AT-R01 remain separate. |
 | AT-R01-DASH | Dashboard analytics accuracy and chart fit | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-DASH.md). Status/tracing denominators and chart types corrected; cohort rates and program percentages have explicit sample sizes. Focused tests pass; browser rendering and management-scope isolation remain unverified. Full AT-R01 is still planned. |
 | AT-R01-LATEST | Latest active record per account in Alumni Data Report/export | VERIFIED COMPLETED | [Record](completed/AT-R01-LATEST.md). Focused report/export behavior, timestamp ties, archived rows and campus-filter preservation passed on SQLite memory. This does not complete AT-R01. |
 | AT-R01-CAMPUS | Campus filter and linked campus XLSX labels | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-R01-CAMPUS.md). Focused SQLite tests pass; connected MariaDB `campuses` schema verified after owner migration; browser acceptance is pending. Does not complete AT-R01 or its security gates. |
@@ -336,3 +337,11 @@ Removed three unescaped semicolons from the Owned form sequence message labels i
 3. Verification: Pint passed on the five changed PHP files and again after the download fix; PHP syntax validation passed on all five files and the follow-up export; `git diff --check` passed. Automated tests and an Excel download were not run. No import was executed and no database records were changed.
 4. Limits: education end date, employment date hired, company address and supporting document reference remain required because the current schema requires them. Current direct import remains insert-only; existing alumni numbers are rejected. Leading-zero/string student IDs remain limited by the existing integer column/import validation.
 5. AT-A02 remains BLOCKED until the source workbook is supplied; AT-I01 remains PLANNED behind its stated policy/schema/security dependencies. No legacy workbook parsing or staged preview/apply support is claimed.
+
+## Latest handoff — AT-R01-PDF, 2026-11-12
+
+1. Added **Export PDF** beside **Export Excel**, reusing the existing report query, fields, latest-active-per-account selection and all four filters. The PDF action checks the current page/export grant. The owner approved Dompdf 3.1.6; Composer added only it and four supporting packages.
+2. Verified: seven new PDF tests pass **7/41**; focused PDF/XLSX regression passes **12/65**. Pint, Composer validation and diff checks pass. Both pages of a 35-record synthetic A3 landscape PDF were inspected, including repeated headings and a wrapped 449-character reference. Independent review found no blocking issue.
+3. Wider checks: report/export files have **12 passed / 10 existing campus-fixture errors**. The final full isolated suite has **88 passed / 29 failed / 13 errors**, with exact failure names in the [record](completed/AT-R01-PDF.md). Existing self-service/email/onboarding issues and license-related 503 responses remain separate. Composer reports 19 advisories across 10 existing packages; none affects the five new packages.
+4. Limits: live browser download, connected/production acceptance and large-export resource limits remain UNVERIFIED. No database/schema/secret/route/grant changes, external messages, commits or pushes occurred. The pre-existing package-lock.json modification was preserved.
+5. Next: verify the PDF action with a synthetic authorized browser account when the environment is usable. Repair the independent baseline tests and dependency advisories separately; AT-R01 retains its existing scope/policy gates.

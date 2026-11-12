@@ -6,7 +6,7 @@
 
 **Architecture:** One Laravel application/session guard and the existing `online` Filament panel. The current owner-approved increment adds a native alumni form to the shared `/online` Dashboard and retains existing RBAC, tables and widget identities. The earlier path transition, identity-claim, policy, survey and delivery proposals below remain separate work subject to the updated owner decisions.
 
-**Tech stack:** PHP 8.4, Laravel 13.30.1, Filament 5.7.8, Livewire 4.4.3, MariaDB (connected 12.3.2), Laravel Excel 4.0.3, Pest 5.1.3. No added dependency proposed.
+**Tech stack:** PHP 8.4, Laravel 13.30.1, Filament 5.7.8, Livewire 4.4.3, MariaDB (connected 12.3.2), Laravel Excel 4.0.3, Pest 5.1.3. Dompdf 3.1.6 is owner-approved for AT-R01-PDF only.
 
 **Spec:** [REQUIREMENTS](../requirements/REQUIREMENTS.md), [SYSTEM_ARCHITECTURE](../architecture/SYSTEM_ARCHITECTURE.md), [DATABASE_DESIGN](../architecture/DATABASE_DESIGN.md), [RBAC](../architecture/RBAC_PERMISSION_MATRIX.md), [import contract](../import/IMPORT_VALIDATION_RULES.md).
 
@@ -30,7 +30,7 @@ Acceptance includes scoped create/update, negative authorization/tampering, hist
 
 - Audit/docs precede application changes. Workbook evidence remains UNVERIFIED until supplied; do not invent its positions/counts.
 - Preserve unrelated uncommitted `AlumniDataReport.php` changes; no automated broad formatting/refactor over it.
-- Do not modify `.env`, secrets, historical migrations, dependencies or live records. Do not run migration/seed/setup commands on an unverified target.
+- Do not modify `.env`, secrets, historical migrations, dependencies beyond the separately approved AT-R01-PDF renderer, or live records. Do not run migration/seed/setup commands on an unverified target.
 - All grant/claim/policy/retention approvals in requirements remain gates. No auto-promotion, email-based identity claiming or phantom school approvals.
 - Tests use explicit SQLite memory and fake mail/queue/cache/session. MariaDB concurrency/DDL checks require a separately approved disposable target.
 - Every completed implementation task records files, schema/security choices, exact checks/results, limits and status in `completed/TASK-ID.md`.
@@ -173,6 +173,16 @@ Dashboard-only increment AT-R01-DASH uses the current non-deleted registry rows 
 Export requires explicit grant and current staff scope, minimized fields, safe audit and literal handling for formula-like strings; table/export filter differences clearly labelled. Preserve saved widget class identity, 24-column native grid, branding and archived programs. Test unknown/null/zero/multiple-job/archived/invalid-filter data and minimized authorized XLSX; inspect real browser Apply/Reset/chart hydration/layout and accessibility.
 
 ## Phase 8: operations and end-to-end verification
+
+### AT-R01-PDF — Alumni Data Report PDF export (owner request, 2026-11-12)
+
+Add a separate `exportPdf` header action to `AlumniDataReport` using a small `AlumniDataPdfExport` subclass and a report-specific Dompdf writer/Blade print template. Reuse the current query, columns, mapping, campus/year/program/status filters and latest-active-per-account rule; give only PDF an A3 landscape layout with repeated headings. The owner explicitly approved `dompdf/dompdf:^3.1.6`. Preserve the existing XLSX action and require current page/export permission for PDF. No schema, live records, panel paths or broader reporting definitions change; AT-R01's existing scope/policy gates remain open.
+
+- [x] Add failing PDF generation/content and Livewire download/filter/permission tests, using explicit SQLite memory and synthetic factories.
+- [x] Add the PDF export subclass, print template and authorized header action; retain the shared XLSX data selection.
+- [x] Run focused PDF/report/XLSX regression tests, Pint and `git diff --check`; inspect a synthetic rendered PDF for clipping and repeated headings.
+- [x] Record exact results, baseline failures, dependency/security impact and acceptance limits in the tracker/completion record. No commit or live-data changes.
+- [ ] Verify a live browser download with a synthetic authorized account. Automated and PDF visual checks passed; broader live acceptance remains UNVERIFIED.
 
 ### AT-O01 — Production readiness and policy sign-off
 
