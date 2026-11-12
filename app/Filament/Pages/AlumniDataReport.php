@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Exports\AlumniDataExport;
+use App\Exports\AlumniDataPdfExport;
 use App\Models\Alumni;
 use App\Models\Campus;
 use App\Models\Program;
@@ -21,6 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AlumniDataReport extends Page implements HasTable
 {
@@ -47,7 +49,7 @@ class AlumniDataReport extends Page implements HasTable
     {
         return [
             Action::make('exportXlsx')
-                ->label('Export Alumni Data')
+                ->label('Export Excel')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
                 ->action(function () {
@@ -66,7 +68,28 @@ class AlumniDataReport extends Page implements HasTable
                     );
                 })
                 ->visible(fn () => self::hasPermission('export')),
+            Action::make('exportPdf')
+                ->label('Export PDF')
+                ->icon(Heroicon::OutlinedDocumentText)
+                ->color('danger')
+                ->action(function (): BinaryFileResponse {
+                    $graduationYear = $this->selectedGraduationYear();
 
+                    return Excel::download(
+                        new AlumniDataPdfExport(
+                            graduationYear: $graduationYear,
+                            programId: $this->selectedDepartmentId(),
+                            employmentStatus: $this->selectedEmploymentStatus(),
+                            campusId: $this->selectedCampusId(),
+                        ),
+                        $graduationYear === null
+                            ? 'alumni-data-report.pdf'
+                            : "alumni-data-report-{$graduationYear}.pdf",
+                        AlumniDataPdfExport::WRITER_TYPE,
+                        ['Content-Type' => 'application/pdf'],
+                    );
+                })
+                ->authorize(fn (): bool => self::canExport()),
         ];
     }
 
