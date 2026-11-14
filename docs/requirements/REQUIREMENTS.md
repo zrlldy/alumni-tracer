@@ -20,7 +20,7 @@ On first form submission, alumni provide identity, contact and academic details.
 
 ## Direct Excel import optional fields — 2026-11-14
 
-The owner requested that the downloadable template contain one `Alumni` worksheet with a sample row showing valid values for each field. The row uses a currently unused numeric student number and an unambiguous active campus/department name pair resolved by the importer; its remarks cell says to delete it before importing real data. Template generation requires such a pair so it never substitutes values that import validation will reject. The direct import keeps the following minimum fields required to identify each Alumni row:
+The owner requested that the downloadable template contain one `Alumni` worksheet with a sample row showing valid values for each field. The row uses a currently unused numeric student number and an unambiguous active campus/department name pair resolved by the importer. Keep the row visible as a guide; its sample marker causes the importer to skip it, including before validation. Previously downloaded templates using the old delete-row marker are skipped too. Template generation requires an unambiguous active campus/department pair so it never substitutes values that import validation will reject. This does not remove sample records imported before the change. The direct import keeps the following minimum fields required to identify each Alumni row:
 
 - Alumni: `student_number`, `first_name`, `last_name`, `campus`, `department` and `graduation_year`.
 - Education: `student_number` and `institution`.

@@ -94,7 +94,7 @@ class AlumniImportTemplateExport implements Export, WithMultipleSheets
             $sampleProgram->program_name,
             Date::PHPToExcel(new \DateTimeImmutable('2023-06-15')),
             'employed',
-            'SAMPLE DATA - DELETE THIS ROW BEFORE IMPORTING',
+            'SAMPLE DATA - KEEP AS A GUIDE; THIS ROW WILL NOT BE IMPORTED',
             Date::PHPToExcel(new \DateTimeImmutable('2024-01-15')),
             'Sample Tracer',
         ];

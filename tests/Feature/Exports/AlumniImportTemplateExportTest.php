@@ -49,7 +49,7 @@ it('exports one alumni sheet with sample values for every field', function () {
         ->and($sampleRow[8])->toBe('Nursing')
         ->and(is_numeric($sampleRow[9]))->toBeTrue()
         ->and($sampleRow[10])->toBe('employed')
-        ->and($sampleRow[11])->toBe('SAMPLE DATA - DELETE THIS ROW BEFORE IMPORTING');
+        ->and($sampleRow[11])->toBe('SAMPLE DATA - KEEP AS A GUIDE; THIS ROW WILL NOT BE IMPORTED');
 });
 
 it('requires an unambiguous active campus and department pair for sample data', function () {
