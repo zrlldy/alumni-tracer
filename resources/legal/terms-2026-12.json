@@ -1,0 +1,146 @@
+[
+  {
+    "type": "paragraph",
+    "text": "Terms and Conditions"
+  },
+  {
+    "type": "paragraph",
+    "text": "Online Alumni Tracer System for Employability Status"
+  },
+  {
+    "type": "paragraph",
+    "text": "Cebu Technological University (CTU) – Tabogon Extension"
+  },
+  {
+    "type": "paragraph",
+    "text": "Effective Date: December 2026"
+  },
+  {
+    "type": "heading",
+    "text": "1. Acceptance of Terms"
+  },
+  {
+    "type": "paragraph",
+    "text": "By accessing, registering for, or using the Online Alumni Tracer System for Employability Status (\"the System\"), you signify your agreement to be legally bound by these Terms and Conditions. If you do not agree with any provision herein, you must immediately discontinue your use of the platform."
+  },
+  {
+    "type": "heading",
+    "text": "2. Purpose and Institutional Scope"
+  },
+  {
+    "type": "paragraph",
+    "text": "Institutional Purpose: The System is a centralized, web-based platform developed exclusively for Cebu Technological University (CTU) – Tabogon Extension to collect, store, update, monitor, and manage graduate profiles, educational backgrounds, and employment tracking data."
+  },
+  {
+    "type": "paragraph",
+    "text": "Intended Users: Access is strictly designated for authorized university personnel (Campus Directors, Deans, Department Chairpersons, Alumni Coordinators, and Administrative Staff) and official alumni graduates from CTU – Tabogon Extension (covering programs such as BSIT, BTLEd, BEEd, BSIE, and BSHM)."
+  },
+  {
+    "type": "paragraph",
+    "text": "System Boundaries: The platform is designed exclusively for institutional data collection, employability monitoring, statistical analysis, and Commission on Higher Education (CHED) accreditation reporting. It does not operate as an external commercial job placement or recruitment agency."
+  },
+  {
+    "type": "heading",
+    "text": "3. User Accounts, Authentication, and Security"
+  },
+  {
+    "type": "paragraph",
+    "text": "To protect institutional data integrity, user access is governed by Role-Based Access Control (RBAC)."
+  },
+  {
+    "type": "paragraph",
+    "text": "Credentials & Authentication: Users are required to maintain the confidentiality of their login credentials. The System incorporates advanced security protocols, including Two-Factor Authentication (2FA), OATH-based token verification, Passkeys, and Google OAuth integration."
+  },
+  {
+    "type": "paragraph",
+    "text": "Session Management: Features such as \"Remember Me\" and trusted device tracking maintain secure session persistence. Users agree to access their accounts only through secure, private devices."
+  },
+  {
+    "type": "paragraph",
+    "text": "Account Verification: All newly registered alumni accounts and profile updates are subject to administrative review, verification, and approval before being fully committed to the active database."
+  },
+  {
+    "type": "heading",
+    "text": "4. User Obligations and Data Accuracy"
+  },
+  {
+    "type": "paragraph",
+    "text": "As part of institutional compliance and quality assurance, alumni and staff users agree to the following responsibilities:"
+  },
+  {
+    "type": "paragraph",
+    "text": "Accurate Information: Provide truthful, complete, and up-to-date personal details, student identification numbers, graduation dates, and employment records (including company names, positions, industry classifications, and course-to-job alignment)."
+  },
+  {
+    "type": "paragraph",
+    "text": "Timely Updates: Promptly update your user profile whenever changes occur in your professional status or contact information."
+  },
+  {
+    "type": "paragraph",
+    "text": "Prohibited Conduct: Refrain from submitting false records, creating duplicate accounts, uploading unauthorized or malicious files, or attempting to bypass security boundaries and access unauthorized administrative modules."
+  },
+  {
+    "type": "heading",
+    "text": "5. Data Privacy and Confidentiality"
+  },
+  {
+    "type": "paragraph",
+    "text": "CTU – Tabogon Extension is committed to safeguarding personal information in accordance with institutional data privacy standards and legal frameworks."
+  },
+  {
+    "type": "paragraph",
+    "text": "Data Utilization: All data collected via the System (stored securely in a MariaDB relational database) is utilized strictly for academic evaluation, curriculum enhancement, institutional planning, and official accreditation reports."
+  },
+  {
+    "type": "paragraph",
+    "text": "Restricted Access: Personally identifiable information is shielded by strict RBAC protocols, ensuring that only authorized campus administrators can view or export consolidated reports."
+  },
+  {
+    "type": "paragraph",
+    "text": "Data Retention & Archiving: Routine automated backups and soft-deletion protocols are enforced to protect records against data loss while maintaining clean historical audit trails."
+  },
+  {
+    "type": "heading",
+    "text": "6. Intellectual Property"
+  },
+  {
+    "type": "paragraph",
+    "text": "All software architecture, source code (built on Laravel, PHP, Livewire, Tailwind CSS, and Vite), database schemas, user interface designs, visual analytics dashboards, and generated report templates are the intellectual property of Cebu Technological University – Tabogon Extension and the project developers. Unauthorized reproduction, distribution, or reverse-engineering is strictly prohibited."
+  },
+  {
+    "type": "heading",
+    "text": "7. System Availability and Limitation of Liability"
+  },
+  {
+    "type": "paragraph",
+    "text": "Service Continuity: While the System is engineered for high reliability and real-time synchronization within the campus Local Area Network (LAN) or hosting environment, uninterrupted uptime is not guaranteed."
+  },
+  {
+    "type": "paragraph",
+    "text": "Maintenance & Interruptions: Temporary service suspensions may occur due to scheduled system maintenance, database backups, or unforeseen network and power fluctuations at the Tabogon Extension campus. The institution shall not be held liable for temporary delays in data submission resulting from such technical factors."
+  },
+  {
+    "type": "heading",
+    "text": "8. Account Suspension and Termination"
+  },
+  {
+    "type": "paragraph",
+    "text": "Campus administrators reserve the right to suspend, restrict, or archive any user account that violates these Terms and Conditions, provides fraudulent employment data, or compromises system security."
+  },
+  {
+    "type": "heading",
+    "text": "9. Modifications to Terms"
+  },
+  {
+    "type": "paragraph",
+    "text": "CTU – Tabogon Extension reserves the right to revise or update these Terms and Conditions as the platform undergoes future enhancements. Continued use of the System following any modifications constitutes formal acceptance of the updated terms."
+  },
+  {
+    "type": "heading",
+    "text": "10. Contact Information"
+  },
+  {
+    "type": "paragraph",
+    "text": "For technical support, account verification assistance, or inquiries regarding your alumni records, please reach out to the Alumni Coordinator or Administrative Office at Cebu Technological University – Tabogon Extension, Poblacion, Tabogon, Cebu."
+  }
+]
