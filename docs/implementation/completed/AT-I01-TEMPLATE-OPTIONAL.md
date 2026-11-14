@@ -6,6 +6,8 @@ Date: 2026-11-14. Status: **IMPLEMENTED BUT UNVERIFIED** pending connected-datab
 
 The owner asked that importing through the current Excel template not require every field. The direct template keeps row identifiers and the minimum labels needed to create identifiable records. This is separate from the staged legacy/flat import in AT-I01.
 
+The sample-row behavior documented below was superseded on 2026-11-14 by [AT-I01-TEMPLATE-SAMPLE](AT-I01-TEMPLATE-SAMPLE.md): the sample remains in the template as a guide and is skipped during import. The verification results in this record describe the earlier implementation, which imported the sample row.
+
 ## Changes
 
 - Alumni rows still require `student_number`, `first_name`, `last_name`, `campus`, `department` and `graduation_year`; contact fields and other metadata may be blank.
@@ -59,13 +61,19 @@ Nullable current-employment status is presented as unrecorded in the alumni over
 | Nullable employment status consumers | 3 targeted tests passed (alumni edit/save, staff create with unknown status, and staff report view). |
 | Broader `AlumniInformationFormTest.php` | 40 passed; 8 failed and 1 error in other form/dashboard validation and access assertions; not resolved by this import change. The targeted nullable-status regression passes. |
 | Existing report modal test | Not a clean signal: its fixture omits the required program campus. The new direct report view test passes. |
-| Reported worksheet `cellCollection` TypeError | Not reproduced in the synthetic workbook after empty-row skipping; a full runtime stack trace and the exact uploaded workbook were unavailable. |
+| Reported worksheet `cellCollection` TypeError | The initial run did not reproduce it. A follow-up source trace identified duplicate processing of the first worksheet as the cause; see [AT-I01-TEMPLATE-CELL](AT-I01-TEMPLATE-CELL.md). The original upload and full runtime trace remain unavailable. |
 | Pint | Passed on the changed PHP files. |
 | `git diff --check` | Passed. |
 | Workbook behavior | Blank optional fields were saved as `NULL`; core row fields remained required; rollback was refused after null values existed; the Alumni-only download contains a highlighted sample row accepted by the importer; supplied named Employment worksheets may leave optional flags blank. |
 | Configured MariaDB migration | Not run. |
 | Live Filament upload | Not run. |
 | Legacy workbook inspection | **UNVERIFIED / BLOCKED** under AT-A02; no source workbook was available. |
+
+## Follow-up — `cellCollection` TypeError root cause
+
+The earlier note above recorded that the exception was not reproduced. A later source trace found the cause: `AlumniImporter::sheets()` had mapped the same Alumni worksheet both by numeric index and by the name `Alumni`. Laravel Excel imports and disconnects each mapping in turn; disconnecting unsets PhpSpreadsheet's worksheet cell collection, so the duplicate second pass accesses an uninitialized typed property. Commit `dde54bc` removed the duplicate name mapping. The current importer maps the Alumni worksheet once by index and retains the named optional history sheets.
+
+The focused synthetic multi-sheet XLSX importer test now passes with this mapping. This confirms the current source path; the original uploaded workbook and stack trace are still unavailable, and live Filament upload acceptance remains unverified. The broader template task remains **IMPLEMENTED BUT UNVERIFIED** for its separate MariaDB migration and live upload checks.
 
 ## Remaining limits and next action
 

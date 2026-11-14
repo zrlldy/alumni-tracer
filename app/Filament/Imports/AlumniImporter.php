@@ -46,6 +46,17 @@ class AlumniImporter implements SkipsEmptyRows, SkipsUnknownSheets, ToModel, Wit
 
     /**
      * @param  array<string, mixed>  $row
+     */
+    public function isEmptyWhen(array $row): bool
+    {
+        return in_array(strtoupper(trim((string) ($row['remarks'] ?? ''))), [
+            'SAMPLE DATA - KEEP AS A GUIDE; THIS ROW WILL NOT BE IMPORTED',
+            'SAMPLE DATA - DELETE THIS ROW BEFORE IMPORTING',
+        ], true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
      * @return array<string, mixed>
      */
     public function prepareForValidation(array $row, int $index): array
