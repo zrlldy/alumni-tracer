@@ -571,6 +571,30 @@ it('shows only owned work and education history without inferring employment sta
         ->assertDontSee('Foreign Private Employer');
 });
 
+it('preserves work rows whose current status is unknown', function () {
+    $user = createInformationFormUser();
+    $program = createInformationFormProgram();
+    $alumni = createInformationFormAlumni($user, $program);
+    $employment = $alumni->alumniEmployment()->create([
+        ...informationEmploymentData(),
+        'company_name' => 'Unknown Status Employer',
+        'is_current' => null,
+    ]);
+
+    $data = informationFormData($program);
+    $data['employments'] = [[...informationEmploymentData(), 'id' => $employment->id, 'is_current' => null]];
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->assertSee('Current status not recorded')
+        ->assertSee('Unknown Status Employer')
+        ->call('openEditor')
+        ->set('data', $data)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($employment->fresh()->is_current)->toBeNull();
+});
+
 it('shows an incomplete milestone when a saved core profile field is blank', function () {
     $user = createInformationFormUser();
     createInformationFormAlumni($user, createInformationFormProgram(), ['current_address' => '']);

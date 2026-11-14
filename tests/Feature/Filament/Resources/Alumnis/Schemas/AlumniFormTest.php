@@ -99,7 +99,7 @@ it('creates an unlinked alumni record with education and employment history', fu
                 'starting_date' => '2021-01-15',
                 'ended_at' => null,
                 'supported_documents' => 'Certificate ref 123',
-                'is_current' => true,
+                'is_current' => null,
             ]],
         ])
         ->assertHasNoFormErrors();
@@ -117,6 +117,7 @@ it('creates an unlinked alumni record with education and employment history', fu
         'alumni_id' => $alumni->id,
         'company_name' => 'Example Company',
         'position' => 'Analyst',
+        'is_current' => null,
     ]);
 });
 

@@ -8,7 +8,6 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -85,7 +84,8 @@ class AlumniForm
                             TextInput::make('supported_documents')->label('Supporting Document Reference')
                                 ->helperText('Enter an existing document reference or URL.')
                                 ->required()->maxLength(255),
-                            Toggle::make('is_current')->label('Currently works here')->default(false)->required(),
+                            Select::make('is_current')->label('Currently works here')
+                                ->options([1 => 'Yes', 0 => 'No'])->placeholder('Not specified'),
                         ])
                         ->columns(2),
                 ]),
