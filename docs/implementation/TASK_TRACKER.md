@@ -43,6 +43,7 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-UI02 | Signed-in email verification prompt redesign | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI02.md). Eight isolated tests/34 assertions pass; desktop/tablet/long-email phone renders inspected; synthetic performance has 0 failures/7 warnings. Live keyboard/screen-reader and inbox acceptance remain unverified. Existing signed-link and resend limits are preserved. |
 | AT-UI03 | Roleless Get Started orientation | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI03.md). Alumni/staff guidance, system administrator contact, 30-day notice and generated Dashboard redirect. Focused auth/onboarding tests 14/56 plus two roleless cases 2/9 pass; synthetic desktop/phone/tablet inspected. Live accessibility, broader directory-navigation failure and deletion enforcement remain separate. |
 | AT-O01 | Deployment/privacy/end-to-end readiness | PLANNED | Applicable implemented modules and school policy approvals |
+| AT-LEGAL01 | Supplied terms page and recorded account acceptance | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-LEGAL01.md). Exact DOCX text, public page, password/Google/existing-account acceptance, persistent Livewire guard and permanent links. Isolated terms/email checks pass 27/188; build and Pint pass. Local SQLite schema initialized; owner then retained MariaDB. Private backup completed and the single terms migration applied to MariaDB (batch 2); both nullable fields verified. Latest focused suite 19/154; live acceptance remains pending. |
 
 ## Decisions pending
 
@@ -371,3 +372,23 @@ Removed three unescaped semicolons from the Owned form sequence message labels i
 2. The duplicate mapping was removed in commit `dde54bc`. The current source maps Alumni once by index and retains the optional named `Education` and `Employment` sheets. No additional application code change was needed in this follow-up.
 3. The focused importer feature test passed **5 tests / 22 assertions**, including a synthetic XLSX with all three worksheets. `AT-I01-TEMPLATE-CELL` is verified complete for this defect.
 4. The original workbook and full runtime trace remain unavailable, and live Filament upload acceptance was not run. The broader `AT-I01-TEMPLATE` task remains IMPLEMENTED BUT UNVERIFIED.
+
+## Latest handoff — AT-LEGAL01 terms and acceptance, 2026-11-15
+
+1. Implemented: exact supplied terms text, public `/terms`, authenticated review/acceptance, password-registration acceptance, Google/existing-account gating, persistent Livewire checks and public/account-menu links. Version and timestamp are stored only on explicit agreement; existing accounts are not backfilled.
+2. Verified: all 36 nonempty DOCX paragraphs match; focused terms and email-verification suite passes **27 tests / 188 assertions** on SQLite memory with array services. Vite build, Pint and diff checks pass. Synthetic desktop/phone renders were inspected; see the record for final viewport checks and automated visual-check limits.
+3. Wider checks: the onboarding role-change test expects 404 but receives 200, and the email-artwork test expects `multipart/related`; both reproduce on unchanged HEAD `9c6b2d7` in a temporary baseline checkout. No fix to those unrelated behaviors is claimed. Full suite was not run.
+4. Pending: approved target/backup and execution of the single new nullable-column migration, then live password/Google/existing-account, keyboard/focus and screen-reader acceptance. School privacy wording and other unresolved decisions remain independent. No connected database, secret, role, live account, dependency or historical migration was changed.
+5. Next: review/apply only `2026_11_14_161829_add_terms_acceptance_to_users_table.php` after explicit database/backup approval, then perform live acceptance. Do not deploy the acceptance-writing paths before this migration.
+
+SQLite follow-up, 2026-11-15: owner selected SQLite. Current app default is `mariadb`; no `database/database.sqlite` exists. Requested a choice of new local SQLite database versus an existing file/path. No connection changes or migrations performed. AT-LEGAL01 remains IMPLEMENTED BUT UNVERIFIED for activation.
+
+## Latest handoff — new local SQLite database, 2026-11-15
+
+Owner explicitly authorized creating a new SQLite database. Created `database/database.sqlite` without overwrite, mode 0600; initialized all **20 migrations**, including terms acceptance. Verified both terms columns, all migrations recorded and zero users. No seed/import/account creation. Added `.gitignore` protection for SQLite database/sidecars/backups and verified exclusion. No existing database was changed; the running app default remains `mariadb`, with no `.env` or connection-setting edits. AT-LEGAL01 remains IMPLEMENTED BUT UNVERIFIED for live acceptance. Next: configure the intended runtime for SQLite only if requested, then verify live acceptance with an authorized synthetic account. See the final follow-up in AT-LEGAL01 for the exact command/results.
+
+Runtime-error follow-up, 2026-11-15: POST terms acceptance still reaches MariaDB, which lacks the terms columns. SQLite readiness was reconfirmed read-only (both columns, zero users); app default remains MariaDB and configuration is not cached. Explicit authorization requested for local `.env` database-setting changes to use SQLite. No secrets/request details copied, no database writes or connection changes. Next: apply and verify the approved runtime configuration; error resolution remains unverified.
+
+## Latest handoff — MariaDB terms migration repaired, 2026-11-15
+
+Owner chose to keep MariaDB. Verified the local runtime target and pending single migration, created a private Git-ignored transactional backup (details in AT-LEGAL01), then applied only the terms acceptance migration. It ran in **batch 2**; both nullable users columns are verified through the unchanged default MariaDB connection. No `.env`, grants, accounts, other migrations or seed data changed. Focused isolated terms tests pass **19 / 154**. The missing-column cause is repaired; user should retry Agree and continue. Actual user acceptance and broader live accessibility checks remain pending; AT-LEGAL01 remains IMPLEMENTED BUT UNVERIFIED for those checks.

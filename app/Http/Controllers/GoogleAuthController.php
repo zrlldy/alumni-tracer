@@ -7,8 +7,8 @@ use App\Support\AllowedEmailDomains;
 use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Notifications\Notification;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
@@ -225,6 +225,10 @@ class GoogleAuthController extends Controller
         Filament::auth()->login($user, true);
 
         session()->regenerate();
+
+        if (! $user->hasAcceptedCurrentTerms()) {
+            return redirect()->route('terms.accept');
+        }
 
         return redirect()->intended(Filament::getUrl());
     }

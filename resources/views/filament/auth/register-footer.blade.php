@@ -21,6 +21,8 @@
         <span>Continue with Google</span>
     </a>
 
+    <p class="mt-3 text-center text-sm text-gray-600 dark:text-gray-300">Google accounts will review and accept the Terms and Conditions after sign-in.</p>
+
     <p class="mt-5 text-center text-sm text-gray-600">
         Already have an account?
         <a href="{{ filament()->getLoginUrl() }}" class="font-semibold text-primary-700 hover:text-primary-600 underline">

@@ -193,3 +193,9 @@ Acceptance: entire required auth/RBAC/ownership test matrix on actual routes plu
 ## Next task selection
 
 AT-S01 is independently eligible after documents exist. AT-A02 needs the file. AT-F01 needs initial staff designation and scope/admission approval; AT-F03 needs school identity approval. Downstream tasks stay PLANNED until dependencies are verified. Safe documentation/test/redaction work does not justify silently deciding identity ownership or auto-promoting a staff account.
+
+## AT-LEGAL01 — Supplied terms and account acceptance
+
+Owner authorized implementation on 2026-11-15 using the attached DOCX without changing its context. This increment is independent of blocked identity/retention decisions and does not resolve them. Scope: exact supplied public terms text, registration checkbox, Google/existing-account review, persistent server-side acceptance checks, current version/timestamp storage, responsive Blade reading layout and permanent links.
+
+Acceptance checks: public readability/text fidelity; unchecked/stale registration rejection; authenticated acceptance and stale-version rejection; own-account writes and timestamp idempotence; new/existing/accepted Google accounts; direct panel and subsequent Livewire gate; email verification and logout remain available; acceptance adds no grants. Use isolated SQLite/array services, build, Pint, diff review and synthetic browser renders. Do not run connected migrations without approved target/backup. Status and rollout limits: [completion/handoff record](completed/AT-LEGAL01.md).

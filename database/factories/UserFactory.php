@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Support\Terms;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -30,6 +31,8 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'terms_accepted_version' => Terms::VERSION,
+            'terms_accepted_at' => now(),
             // 'password' => static::$password ??= Hash::make('password'),
             'password' => '12345678',
             'remember_token' => Str::random(10),
@@ -43,6 +46,14 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function withoutTermsAcceptance(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'terms_accepted_version' => null,
+            'terms_accepted_at' => null,
         ]);
     }
 }

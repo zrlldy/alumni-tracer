@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Register;
+use App\Http\Middleware\EnsureTermsAccepted;
 use App\Http\Middleware\RepairFilamentAlpineExpressions;
 use App\Livewire\VerifyEmail;
 use App\Notifications\AlumniEmailOtp;
@@ -64,6 +65,11 @@ class AlumniPanelProvider extends PanelProvider
             ->profile(EditProfile::class,
                 isSimple: false, )
             ->userMenuItems([
+                Action::make('terms')
+                    ->label('Terms and Conditions')
+                    ->icon('heroicon-o-document-text')
+                    ->url(fn (): string => route('terms.show'))
+                    ->openUrlInNewTab(),
                 'profile' => fn (Action $action) => $action
                     ->label('Settings')
                     ->icon('heroicon-o-cog-6-tooth'),
@@ -162,6 +168,7 @@ class AlumniPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->authMiddleware([EnsureTermsAccepted::class], isPersistent: true)
             ->multiFactorAuthentication([
                 AppAuthentication::make()->recoverable()->recoveryCodeCount(10)->codeWindow(4),
                 EmailAuthentication::make()->codeExpiryMinutes(2)->codeNotification(AlumniEmailOtp::class),
