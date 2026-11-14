@@ -5,6 +5,10 @@ use App\Models\Alumni;
 use App\Models\Campus;
 use App\Models\Program;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Excel as ExcelWriter;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 uses(RefreshDatabase::class);
@@ -28,14 +32,14 @@ it('exports the alumni fields with campus and department headings', function () 
     ]);
 });
 
-it('exports one alumni sheet with sample values for every field', function () {
+it('keeps the alumni worksheet and sample values alongside its hidden reference sheet', function () {
     $campus = Campus::factory()->create(['name' => 'North Campus']);
     $program = Program::factory()->for($campus)->create(['program_name' => 'Nursing', 'is_active' => true]);
     Alumni::factory()->for($program)->create(['student_number' => 999_999_999]);
     $sheets = (new AlumniImportTemplateExport)->sheets();
 
     expect(array_map(fn ($sheet): string => $sheet->title(), $sheets))
-        ->toBe(['Alumni']);
+        ->toBe(['Alumni', '_Lists']);
 
     $sampleRow = $sheets[0]->array()[0];
 
@@ -78,8 +82,57 @@ it('places campus and department dropdowns under their headings', function () {
     expect(array_key_first($styles))->toBe('A1:N1')
         ->and($sheet->dataValidationExists('H1048576'))->toBeTrue()
         ->and($sheet->dataValidationExists('I1048576'))->toBeTrue()
+        ->and($sheet->dataValidationExists('K1048576'))->toBeTrue()
         ->and($sheet->getDataValidation('H2')->getAllowBlank())->toBeFalse()
-        ->and($sheet->getDataValidation('I2')->getAllowBlank())->toBeFalse();
+        ->and($sheet->getDataValidation('I2')->getAllowBlank())->toBeFalse()
+        ->and($sheet->getDataValidation('H2')->getShowDropDown())->toBeTrue()
+        ->and($sheet->getDataValidation('I2')->getShowDropDown())->toBeTrue();
+});
+
+it('exports dependent dropdown references from active campuses and departments', function () {
+    $northCampus = Campus::factory()->create(['name' => 'North Campus', 'is_active' => true]);
+    $southCampus = Campus::factory()->create(['name' => 'South Campus', 'is_active' => true]);
+    $inactiveCampus = Campus::factory()->create(['name' => 'Closed Campus', 'is_active' => false]);
+
+    Program::factory()->for($northCampus)->create(['program_name' => 'Nursing', 'is_active' => true]);
+    Program::factory()->for($southCampus)->create(['program_name' => 'Education', 'is_active' => true]);
+    Program::factory()->for($northCampus)->create(['program_name' => 'Inactive Department', 'is_active' => false]);
+    Program::factory()->for($inactiveCampus)->create(['program_name' => 'Closed Department', 'is_active' => true]);
+
+    $path = sys_get_temp_dir().'/alumni-template-'.Str::uuid().'.xlsx';
+
+    try {
+        file_put_contents($path, Excel::raw(new AlumniImportTemplateExport, ExcelWriter::XLSX));
+        $spreadsheet = IOFactory::load($path);
+        $alumniSheet = $spreadsheet->getSheetByName('Alumni');
+        $referenceSheet = $spreadsheet->getSheetByName('_Lists');
+        $archive = new ZipArchive;
+        $archive->open($path);
+        $alumniXml = $archive->getFromName('xl/worksheets/sheet1.xml');
+        $archive->close();
+
+        expect($alumniSheet)->not->toBeNull()
+            ->and($referenceSheet)->not->toBeNull()
+            ->and($referenceSheet->getSheetState())->toBe('hidden')
+            ->and($alumniXml)->toContain('showDropDown="0"')
+            ->and($alumniSheet->getDataValidation('H2')->getFormula1())->toBe('=_CampusList')
+            ->and($alumniSheet->getDataValidation('I2')->getFormula1())->toBe('=INDIRECT("Department_"&MATCH($H2,_CampusList,0))')
+            ->and($alumniSheet->dataValidationExists('K2'))->toBeTrue()
+            ->and($alumniSheet->getDataValidation('K2')->getFormula1())->toBe('"employed,unemployed,untraced"')
+            ->and($alumniSheet->getDataValidation('K2')->getAllowBlank())->toBeTrue()
+            ->and($referenceSheet->rangeToArray('A1:B3', null, true, false))->toBe([
+                ['campus', 'department_1'],
+                ['North Campus', 'Nursing'],
+                ['South Campus', 'Education'],
+            ])
+            ->and($spreadsheet->getNamedRange('_CampusList')?->getRange())->toBe("'_Lists'!\$A\$2:\$A\$3")
+            ->and($spreadsheet->getNamedRange('Department_1')?->getRange())->toBe("'_Lists'!\$B\$2:\$B\$2")
+            ->and($spreadsheet->getNamedRange('Department_2')?->getRange())->toBe("'_Lists'!\$B\$3:\$B\$3");
+    } finally {
+        if (is_file($path)) {
+            unlink($path);
+        }
+    }
 });
 
 it('marks the sample row and formats phone and date examples correctly', function () {

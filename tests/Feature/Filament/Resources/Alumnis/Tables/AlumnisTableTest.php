@@ -75,6 +75,31 @@ it('shows one concise summary per invalid Excel row', function () {
             ->persistent());
 });
 
+it('includes the invalid campus and department pair in the row import error', function () {
+    $staff = createExcelImportStaff();
+    Filament::setCurrentPanel('online');
+    $values = [
+        'student_number' => '200003',
+        'campus' => 'South Campus',
+        'department' => 'Nursing',
+    ];
+    $failure = new ExcelValidationException(
+        new LaravelValidationException(Validator::make([], [])),
+        [new Failure(3, 'program_id', ['The selected department must belong to the selected campus.'], $values)],
+    );
+
+    Excel::shouldReceive('import')->once()->andThrow($failure);
+
+    Livewire::actingAs($staff)
+        ->test(ListAlumnis::class)
+        ->callAction(TestAction::make('import')->table(), data: ['file' => [UploadedFile::fake()->create('synthetic.xlsx', 10, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')]])
+        ->assertNotified(Notification::make()
+            ->title('Check the Excel file')
+            ->body('Some rows could not be imported. Check the listed fields, then upload the file again:'."\n\n".'Row 3 (Student #200003): Check these fields: Department. Department “Nursing” does not uniquely match Campus “South Campus” in the active records.')
+            ->danger()
+            ->persistent());
+});
+
 it('hides technical exception details from Excel import notifications', function () {
     $staff = createExcelImportStaff();
     Filament::setCurrentPanel('online');
