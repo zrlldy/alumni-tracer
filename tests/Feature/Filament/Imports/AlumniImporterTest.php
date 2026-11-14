@@ -57,10 +57,13 @@ it('does not choose between duplicate campus and department matches', function (
     expect($row['program_id'])->toBeNull();
 });
 
-it('imports the generated sample row and optional details while ignoring formatted blank rows', function () {
+it('skips current and previous sample rows while importing real rows and optional details', function () {
     $campus = Campus::factory()->create(['name' => 'North Campus']);
     $program = Program::factory()->for($campus)->create(['program_name' => 'Nursing', 'is_active' => true]);
     $sampleRow = (new AlumniImportTemplateExport)->sheets()[0]->array()[0];
+    $previousSampleRow = $sampleRow;
+    $previousSampleRow[0]--;
+    $previousSampleRow[11] = 'SAMPLE DATA - DELETE THIS ROW BEFORE IMPORTING';
 
     $spreadsheet = new Spreadsheet;
     $alumniSheet = $spreadsheet->getActiveSheet();
@@ -72,6 +75,7 @@ it('imports the generated sample row and optional details while ignoring formatt
             'remarks', 'date_traced', 'trace_by',
         ],
         $sampleRow,
+        $previousSampleRow,
         ['200001', 'Taylor', '', 'Example', '', '', '', 'North Campus', 'Nursing', ExcelDate::PHPToExcel(new DateTimeImmutable('2021-06-01')), '', '', '', ''],
     ], null, 'A1');
     $alumniSheet->getStyle('A132:N132')->getFont()->setBold(true);
@@ -119,22 +123,12 @@ it('imports the generated sample row and optional details while ignoring formatt
 
     $alumni = Alumni::query()->where('student_number', 200001)->firstOrFail();
 
-    expect(Alumni::query()->count())->toBe(2)
+    expect(Alumni::query()->count())->toBe(1)
         ->and($alumni->middle_name)->toBeNull()
         ->and($alumni->email)->toBeNull()
         ->and($alumni->phone_number)->toBeNull()
-        ->and($alumni->current_address)->toBeNull();
-
-    expect(Alumni::query()->where('student_number', $sampleRow[0])->firstOrFail()->only([
-        'first_name', 'last_name', 'email', 'phone_number', 'program_id', 'employment_status',
-    ]))->toBe([
-        'first_name' => 'Alex',
-        'last_name' => 'Example',
-        'email' => 'alex@example.com',
-        'phone_number' => '00000000000',
-        'program_id' => $program->id,
-        'employment_status' => 'employed',
-    ]);
+        ->and($alumni->current_address)->toBeNull()
+        ->and(Alumni::query()->whereIn('student_number', [$sampleRow[0], $previousSampleRow[0]])->exists())->toBeFalse();
 
     expect(AlumniEducation::query()->where('alumni_id', $alumni->id)->firstOrFail()->only([
         'program', 'degree_level', 'units_completed', 'status', 'started_at', 'ended_at',
