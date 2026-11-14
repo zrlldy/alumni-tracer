@@ -3,10 +3,10 @@
 namespace App\Livewire;
 
 use App\Filament\Pages\MyInformation;
-use App\Support\SystemSecurity;
 use App\Filament\Resources\Alumnis\Schemas\AlumniForm;
 use App\Models\Alumni;
 use App\Models\User;
+use App\Support\SystemSecurity;
 use App\Traits\RoleBasedAccessControl;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -16,7 +16,6 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Concerns\RestrictsFileUploadsToSchemaComponents;
@@ -180,7 +179,8 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
                                 TextInput::make('supported_documents')->label('Supporting document reference')
                                     ->helperText('Enter an existing document reference or URL.')
                                     ->required()->maxLength(255),
-                                Toggle::make('is_current')->label('I currently work here')->default(false)->required(),
+                                Select::make('is_current')->label('I currently work here')
+                                    ->options([1 => 'Yes', 0 => 'No'])->placeholder('Not specified'),
                             ]),
                     ]),
             ]);
@@ -289,8 +289,9 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
         $this->overview = [
             'profileCompletion' => $record !== null && collect($coreFields)->every(fn (string $field): bool => filled($data[$field] ?? null)) ? 100 : 0,
             'employmentStatus' => $record?->employment_status,
-            'currentJobs' => array_values(array_filter($data['employments'], fn (array $job): bool => (bool) $job['is_current'])),
-            'pastJobs' => array_values(array_filter($data['employments'], fn (array $job): bool => ! $job['is_current'])),
+            'currentJobs' => array_values(array_filter($data['employments'], fn (array $job): bool => $job['is_current'] !== null && (bool) $job['is_current'])),
+            'pastJobs' => array_values(array_filter($data['employments'], fn (array $job): bool => $job['is_current'] !== null && ! (bool) $job['is_current'])),
+            'unknownStatusJobs' => array_values(array_filter($data['employments'], fn (array $job): bool => $job['is_current'] === null)),
             'education' => $data['education'],
         ];
 

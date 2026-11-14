@@ -104,7 +104,7 @@
                             <h3 class="font-semibold text-gray-950 dark:text-white">{{ $employment->company_name }}</h3>
                             <p class="text-sm text-gray-600 dark:text-gray-300">{{ $employment->position ?: 'Position not specified' }}</p>
                         </div>
-                        <span class="text-sm text-gray-500 dark:text-gray-400">{{ $employment->is_current ? 'Current role' : 'Previous role' }}</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">{{ $employment->is_current === null ? 'Current status not recorded' : ($employment->is_current ? 'Current role' : 'Previous role') }}</span>
                     </div>
                     <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
                         <div>

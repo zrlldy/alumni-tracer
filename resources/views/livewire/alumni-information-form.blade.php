@@ -40,10 +40,10 @@
         <x-slot name="heading">Work history</x-slot>
         <x-slot name="description">Current and past jobs you have recorded. These entries are not marked as school verified.</x-slot>
 
-        @if ($overview['currentJobs'] === [] && $overview['pastJobs'] === [])
+        @if ($overview['currentJobs'] === [] && $overview['pastJobs'] === [] && $overview['unknownStatusJobs'] === [])
             <p class="text-sm text-gray-600 dark:text-gray-400">No work history recorded</p>
         @else
-            <div class="grid gap-6 lg:grid-cols-2">
+            <div class="grid gap-6 lg:grid-cols-3">
                 <div class="space-y-3">
                     <h3 class="font-medium text-gray-950 dark:text-white">Current work</h3>
                     @forelse ($overview['currentJobs'] as $job)
@@ -75,6 +75,17 @@
                         </article>
                     @empty
                         <p class="text-sm text-gray-600 dark:text-gray-400">No past work recorded</p>
+                    @endforelse
+                </div>
+                <div class="space-y-3">
+                    <h3 class="font-medium text-gray-950 dark:text-white">Current status not recorded</h3>
+                    @forelse ($overview['unknownStatusJobs'] as $job)
+                        <article class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                            <h4 class="font-semibold text-gray-950 dark:text-white">{{ $job['company_name'] }}</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $job['position'] ?: 'Position not recorded' }}</p>
+                        </article>
+                    @empty
+                        <p class="text-sm text-gray-600 dark:text-gray-400">No jobs with an unrecorded status</p>
                     @endforelse
                 </div>
             </div>

@@ -16,12 +16,14 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
 {
     /**
      * @param  array<string>  $headings
-     * @param  array<array{heading: string, options: array<string>, label: string}>  $dropdowns
+     * @param  array<array{heading: string, options: array<string>, label: string, allow_blank?: bool}>  $dropdowns
+     * @param  array<array<mixed>>  $rows
      */
     public function __construct(
         private string $worksheetTitle,
         private array $headings,
         private array $dropdowns = [],
+        private array $rows = [],
     ) {}
 
     public function title(): string
@@ -29,10 +31,10 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
         return $this->worksheetTitle;
     }
 
-    /** @return array<array<never>> */
+    /** @return array<array<mixed>> */
     public function array(): array
     {
-        return [];
+        return $this->rows;
     }
 
     /** @return array<string> */
@@ -46,15 +48,33 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
      */
     public function styles(Worksheet $sheet): array
     {
-        $studentNumberIndex = array_search('student_number', $this->headings, true);
+        foreach (['student_number', 'phone_number'] as $textHeading) {
+            $textColumnIndex = array_search($textHeading, $this->headings, true);
 
-        if ($studentNumberIndex !== false) {
-            $studentNumberColumn = Coordinate::stringFromColumnIndex($studentNumberIndex + 1);
+            if ($textColumnIndex === false) {
+                continue;
+            }
 
-            $sheet->getStyle("{$studentNumberColumn}:{$studentNumberColumn}")
+            $textColumn = Coordinate::stringFromColumnIndex($textColumnIndex + 1);
+
+            $sheet->getStyle("{$textColumn}2")
                 ->getNumberFormat()
                 ->setFormatCode('@');
-            $sheet->getStyle("{$studentNumberColumn}:{$studentNumberColumn}")->setQuotePrefix(true);
+            $sheet->getStyle("{$textColumn}2")->setQuotePrefix(true);
+        }
+
+        foreach (['graduation_year', 'date_traced'] as $dateHeading) {
+            $dateColumnIndex = array_search($dateHeading, $this->headings, true);
+
+            if ($dateColumnIndex === false) {
+                continue;
+            }
+
+            $dateColumn = Coordinate::stringFromColumnIndex($dateColumnIndex + 1);
+
+            $sheet->getStyle("{$dateColumn}2")
+                ->getNumberFormat()
+                ->setFormatCode('yyyy-mm-dd');
         }
 
         foreach ($this->dropdowns as $dropdown) {
@@ -75,7 +95,7 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
             $validation
                 ->setType(DataValidation::TYPE_LIST)
                 ->setErrorStyle(DataValidation::STYLE_STOP)
-                ->setAllowBlank(false)
+                ->setAllowBlank($dropdown['allow_blank'] ?? false)
                 ->setShowDropDown(true)
                 ->setShowInputMessage(true)
                 ->setShowErrorMessage(true)
@@ -89,7 +109,7 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
             $sheet->setDataValidation($range, $validation);
         }
 
-        return [
+        $styles = [
             'A1:'.Coordinate::stringFromColumnIndex(count($this->headings)).'1' => [
                 'font' => [
                     'bold' => true,
@@ -101,5 +121,20 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
                 ],
             ],
         ];
+
+        if ($this->rows !== []) {
+            $styles['A2:'.Coordinate::stringFromColumnIndex(count($this->headings)).'2'] = [
+                'font' => [
+                    'italic' => true,
+                    'color' => ['rgb' => '7F6000'],
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'FFF2CC'],
+                ],
+            ];
+        }
+
+        return $styles;
     }
 }

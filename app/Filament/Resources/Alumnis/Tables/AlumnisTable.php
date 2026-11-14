@@ -28,9 +28,13 @@ use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException as LaravelValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\Failure;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Throwable;
 
@@ -105,37 +109,17 @@ class AlumnisTable
                                 ->success()
                                 ->send();
                         } catch (ValidationException $e) {
-                            $messages = collect(
-                                $e->failures()
-                            )
-                                ->map(function ($failure) {
-                                    $studentNumber =
-                                        $failure->values()['student_number']
-                                        ?? 'Unknown';
-
-                                    return sprintf(
-                                        'Row %d (Student #%s): %s',
-                                        $failure->row(),
-                                        $studentNumber,
-                                        implode(
-                                            ', ',
-                                            $failure->errors()
-                                        )
-                                    );
-                                })
-                                ->implode("\n");
-
                             Notification::make()
-                                ->title('Import validation failed')
-                                ->body($messages)
+                                ->title('Check the Excel file')
+                                ->body(self::formatImportFailures($e))
                                 ->danger()
                                 ->persistent()
                                 ->send();
                         } catch (Throwable $e) {
-
+                            Log::error('Alumni Excel import failed.', ['exception_class' => $e::class]);
                             Notification::make()
                                 ->title('Import failed')
-                                ->body($e->getMessage())
+                                ->body('We could not import this file. Check that it uses the provided XLSX template, then try again.')
                                 ->danger()
                                 ->persistent()
                                 ->send();
@@ -392,5 +376,35 @@ class AlumnisTable
                     ->orWhereRaw('TRIM(student_id) = ?', [$studentNumber]);
             })
             ->whereDoesntHave('alumnis', fn (Builder $query): Builder => $query->withTrashed());
+    }
+
+    private static function formatImportFailures(ValidationException $exception): string
+    {
+        $rows = collect($exception->failures())
+            ->groupBy(fn (Failure $failure): int => $failure->row())
+            ->map(function (Collection $failures, int|string $row): string {
+                $studentNumber = trim((string) ($failures->first()->values()['student_number'] ?? ''));
+                $rowLabel = "Row {$row}".($studentNumber !== '' ? " (Student #{$studentNumber})" : '');
+                $fields = $failures
+                    ->map(fn (Failure $failure): string => Str::headline($failure->attribute() === 'program_id' ? 'department' : $failure->attribute()))
+                    ->unique()
+                    ->values();
+                $details = $failures
+                    ->flatMap(fn (Failure $failure): array => $failure->errors())
+                    ->map(fn (string $message): ?string => match (true) {
+                        str_contains($message, 'already exists') => 'Student number already exists in the system.',
+                        str_contains($message, 'appears more than once') => 'Student number is repeated in this file.',
+                        str_contains($message, 'must belong to the selected campus') => 'Department must match the selected campus.',
+                        default => null,
+                    })
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                return "{$rowLabel}: Check these fields: {$fields->implode(', ')}.".($details->isNotEmpty() ? ' '.$details->implode(' ') : '');
+            })
+            ->values();
+
+        return "Some rows could not be imported. Check the listed fields, then upload the file again:\n\n".$rows->implode("\n");
     }
 }

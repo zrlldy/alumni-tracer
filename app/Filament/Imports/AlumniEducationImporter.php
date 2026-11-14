@@ -5,12 +5,13 @@ namespace App\Filament\Imports;
 use App\Models\Alumni;
 use App\Models\AlumniEducation;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class AlumniEducationImporter implements ToModel, WithHeadingRow, WithValidation
+class AlumniEducationImporter implements SkipsEmptyRows, ToModel, WithHeadingRow, WithValidation
 {
     public function __construct(private AlumniImporter $alumniImporter) {}
 
@@ -39,12 +40,12 @@ class AlumniEducationImporter implements ToModel, WithHeadingRow, WithValidation
         return new AlumniEducation([
             'alumni_id' => $alumni->id,
             'instituion' => $row['institution'],
-            'program' => $row['program'],
-            'degree_level' => $row['degree_level'],
-            'units_completed' => $row['units_completed'],
-            'status' => $row['status'],
-            'started_at' => $row['started_at'],
-            'ended_at' => $row['ended_at'],
+            'program' => $row['program'] ?? null,
+            'degree_level' => $row['degree_level'] ?? null,
+            'units_completed' => $row['units_completed'] ?? null,
+            'status' => $row['status'] ?? null,
+            'started_at' => $row['started_at'] ?? null,
+            'ended_at' => $row['ended_at'] ?? null,
         ]);
     }
 
@@ -61,12 +62,12 @@ class AlumniEducationImporter implements ToModel, WithHeadingRow, WithValidation
                 Rule::exists('alumnis', 'student_number'),
             ],
             'institution' => ['required', 'string', 'max:255'],
-            'program' => ['required', 'string', 'max:255'],
-            'degree_level' => ['required', 'string', 'max:255'],
-            'units_completed' => ['required', 'integer', 'min:0', 'max:4294967295'],
-            'status' => ['required', 'string', 'max:255'],
-            'started_at' => ['required', 'date'],
-            'ended_at' => ['required', 'date', 'after_or_equal:started_at'],
+            'program' => ['nullable', 'string', 'max:255'],
+            'degree_level' => ['nullable', 'string', 'max:255'],
+            'units_completed' => ['nullable', 'integer', 'min:0', 'max:4294967295'],
+            'status' => ['nullable', 'string', 'max:255'],
+            'started_at' => ['nullable', 'date', 'required_with:ended_at'],
+            'ended_at' => ['nullable', 'date', 'after_or_equal:started_at'],
         ];
     }
 
