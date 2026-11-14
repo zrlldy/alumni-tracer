@@ -3,9 +3,9 @@
 namespace App\Exports;
 
 use App\Models\Alumni;
-use App\Models\Campus;
 use App\Models\Program;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -14,13 +14,11 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class AlumniImportTemplateExport implements Export, WithMultipleSheets
 {
     /**
-     * @return array<AlumniImportTemplateSheetExport>
+     * @return array<AlumniImportTemplateReferenceSheetExport|AlumniImportTemplateSheetExport>
      */
     public function sheets(): array
     {
-        return [
-            $this->alumniSheet(),
-        ];
+        return $this->sheetExports();
     }
 
     /**
@@ -51,10 +49,13 @@ class AlumniImportTemplateExport implements Export, WithMultipleSheets
      */
     public function styles(Worksheet $sheet): array
     {
-        return $this->alumniSheet()->styles($sheet);
+        return $this->sheetExports()[0]->styles($sheet);
     }
 
-    private function alumniSheet(): AlumniImportTemplateSheetExport
+    /**
+     * @return array<AlumniImportTemplateReferenceSheetExport|AlumniImportTemplateSheetExport>
+     */
+    private function sheetExports(): array
     {
         $activePrograms = Program::query()
             ->where('is_active', true)
@@ -62,19 +63,48 @@ class AlumniImportTemplateExport implements Export, WithMultipleSheets
             ->with('campus')
             ->orderBy('program_name')
             ->get();
-        $sampleProgram = $activePrograms->first(fn (Program $program): bool => $activePrograms
-            ->where('campus.name', $program->campus->name)
-            ->where('program_name', $program->program_name)
-            ->count() === 1);
+        $departmentsByCampus = $this->departmentsByCampus($activePrograms);
+        $sampleProgram = $activePrograms->first(fn (Program $program): bool => in_array(
+            $program->program_name,
+            $departmentsByCampus[$program->campus->name] ?? [],
+            true,
+        ));
 
         if ($sampleProgram === null) {
             throw new \RuntimeException('Cannot generate an importable sample without an unambiguous active campus and department.');
         }
 
-        return new AlumniImportTemplateSheetExport('Alumni', $this->headings(), [
-            ['heading' => 'campus', 'options' => Campus::query()->where('is_active', true)->orderBy('name')->pluck('name')->all(), 'label' => 'Campus'],
-            ['heading' => 'department', 'options' => $activePrograms->pluck('program_name')->all(), 'label' => 'Department'],
-        ], [$this->sampleAlumniRow($sampleProgram)]);
+        return [
+            new AlumniImportTemplateSheetExport('Alumni', $this->headings(), [
+                ['heading' => 'campus', 'formula' => '=_CampusList', 'label' => 'Campus'],
+                ['heading' => 'department', 'formula' => '=INDIRECT("Department_"&MATCH($H2,_CampusList,0))', 'label' => 'Department'],
+                ['heading' => 'employment_status', 'options' => ['employed', 'unemployed', 'untraced'], 'label' => 'Employment Status', 'allow_blank' => true],
+            ], [$this->sampleAlumniRow($sampleProgram)]),
+            new AlumniImportTemplateReferenceSheetExport($departmentsByCampus),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, Program>  $activePrograms
+     * @return array<string, array<string>>
+     */
+    private function departmentsByCampus(Collection $activePrograms): array
+    {
+        return $activePrograms
+            ->groupBy(fn (Program $program): string => $program->campus->name)
+            ->map(fn (Collection $programs, string $campusName): array => $programs
+                ->filter(fn (Program $program): bool => $activePrograms
+                    ->where('campus.name', $campusName)
+                    ->where('program_name', $program->program_name)
+                    ->count() === 1)
+                ->pluck('program_name')
+                ->unique()
+                ->sort()
+                ->values()
+                ->all())
+            ->filter(fn (array $departments): bool => $departments !== [])
+            ->sortKeys()
+            ->all();
     }
 
     /**
