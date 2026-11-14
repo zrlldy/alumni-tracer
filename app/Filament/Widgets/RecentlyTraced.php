@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 class RecentlyTraced extends TableWidget
 {
     use RoleBasedAccessControl;
+
     public static function canView(): bool
     {
         return static::hasWidgetAccess();
@@ -26,7 +27,7 @@ class RecentlyTraced extends TableWidget
     {
         return $table
             ->query(
-                fn(): Builder => Alumni::query()
+                fn (): Builder => Alumni::query()
                     ->whereNotNull('date_traced')
                     ->latest('date_traced')
             )
@@ -40,7 +41,7 @@ class RecentlyTraced extends TableWidget
 
                 TextColumn::make('full_name')
                     ->label('Alumni')
-                    ->state(fn(Alumni $record): string => collect([
+                    ->state(fn (Alumni $record): string => collect([
                         $record->first_name,
                         $record->middle_name,
                         $record->last_name,
@@ -48,7 +49,7 @@ class RecentlyTraced extends TableWidget
                         ->filter()
                         ->implode(' ')
                     )
-                    ->description(fn(Alumni $record): string => $record->email)
+                    ->description(fn (Alumni $record): ?string => $record->email)
                     ->icon('heroicon-o-user')
                     ->searchable([
                         'first_name',
@@ -69,7 +70,7 @@ class RecentlyTraced extends TableWidget
                 TextColumn::make('graduation_year')
                     ->label('Batch')
                     ->formatStateUsing(
-                        fn($state) => $state
+                        fn ($state) => $state
                             ? Carbon::parse($state)->format('Y')
                             : 'N/A'
                     )
@@ -80,15 +81,15 @@ class RecentlyTraced extends TableWidget
                     ->label('Status')
                     ->badge()
                     ->formatStateUsing(
-                        fn(string $state): string => ucfirst($state)
+                        fn (string $state): string => ucfirst($state)
                     )
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'employed' => 'success',
                         'unemployed' => 'danger',
                         'untraced' => 'warning',
                         default => 'gray',
                     })
-                    ->icon(fn(string $state): string => match ($state) {
+                    ->icon(fn (string $state): string => match ($state) {
                         'employed' => 'heroicon-o-check-circle',
                         'unemployed' => 'heroicon-o-x-circle',
                         'untraced' => 'heroicon-o-question-mark-circle',
@@ -99,7 +100,7 @@ class RecentlyTraced extends TableWidget
                     ->label('Date Traced')
                     ->date('M d, Y')
                     ->description(
-                        fn(Alumni $record): ?string => $record->date_traced
+                        fn (Alumni $record): ?string => $record->date_traced
                             ? Carbon::parse($record->date_traced)->diffForHumans()
                             : null
                     )
@@ -123,7 +124,7 @@ class RecentlyTraced extends TableWidget
                     ->label('Address')
                     ->icon('heroicon-o-map-pin')
                     ->limit(30)
-                    ->tooltip(fn(Alumni $record): ?string => $record->current_address)
+                    ->tooltip(fn (Alumni $record): ?string => $record->current_address)
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('remarks')

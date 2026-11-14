@@ -391,3 +391,25 @@ it('opens a compact report row as a details modal', function () {
         ->assertSee('Example Technologies')
         ->assertSee('employment-certificate.pdf');
 });
+
+it('labels employment with a null current status as unrecorded', function () {
+    $campus = Campus::query()->create(['name' => 'Report Details Campus']);
+    $program = Program::query()->create([
+        'campus_id' => $campus->id,
+        'program_name' => 'Bachelor of Science in Information Technology',
+        'is_active' => true,
+    ]);
+    $alumni = Alumni::factory()->for($program)->create();
+    AlumniEmployment::query()->create([
+        'alumni_id' => $alumni->id,
+        'company_name' => 'Unknown Status Employer',
+        'date_hired' => '2023-04-01',
+        'is_current' => null,
+    ]);
+
+    $this->view('filament.pages.alumni-report-details', [
+        'alumni' => $alumni->load(['program', 'alumniEducation', 'alumniEmployment']),
+    ])
+        ->assertSee('Unknown Status Employer')
+        ->assertSee('Current status not recorded');
+});

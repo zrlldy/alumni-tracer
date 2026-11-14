@@ -2,11 +2,13 @@
 
 namespace App\Exports;
 
+use App\Models\Alumni;
 use App\Models\Campus;
 use App\Models\Program;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class AlumniImportTemplateExport implements Export, WithMultipleSheets
@@ -18,33 +20,6 @@ class AlumniImportTemplateExport implements Export, WithMultipleSheets
     {
         return [
             $this->alumniSheet(),
-            new AlumniImportTemplateSheetExport('Education', [
-                'student_number',
-                'institution',
-                'program',
-                'degree_level',
-                'units_completed',
-                'status',
-                'started_at',
-                'ended_at',
-            ]),
-            new AlumniImportTemplateSheetExport('Employment', [
-                'student_number',
-                'company_name',
-                'position',
-                'company_address',
-                'industry',
-                'employment_type',
-                'is_course_related',
-                'date_hired',
-                'starting_date',
-                'ended_at',
-                'supported_documents',
-                'is_current',
-            ], [
-                ['heading' => 'is_course_related', 'options' => ['Yes', 'No'], 'label' => 'Course relation'],
-                ['heading' => 'is_current', 'options' => ['Yes', 'No'], 'label' => 'Current employment'],
-            ]),
         ];
     }
 
@@ -81,11 +56,62 @@ class AlumniImportTemplateExport implements Export, WithMultipleSheets
 
     private function alumniSheet(): AlumniImportTemplateSheetExport
     {
+        $activePrograms = Program::query()
+            ->where('is_active', true)
+            ->whereHas('campus', fn (Builder $query): Builder => $query->where('is_active', true))
+            ->with('campus')
+            ->orderBy('program_name')
+            ->get();
+        $sampleProgram = $activePrograms->first(fn (Program $program): bool => $activePrograms
+            ->where('campus.name', $program->campus->name)
+            ->where('program_name', $program->program_name)
+            ->count() === 1);
+
+        if ($sampleProgram === null) {
+            throw new \RuntimeException('Cannot generate an importable sample without an unambiguous active campus and department.');
+        }
+
         return new AlumniImportTemplateSheetExport('Alumni', $this->headings(), [
             ['heading' => 'campus', 'options' => Campus::query()->where('is_active', true)->orderBy('name')->pluck('name')->all(), 'label' => 'Campus'],
-            ['heading' => 'department', 'options' => Program::query()->where('is_active', true)
-                ->whereHas('campus', fn (Builder $query): Builder => $query->where('is_active', true))
-                ->orderBy('program_name')->pluck('program_name')->all(), 'label' => 'Department'],
-        ]);
+            ['heading' => 'department', 'options' => $activePrograms->pluck('program_name')->all(), 'label' => 'Department'],
+        ], [$this->sampleAlumniRow($sampleProgram)]);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function sampleAlumniRow(Program $sampleProgram): array
+    {
+        return [
+            $this->sampleStudentNumber(),
+            'Alex',
+            'B.',
+            'Example',
+            'alex@example.com',
+            '00000000000',
+            '123 Example Street',
+            $sampleProgram->campus->name,
+            $sampleProgram->program_name,
+            Date::PHPToExcel(new \DateTimeImmutable('2023-06-15')),
+            'employed',
+            'SAMPLE DATA - DELETE THIS ROW BEFORE IMPORTING',
+            Date::PHPToExcel(new \DateTimeImmutable('2024-01-15')),
+            'Sample Tracer',
+        ];
+    }
+
+    private function sampleStudentNumber(): int
+    {
+        $studentNumber = 999_999_999;
+
+        while ($studentNumber > 0 && Alumni::withTrashed()->where('student_number', $studentNumber)->exists()) {
+            $studentNumber--;
+        }
+
+        if ($studentNumber === 0) {
+            throw new \RuntimeException('No unused student number is available for the sample row.');
+        }
+
+        return $studentNumber;
     }
 }

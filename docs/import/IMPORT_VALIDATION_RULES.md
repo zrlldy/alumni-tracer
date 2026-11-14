@@ -1,6 +1,18 @@
 # Import validation and application rules
 
-Date: 2026-11-01. Target contract for AT-I01; **not current importer behavior**. Actual legacy structural rules remain blocked by AT-A02. Limits below are conservative proposed implementation defaults, to be validated on the actual workbook and hosting constraints.
+Date: 2026-11-01. The rules below describe the staged AT-I01 target contract, separate from the current-template section. Actual legacy structural rules remain blocked by AT-A02. Limits below are conservative proposed implementation defaults, to be validated on the actual workbook and hosting constraints.
+
+## Current direct template import — 2026-11-14
+
+This section records the current direct importer; it does not change the staged AT-I01 contract below. The generated template contains one Alumni worksheet with a valid sample row that passes import validation. It requires an active campus/department name pair that resolves to exactly one program; generation stops if no such pair exists. Delete the example row before importing real data, or it will create a sample Alumni record. The importer also supports optional named Education and Employment worksheets when they are present. Required columns are:
+
+| Worksheet | Required columns | Conditional columns |
+| --- | --- | --- |
+| Alumni | `student_number`, `first_name`, `last_name`, `campus`, `department`, `graduation_year` | None |
+| Education | `student_number`, `institution` | `started_at` is required when `ended_at` is supplied |
+| Employment | `student_number`, `company_name`, `date_hired` | `starting_date` is required when `ended_at` is supplied |
+
+All remaining columns may be blank and are stored as `NULL`. Completely empty worksheet rows, including formatted rows, are skipped. The forward migration relaxes only the affected nullable columns. Blank values do not create an Alumni/history row without the required identifier and primary label. This direct path remains separate from the preview/apply workflow described below.
 
 ## File and parser boundary
 

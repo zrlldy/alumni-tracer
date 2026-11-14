@@ -5,12 +5,13 @@ namespace App\Filament\Imports;
 use App\Models\Alumni;
 use App\Models\AlumniEmployment;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class AlumniEmploymentImporter implements ToModel, WithHeadingRow, WithValidation
+class AlumniEmploymentImporter implements SkipsEmptyRows, ToModel, WithHeadingRow, WithValidation
 {
     public function __construct(private AlumniImporter $alumniImporter) {}
 
@@ -43,15 +44,15 @@ class AlumniEmploymentImporter implements ToModel, WithHeadingRow, WithValidatio
             'alumni_id' => $alumni->id,
             'company_name' => $row['company_name'],
             'position' => $row['position'] ?? null,
-            'company_address' => $row['company_address'],
+            'company_address' => $row['company_address'] ?? null,
             'industry' => $row['industry'] ?? null,
-            'employment_type' => $row['employment_type'],
+            'employment_type' => $row['employment_type'] ?? null,
             'is_course_related' => $row['is_course_related'] ?? null,
             'date_hired' => $row['date_hired'],
             'starting_date' => $row['starting_date'] ?? null,
             'ended_at' => $row['ended_at'] ?? null,
-            'supported_documents' => $row['supported_documents'],
-            'is_current' => $row['is_current'],
+            'supported_documents' => $row['supported_documents'] ?? null,
+            'is_current' => $row['is_current'] ?? null,
         ]);
     }
 
@@ -69,15 +70,15 @@ class AlumniEmploymentImporter implements ToModel, WithHeadingRow, WithValidatio
             ],
             'company_name' => ['required', 'string', 'max:255'],
             'position' => ['nullable', 'string', 'max:255'],
-            'company_address' => ['required', 'string', 'max:255'],
+            'company_address' => ['nullable', 'string', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],
-            'employment_type' => ['required', 'string', 'max:255'],
+            'employment_type' => ['nullable', 'string', 'max:255'],
             'is_course_related' => ['nullable', 'boolean'],
             'date_hired' => ['required', 'date'],
-            'starting_date' => ['nullable', 'date'],
+            'starting_date' => ['nullable', 'date', 'required_with:ended_at'],
             'ended_at' => ['nullable', 'date', 'after_or_equal:date_hired', 'after_or_equal:starting_date'],
-            'supported_documents' => ['required', 'string', 'max:255'],
-            'is_current' => ['required', 'boolean'],
+            'supported_documents' => ['nullable', 'string', 'max:255'],
+            'is_current' => ['nullable', 'boolean'],
         ];
     }
 

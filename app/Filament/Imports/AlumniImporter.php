@@ -6,6 +6,7 @@ use App\Models\Alumni;
 use App\Models\Program;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -13,7 +14,7 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class AlumniImporter implements SkipsUnknownSheets, ToModel, WithHeadingRow, WithMultipleSheets, WithValidation
+class AlumniImporter implements SkipsEmptyRows, SkipsUnknownSheets, ToModel, WithHeadingRow, WithMultipleSheets, WithValidation
 {
     /** @var array<string, true> */
     private array $importedStudentNumbers = [];
@@ -25,7 +26,6 @@ class AlumniImporter implements SkipsUnknownSheets, ToModel, WithHeadingRow, Wit
     {
         return [
             0 => $this,
-            'Alumni' => $this,
             'Education' => new AlumniEducationImporter($this),
             'Employment' => new AlumniEmploymentImporter($this),
         ];

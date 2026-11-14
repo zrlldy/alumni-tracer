@@ -9,12 +9,95 @@ use App\Models\Program;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserAllocation;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException as LaravelValidationException;
 use Livewire\Livewire;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\Failure;
+use Maatwebsite\Excel\Validators\ValidationException as ExcelValidationException;
 
 uses(RefreshDatabase::class);
+
+function createExcelImportStaff(): User
+{
+    $role = Role::query()->create([
+        'name' => 'Import Staff',
+        'action' => ['view', 'import'],
+        'access_page' => [AlumniResource::getSlug(), Dashboard::getSlug()],
+        'access_subpage' => [],
+        'access_widget' => [],
+    ]);
+    $allocation = UserAllocation::query()->create([
+        'role_id' => $role->id,
+        'management_scope' => 'all_program',
+        'max_users' => 10,
+    ]);
+
+    return User::factory()->create(['user_allocation_id' => $allocation->id]);
+}
+
+it('shows one concise summary per invalid Excel row', function () {
+    $staff = createExcelImportStaff();
+    Filament::setCurrentPanel('online');
+
+    $values = ['student_number' => ''];
+    $failure = new ExcelValidationException(
+        new LaravelValidationException(Validator::make([], [])),
+        [
+            new Failure(132, 'student_number', ['Student number is required.'], $values),
+            new Failure(132, 'first_name', ['The first_name field is required.'], $values),
+            new Failure(132, 'last_name', ['The last_name field is required.'], $values),
+            new Failure(132, 'campus', ['The campus field is required.'], $values),
+            new Failure(132, 'department', ['The department field is required.'], $values),
+            new Failure(132, 'department', ['The selected department must belong to the selected campus.'], $values),
+            new Failure(132, 'graduation_year', ['The graduation_year field is required.'], $values),
+        ],
+    );
+
+    Excel::shouldReceive('import')->once()->andThrow($failure);
+
+    Livewire::actingAs($staff)
+        ->test(ListAlumnis::class)
+        ->callAction(TestAction::make('import')->table(), data: ['file' => [UploadedFile::fake()->create('synthetic.xlsx', 10, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')]])
+        ->assertHasNoFormErrors()
+        ->assertHasNoActionErrors()
+        ->assertNotified(Notification::make()
+            ->title('Check the Excel file')
+            ->body("Some rows could not be imported. Check the listed fields, then upload the file again:\n\nRow 132: Check these fields: Student Number, First Name, Last Name, Campus, Department, Graduation Year. Department must match the selected campus.")
+            ->danger()
+            ->persistent());
+});
+
+it('hides technical exception details from Excel import notifications', function () {
+    $staff = createExcelImportStaff();
+    Filament::setCurrentPanel('online');
+    Log::spy();
+    $exception = new RuntimeException('Typed property PhpOffice\\PhpSpreadsheet\\Worksheet\\Worksheet::$cellCollection must not be accessed before initialization');
+
+    Excel::shouldReceive('import')->once()->andThrow($exception);
+
+    Livewire::actingAs($staff)
+        ->test(ListAlumnis::class)
+        ->callAction(TestAction::make('import')->table(), data: ['file' => [UploadedFile::fake()->create('synthetic.xlsx', 10, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')]])
+        ->assertHasNoFormErrors()
+        ->assertHasNoActionErrors()
+        ->assertNotified(Notification::make()
+            ->title('Import failed')
+            ->body('We could not import this file. Check that it uses the provided XLSX template, then try again.')
+            ->danger()
+            ->persistent());
+
+    Log::shouldHaveReceived('error')->once()->with('Alumni Excel import failed.', [
+        'exception_class' => RuntimeException::class,
+    ]);
+});
 
 it('lets staff choose and explicitly link an email or student id match', function () {
     $role = Role::query()->create([
