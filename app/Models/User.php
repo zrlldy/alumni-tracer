@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Support\AllowedEmailDomains;
 use App\Support\SystemSecurity;
+use App\Support\Terms;
 use Database\Factories\UserFactory;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthentication;
 use Filament\Auth\MultiFactor\App\Concerns\InteractsWithAppAuthenticationRecovery;
@@ -23,28 +24,27 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
 use Spatie\LaravelPasskeys\Models\Concerns\HasPasskeys;
 use Spatie\LaravelPasskeys\Models\Concerns\InteractsWithPasskeys;
 
 #[Fillable([
-        'user_allocation_id',
-        'avatar_img',
-        'name',
-        'email',
-        'email_verified_at',
-        'password',
-        'password_set_at',
-        'app_authentication_secret',
-        'google_id',
-        'google_oauth_enabled',
+    'user_allocation_id',
+    'avatar_img',
+    'name',
+    'email',
+    'email_verified_at',
+    'password',
+    'password_set_at',
+    'app_authentication_secret',
+    'google_id',
+    'google_oauth_enabled',
 ])]
 #[Hidden(['password', 'remember_token'])]
 // class User extends Authenticatable implements HasAppAuthentication, HasEmailAuthentication, MustVerifyEmail
-class User extends Authenticatable implements FilamentUser, HasAvatar, HasAppAuthentication, HasEmailAuthentication, HasPasskeys, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAvatar, HasEmailAuthentication, HasPasskeys, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use InteractsWithAppAuthentication, InteractsWithAppAuthenticationRecovery, InteractsWithEmailAuthentication, InteractsWithPasskeys, HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, InteractsWithAppAuthentication, InteractsWithAppAuthenticationRecovery, InteractsWithEmailAuthentication, InteractsWithPasskeys, Notifiable, SoftDeletes;
 
     /**
      * Get the attributes that should be cast.
@@ -55,6 +55,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasAppAut
     {
         return [
             'email_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -64,8 +65,26 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasAppAut
         $image = $this->avatar_img;
 
         return filled($image)
-            ? asset('storage/' . ltrim($image, '/'))
+            ? asset('storage/'.ltrim($image, '/'))
             : null;
+    }
+
+    public function hasAcceptedCurrentTerms(): bool
+    {
+        return $this->terms_accepted_version === Terms::VERSION
+            && $this->terms_accepted_at !== null;
+    }
+
+    public function acceptCurrentTerms(): void
+    {
+        if ($this->hasAcceptedCurrentTerms()) {
+            return;
+        }
+
+        $this->forceFill([
+            'terms_accepted_version' => Terms::VERSION,
+            'terms_accepted_at' => now(),
+        ])->saveOrFail();
     }
 
     protected static function booted(): void
@@ -135,13 +154,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasAppAut
         return AllowedEmailDomains::passes($email);
     }
 
-
     public static function protectedEmails(): array
     {
         return SystemSecurity::superAdminEmails();
     }
-
-    
 
     protected static function isProtectedEmail(string $email): bool
     {
@@ -156,7 +172,4 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasAppAut
     {
         return SystemSecurity::developerEmails();
     }
-
-
-
 }

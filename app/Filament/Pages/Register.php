@@ -4,16 +4,23 @@ namespace App\Filament\Pages;
 
 use App\Models\User;
 use App\Support\AllowedEmailDomains;
+use App\Support\Terms;
 use Closure;
 use DiogoGPinto\AuthUIEnhancer\Pages\Auth\Concerns\HasCustomLayout;
 use Filament\Actions\Action;
 use Filament\Auth\Pages\Register as BaseRegister;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Hidden;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Sujip\Filament\Turnstile\Contracts\TurnstileClientContract;
 use Sujip\Filament\Turnstile\TurnstileInput;
@@ -36,6 +43,17 @@ class Register extends BaseRegister
         if ($client->isConfigured()) {
             $components[] = TurnstileInput::make('turnstileToken');
         }
+
+        $components[] = Checkbox::make('terms')
+            ->label(new HtmlString('I agree to the <a href="'.e(route('terms.show')).'" target="_blank" rel="noopener noreferrer" class="underline">Terms and Conditions</a>.'))
+            ->accepted()
+            ->validationMessages(['accepted' => 'Please agree to the Terms and Conditions to create an account.'])
+            ->dehydrated(false);
+        $components[] = Hidden::make('terms_version')
+            ->default(Terms::VERSION)
+            ->required()
+            ->in([Terms::VERSION])
+            ->dehydrated(false);
 
         return $schema->components($components);
     }
@@ -120,7 +138,18 @@ class Register extends BaseRegister
         return $data;
     }
 
-    public function getSubheading(): string | \Illuminate\Contracts\Support\Htmlable | null
+    protected function handleRegistration(array $data): Model
+    {
+        return DB::transaction(function () use ($data): Model {
+            /** @var User $user */
+            $user = parent::handleRegistration($data);
+            $user->acceptCurrentTerms();
+
+            return $user;
+        });
+    }
+
+    public function getSubheading(): string|Htmlable|null
     {
         return null;
     }

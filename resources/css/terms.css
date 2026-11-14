@@ -1,0 +1,64 @@
+@layer components {
+    .terms-page {
+        --terms-page: #f7f9fb;
+        --terms-surface: #ffffff;
+        --terms-ink: #003049;
+        --terms-muted: #526574;
+        --terms-line: #d6e0e5;
+        background: var(--terms-page);
+        color: var(--terms-ink);
+        font-family: "Inter Variable", sans-serif;
+        font-size: 16px;
+        line-height: 1.8;
+    }
+    .terms-page a { text-underline-offset: 4px; }
+    .terms-page a:hover { text-decoration: underline; }
+    .terms-page :focus-visible { outline: 3px solid #d62828; outline-offset: 5px; }
+    .terms-skip { position: absolute; top: -100px; left: 24px; padding: 12px; background: var(--terms-surface); z-index: 10; }
+    .terms-skip:focus { top: 12px; }
+    .terms-header { display: flex; justify-content: space-between; align-items: center; gap: 24px; max-width: 1184px; margin: auto; padding: 24px 32px; border-bottom: 1px solid var(--terms-line); }
+    .terms-header a { display: inline-flex; align-items: center; min-height: 44px; }
+    .terms-brand { font-size: 20px; font-weight: 750; letter-spacing: -.04em; }
+    .terms-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 64px; max-width: 1184px; padding: 56px 32px 80px; margin: auto; }
+    .terms-index nav { position: sticky; top: 32px; }
+    .terms-mobile-index { display: none; }
+    .terms-index p { font-size: 14px; font-weight: 650; margin-bottom: 16px; }
+    .terms-index a, .terms-mobile-index a { display: block; padding: 10px 0; font-size: 13px; line-height: 1.6; color: var(--terms-muted); }
+    .terms-document { min-width: 0; max-width: 72ch; }
+    .terms-title { border-top: 4px solid #fcbf49; padding-top: 24px; padding-bottom: 28px; border-bottom: 1px solid var(--terms-line); margin-bottom: 32px; }
+    .terms-title h1 { font-size: clamp(32px, 4vw, 48px); font-weight: 750; line-height: 1.15; letter-spacing: -.045em; margin-bottom: 24px; }
+    .terms-subtitle { font-size: 20px; font-weight: 550; line-height: 1.5; margin-bottom: 8px; }
+    .terms-title > p:not(.terms-subtitle) { color: var(--terms-muted); font-size: 14px; }
+    .terms-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; margin-top: 24px; color: var(--terms-muted); font-size: 13px; }
+    .terms-document > h2, .terms-acceptance h2 { font-size: 21px; font-weight: 650; line-height: 1.4; letter-spacing: -.02em; margin: 40px 0 16px; scroll-margin-top: 24px; }
+    .terms-document > p { margin: 0 0 20px; overflow-wrap: anywhere; }
+    .terms-intro { font-weight: 550; }
+    .terms-acceptance { border-top: 1px solid var(--terms-line); margin-top: 40px; }
+    .terms-checkbox { display: flex; gap: 12px; align-items: start; cursor: pointer; padding: 12px 0; }
+    .terms-checkbox input { width: 20px; height: 20px; flex-shrink: 0; margin-top: 5px; accent-color: #003049; }
+    .terms-button { display: inline-flex; justify-content: center; min-height: 48px; padding: 12px 24px; background: #003049; color: white; font-weight: 600; border-radius: 6px; margin-top: 16px; cursor: pointer; }
+    .terms-button:hover { background: #084b6a; }
+    .terms-signout { min-height: 44px; margin-top: 12px; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+    .terms-error { color: #b91c1c; font-size: 14px; }
+    .terms-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-top: 1px solid var(--terms-line); padding-top: 24px; margin-top: 56px; font-size: 14px; }
+    .terms-footer a { display: inline-flex; align-items: center; min-height: 44px; }
+    @media (max-width: 850px) {
+        .terms-layout { grid-template-columns: 1fr; gap: 32px; padding-top: 32px; }
+        .terms-index { display: none; }
+        .terms-mobile-index { display: block; margin-bottom: 24px; }
+        .terms-mobile-index summary { min-height: 44px; padding: 8px 0; cursor: pointer; font-size: 14px; font-weight: 600; }
+    }
+    @media (max-width: 480px) {
+        .terms-header { padding: 16px 24px; }
+        .terms-layout { padding: 32px 24px 48px; }
+        .terms-button { width: 100%; }
+    }
+    @media (prefers-color-scheme: dark) {
+        .terms-page { --terms-page: #071923; --terms-surface: #0a1e2a; --terms-ink: #f8fafc; --terms-muted: #a9bac7; --terms-line: #29404d; }
+        .terms-page :focus-visible { outline-color: #fcbf49; }
+        .terms-button { background: #fcbf49; color: #003049; }
+        .terms-button:hover { background: #ffd47e; }
+        .terms-error { color: #fca5a5; }
+        .terms-checkbox input { accent-color: #fcbf49; }
+    }
+}

@@ -11,6 +11,7 @@
     <div class="landing-container landing-footer-bottom">
         <a href="#top" class="landing-brand" aria-label="Alumni Tracer home"><img src="{{ asset('images/alumni-whitelogo.svg') }}" alt="Alumni Tracer" width="112" height="65"></a>
         <p>© {{ now()->year }} Alumni Tracer</p>
+        <a href="{{ route('terms.show') }}" class="landing-text-link">Terms and Conditions</a>
         <a href="#top" class="landing-text-link">Back to top</a>
     </div>
 </footer>
