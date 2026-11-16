@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserAllocation;
 use App\Support\SystemEncrypter;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -130,6 +131,64 @@ function createInformationFormAlumni(User $user, Program $program, array $attrib
     ]);
 }
 
+it('offers degree level and study status dropdowns in my information', function () {
+    $user = createInformationFormUser();
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->call('openEditor')
+        ->set('data.education', [informationEducationData()])
+        ->assertFormFieldExists('education.0.degree_level', fn ($field): bool => $field instanceof Select
+            && $field->getOptions()['Masters'] === 'Master’s degree'
+            && $field->getOptions()['Doctorate'] === 'Doctorate')
+        ->assertFormFieldExists('education.0.status', fn ($field): bool => $field instanceof Select
+            && $field->getOptions()['Completed'] === 'Completed'
+            && $field->getOptions()['Enrolled'] === 'Enrolled');
+});
+
+it('rejects missing or unlisted education dropdown values before saving', function (string $field, ?string $value) {
+    $user = createInformationFormUser();
+    $data = informationFormData(createInformationFormProgram());
+    $data['education'] = [[...informationEducationData(), $field => $value]];
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->set('data', $data)->call('save')
+        ->assertHasErrors(["data.education.0.{$field}"]);
+
+    $this->assertDatabaseCount('alumnis', 0);
+    $this->assertDatabaseCount('alumni_education', 0);
+})->with([
+    'unknown degree' => ['degree_level', 'Forged degree'],
+    'unknown study status' => ['status', 'Forged study status'],
+    'missing degree' => ['degree_level', null],
+    'missing study status' => ['status', null],
+]);
+
+it('preserves owned legacy education dropdown values without offering another account values', function () {
+    $user = createInformationFormUser();
+    $program = createInformationFormProgram();
+    $alumni = createInformationFormAlumni($user, $program);
+    $education = $alumni->alumniEducation()->create([
+        ...informationEducationData(), 'degree_level' => 'Legacy qualification', 'status' => 'Legacy study status',
+    ]);
+    $other = User::factory()->create(['email' => 'foreign-education@example.test']);
+    createInformationFormAlumni($other, $program, ['student_number' => 20249999, 'email' => $other->email])
+        ->alumniEducation()->create([
+            ...informationEducationData(), 'degree_level' => 'Private foreign qualification', 'status' => 'Private foreign status',
+        ]);
+
+    Livewire::actingAs($user)->test(AlumniInformationForm::class)
+        ->call('openEditor')
+        ->assertSee('Legacy qualification')->assertSee('Legacy study status')
+        ->assertDontSee('Private foreign qualification')->assertDontSee('Private foreign status')
+        ->set('data.campus_id', $program->campus_id)
+        ->set('data.program_id', $program->id)
+        ->call('save')->assertHasNoErrors();
+
+    $this->assertDatabaseHas('alumni_education', [
+        'id' => $education->id, 'degree_level' => 'Legacy qualification', 'status' => 'Legacy study status',
+    ]);
+});
+
 it('creates the signed-in alumnus with education and employment information', function () {
     $user = createInformationFormUser();
     $data = informationFormData(createInformationFormProgram());
@@ -153,6 +212,9 @@ it('creates the signed-in alumnus with education and employment information', fu
         'alumni_id' => $alumni->id,
         'instituion' => 'Synthetic Graduate School',
     ]);
+    $education = $alumni->alumniEducation()->sole();
+    expect($education->degree_level)->toBe('Masters');
+    expect($education->status)->toBe('Completed');
     $this->assertDatabaseHas('alumni_employments', [
         'alumni_id' => $alumni->id,
         'company_name' => 'Synthetic Employer',

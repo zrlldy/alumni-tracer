@@ -1,5 +1,11 @@
 # Alumni-Tracer task tracker
 
+## Latest handoff — My Information education dropdowns, 2026-11-16
+
+Owner approved the options and confirmed string storage is required. Strict reloaded-value assertions now verify `Masters` and `Completed` remain strings. Latest focused result: **8 passed / 49 assertions**; Pint and diff checks passed. No schema/type change. Browser acceptance and baseline failures remain outstanding.
+
+Owner requested Degree level and Study status dropdowns after source inspection. Both were free-text string columns with no enum or lookup source. My Information now uses Select fields with fixed form options plus the current account's active saved legacy values; other accounts' values are excluded and forged new selections fail validation. No schema, import, staff-editor, route or authorization changes. Files, choices, exact commands and limits: [AT-F04-FORM follow-up](completed/AT-F04-FORM.md). Focused dropdown/create/update checks pass **8/47**; final full form file is **46 passed, 8 failed, 1 error / 214 assertions**, retaining the baseline's 8 failures and 1 error (baseline 40 passed / 182 assertions). Pint and diff checks pass. Browser/client acceptance remains UNVERIFIED and the broader task status is unchanged. Next: client checks My Information options; separately resolve the existing campus/Dashboard/access test failures. Working branch `chun` was clean and 11 commits ahead of the locally known origin at task start; no fetch, commit or push was performed.
+
 Updated: 2026-11-16. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.

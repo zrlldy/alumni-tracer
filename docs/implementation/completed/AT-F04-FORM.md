@@ -1,5 +1,25 @@
 # AT-F04-FORM — Alumni information form in the shared Filament panel
 
+## My Information education dropdown follow-up — 2026-11-16
+
+Owner follow-up: explicitly approved the proposed options and required string compatibility. Dropdown option keys and database columns remain strings; no enum casts or numeric lookup IDs were introduced. Added strict persistence assertions confirming that reloaded education fields equal the strings `Masters` and `Completed`. Re-ran the same focused dropdown/create/update command: **8 passed / 49 assertions**; Pint and diff checks passed. This supersedes the earlier unanswered-options note below; broader baseline failures and live acceptance limits remain unchanged.
+
+Owner request: make Degree level and Study status dropdowns, checking for existing enums or dynamic sources first. Inspected the model, current and nullable-field migrations, importer, staff schema, My Information page and Livewire form; both columns are strings with no enum cast or managed option source. Replaced only these two My Information text inputs with native Filament Select fields. Degree values are Certificate, Diploma, Associate, Bachelor, Masters, Doctorate and Other; study statuses are Enrolled, Completed, On leave and Discontinued. An optional options question received no answer before implementation; these default form choices are not a claim of school taxonomy approval.
+
+The form adds its own active saved education values from the locked, server-filled overview to the options, preserving legacy wording without querying or exposing other users' values. Filament validates option membership and required selection. Existing ownership checks, imports, staff editors, stored strings, schema and date requirements remain unchanged. No connected database reads/writes, migrations, secrets, dependencies, account changes or route changes were performed. My Information now has its own existing page/component permission path in current source; older Dashboard-only descriptions below are historical.
+
+Files: `app/Livewire/AlumniInformationForm.php`, `tests/Feature/AlumniInformationFormTest.php`, `docs/requirements/REQUIREMENTS.md`, this record and `docs/implementation/TASK_TRACKER.md`. Tests cover dropdown types/options, missing and forged selections, legacy-value save and foreign-value exclusion; existing create/update tests verify persistence. The legacy test explicitly selects campus/department to avoid the pre-existing campus hydration defect.
+
+All tests used `APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: DB_URL= MAIL_MAILER=array QUEUE_CONNECTION=sync CACHE_STORE=array SESSION_DRIVER=array` before `php artisan test --compact`:
+
+- Baseline `tests/Feature/AlumniInformationFormTest.php`: 49 cases, 40 passed, 8 failures, 1 error, 182 assertions. Existing issues include repeat-save/campus hydration, archived-program display, outdated Dashboard/access expectations and a revoked-allocation Livewire snapshot error.
+- New checks before implementation, same file with `--filter='dropdown'`: 6 cases, 2 passed / 4 failed. After implementation the legacy test's unrelated campus selection was supplied explicitly.
+- Focused file with `--filter='dropdown|creates the signed-in alumnus|updates permitted contacts'`: **8 passed / 47 assertions**.
+- Final full file: **55 cases, 46 passed, 8 failures, 1 error, 214 assertions**. The pre-existing failures remain; no full-project suite run or all-green claim.
+- `vendor/bin/pint --dirty --format agent` and `git diff --check`: passed. API references: installed Filament Forms 5.7.8 source and official Filament 5 documentation; Boost and Superpowers remain unavailable.
+
+The dropdown behavior is verified through component rendering, validation and isolated persistence. Browser interaction and live-client acceptance remain UNVERIFIED; broader AT-F04-FORM stays IMPLEMENTED BUT UNVERIFIED. Next: check the fields in My Information and adjust labels/options if the owner supplies a school-specific list. Resolve baseline form/Dashboard tests under their separate triage task.
+
 Date: 2026-11-04. Status: **IMPLEMENTED BUT UNVERIFIED** for visual/live acceptance. Automated form and shared-page checks pass; the whole project suite is not green.
 
 ## Objective and authorization
