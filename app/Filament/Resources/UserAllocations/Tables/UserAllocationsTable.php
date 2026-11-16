@@ -42,13 +42,13 @@ class UserAllocationsTable
                     ->searchable(),
                 TextColumn::make('campuses.name')
                     ->placeholder('-')
-                    ->sortable(),
+                    ->searchable(),
                 TextColumn::make('programs.program_name')
                     ->placeholder('-')
                     ->badge()
                     ->color('primary')
                     ->separator(',')
-                    ->sortable(),
+                    ->searchable(),
                 TextColumn::make('max_users')
                     ->sortable(),
                 TextColumn::make('status')
