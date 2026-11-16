@@ -1,5 +1,9 @@
 # Alumni-Tracer task tracker
 
+## Latest handoff — terms header navigation, 2026-11-16
+
+Removed Return to portal from the shared terms view at the owner's request. Sign in appears only for guests; signed-in pending accounts continue through the existing required agreement checkbox and Agree and continue. Already-accepted accounts retain their current acceptance. Updated navigation regression coverage: **21 tests / 169 assertions passed** in the isolated SQLite-memory terms suite; Pint and `git diff --check` passed. No database, route, legal-text or access-policy changes. See [AT-LEGAL01](completed/AT-LEGAL01.md) for exact commands and files. The scoped header change is verified; broader AT-LEGAL01 remains IMPLEMENTED BUT UNVERIFIED pending live acceptance. Next: client browser check of guest navigation and signed-in acceptance; full isolated suite remains unrun in this follow-up. Boost/Superpowers unavailable; no required repository documents were missing.
+
 Updated: 2026-11-14. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.
