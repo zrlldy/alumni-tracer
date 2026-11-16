@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Alumni extends Model
 {
@@ -66,5 +67,24 @@ class Alumni extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    protected function fullName(): Attribute
+    {
+        return Attribute::get(function (): string {
+            $firstName = trim((string) $this->first_name);
+            $middleName = trim((string) $this->middle_name);
+            $lastName = trim((string) $this->last_name);
+
+            $middleInitial = $middleName !== ''
+                ? mb_strtoupper(mb_substr($middleName, 0, 1)) . '.'
+                : null;
+
+            return implode(' ', array_filter([
+                $firstName,
+                $middleInitial,
+                $lastName,
+            ]));
+        });
     }
 }
