@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Programs\Tables;
 
+use App\Filament\Resources\Programs\ProgramResource;
 use App\Traits\RoleBasedAccessControl;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -14,13 +16,20 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 class ProgramsTable
 {
     use RoleBasedAccessControl;
+
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'campus' => fn (BelongsTo $relation) => $relation->withTrashed(),
+            ]))
             ->heading('Academic programs')
             ->description('Review program availability or open a record to update its details.')
             ->columns([
@@ -30,6 +39,8 @@ class ProgramsTable
                     ->searchable()
                     ->sortable()
                     ->weight('medium'),
+                TextColumn::make('campus.name')
+                    ->label('Campus'),
                 TextColumn::make('is_active')
                     ->label('Status')
                     ->badge()
@@ -83,8 +94,10 @@ class ProgramsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->before(fn (Action $action, Collection $records) => ProgramResource::preventDeletingParents($action, $records)),
+                    ForceDeleteBulkAction::make()
+                        ->before(fn (Action $action, Collection $records) => ProgramResource::preventDeletingParents($action, $records)),
                     RestoreBulkAction::make(),
                 ]),
             ])
