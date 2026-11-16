@@ -150,23 +150,53 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
                                 Hidden::make('id')->nullable()->rules(['integer']),
                                 TextInput::make('instituion')->label('Institution')->required()->maxLength(255),
                                 TextInput::make('program')->label('Program or course')->required()->maxLength(255),
-                                Select::make('degree_level')->label('Degree level')->required()
-                                    ->options(fn (): array => $this->educationOptions('degree_level', [
+                                // Select::make('degree_level')->label('Degree level')->required()->native(false)
+                                //     ->options(fn (): array => $this->educationOptions('degree_level', [
+                                //         'Certificate' => 'Certificate',
+                                //         'Diploma' => 'Diploma',
+                                //         'Associate' => 'Associate degree',
+                                //         'Bachelor' => 'Bachelor’s degree',
+                                //         'Masters' => 'Master’s degree',
+                                //         'Doctorate' => 'Doctorate',
+                                //         'Other' => 'Other',
+                                //     ])),
+                                // TextInput::make('units_completed')->numeric()->integer()->minValue(0)->maxValue(4294967295)->required(),
+                                // Select::make('status')->label('Study status')->required()->native(false)
+                                //     ->options(fn (): array => $this->educationOptions('status', [
+                                //         'Enrolled' => 'Enrolled',
+                                //         'Completed' => 'Completed',
+                                //         'On leave' => 'On leave',
+                                //         'Discontinued' => 'Discontinued',
+                                //     ])),
+                                TextInput::make('degree_level')
+                                    ->label('Degree level')
+                                    ->required()
+                                    ->datalist(fn (): array => $this->educationOptions('degree_level', [
                                         'Certificate' => 'Certificate',
                                         'Diploma' => 'Diploma',
                                         'Associate' => 'Associate degree',
                                         'Bachelor' => 'Bachelor’s degree',
                                         'Masters' => 'Master’s degree',
                                         'Doctorate' => 'Doctorate',
-                                        'Other' => 'Other',
                                     ])),
-                                TextInput::make('units_completed')->numeric()->integer()->minValue(0)->maxValue(4294967295)->required(),
-                                Select::make('status')->label('Study status')->required()
-                                    ->options(fn (): array => $this->educationOptions('status', [
-                                        'Enrolled' => 'Enrolled',
-                                        'Completed' => 'Completed',
-                                        'On leave' => 'On leave',
-                                        'Discontinued' => 'Discontinued',
+
+                                TextInput::make('units_completed')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->maxValue(4294967295)
+                                    ->required(),
+
+                                TextInput::make('status')
+                                    ->label('Study status')
+                                    ->required()
+                                    ->datalist(fn (): array => $this->educationOptions('status', [
+                                        'Enrolled',
+                                        'Graduated',
+                                        'Completed',
+                                        'On leave',
+                                        'Discontinued',
+                                        'Transferred',
                                     ])),
                                 DatePicker::make('started_at')->label('Start date')->required(),
                                 DatePicker::make('ended_at')->label('End date')->required()->afterOrEqual('started_at')
