@@ -1,5 +1,15 @@
 # AT-LEGAL01 — Supplied terms and recorded acceptance
 
+### Guest-only sign-in header — 2026-11-16
+
+The owner reported that Return to portal was not working and requested its removal, retaining Sign in for guests and the required checkbox/continue flow for signed-in accounts with pending acceptance. Replaced the conditional portal/login header link with a guest-only Sign in link in `resources/views/legal/terms.blade.php`. Signed-in reading and acceptance pages have no portal-return or sign-in header link. Existing accepted accounts are not required to accept the same version again.
+
+Updated `tests/Feature/TermsAcceptanceTest.php` to cover the guest login link, signed-in readers with pending and existing acceptance, and acceptance-page navigation. Existing tests continue to cover unchecked/declined agreement rejection and successful own-account acceptance. No database, security-policy, dependency, route or legal-content changes; all test records are synthetic and isolated from MariaDB.
+
+Verification: new navigation checks initially failed against the original header (3 failures / 18 passed). Final command: `APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: DB_URL= MAIL_MAILER=array QUEUE_CONNECTION=sync CACHE_STORE=array SESSION_DRIVER=array php artisan test --compact tests/Feature/TermsAcceptanceTest.php` — **21 passed / 169 assertions**. `vendor/bin/pint --dirty --format agent` passed. `git diff --check` passed. A test assertion was narrowed to the exact dashboard link so the legitimate sign-out URL was not mistaken for a portal link. Files changed: the Blade view, test file, this record and `docs/implementation/TASK_TRACKER.md`.
+
+The scoped header behavior is verified through HTTP-rendered responses; live browser/client acceptance remains UNVERIFIED. The broader AT-LEGAL01 status stays IMPLEMENTED BUT UNVERIFIED. Next: client checks the signed-out header and signed-in Agree and continue flow; run the complete isolated test suite when requested. Boost and Superpowers were unavailable; installed framework source and official Laravel documentation supplied the API reference.
+
 Date: 2026-11-15 (Asia/Manila). Baseline: `9c6b2d7`, branch `chun`, initially clean working tree.
 Status: **IMPLEMENTED BUT UNVERIFIED** pending live acceptance. The owner retained MariaDB; its terms migration is now applied and verified after a private backup. See the latest follow-up below.
 

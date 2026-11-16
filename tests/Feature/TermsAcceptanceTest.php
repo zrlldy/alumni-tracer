@@ -32,10 +32,24 @@ it('publishes every supplied paragraph without requiring an account', function (
     foreach (Terms::document() as $block) {
         $response->assertSee($block['text']);
     }
-    $response->assertSee('Effective Date: December 2026')->assertDontSee('Agree and continue');
+    $response->assertSee('Effective Date: December 2026')->assertDontSee('Agree and continue')
+        ->assertSee('Sign in')->assertSee(route('filament.online.auth.login'))
+        ->assertDontSee('Return to portal');
     $this->get('/')->assertOk()->assertSee(route('terms.show'));
     $this->get(Filament::getRegistrationUrl())->assertOk()->assertSee(route('terms.show'));
 });
+
+it('hides sign-in and return-to-portal links when reading terms while signed in', function (bool $accepted) {
+    $factory = User::factory();
+    if (! $accepted) {
+        $factory = $factory->withoutTermsAcceptance();
+    }
+    $user = $factory->create(['email' => 'reader@example.test']);
+
+    $this->actingAs($user)->get(route('terms.show'))->assertOk()
+        ->assertDontSee('Return to portal')->assertDontSee('Sign in')
+        ->assertDontSee('href="'.route('filament.online.pages.dashboard').'"', false);
+})->with(['pending agreement' => false, 'already accepted' => true]);
 
 it('requires authentication for reviewing and saving acceptance', function () {
     $this->get(route('terms.accept'))->assertRedirect(Filament::getLoginUrl());
@@ -78,7 +92,10 @@ it('requires current acceptance before protected pages while allowing review and
     $user = User::factory()->withoutTermsAcceptance()->create(['email' => 'existing@example.test']);
     $this->actingAs($user)->get(Filament::getUrl())->assertRedirect(route('terms.accept'));
     $this->get(route('filament.online.auth.profile'))->assertRedirect(route('terms.accept'));
-    $this->get(route('terms.accept'))->assertOk()->assertSee('Agree and continue')->assertSee('Sign out');
+    $this->get(route('terms.accept'))->assertOk()->assertSee('Agree and continue')->assertSee('Sign out')
+        ->assertSee('I agree to the Terms and Conditions.')
+        ->assertDontSee('Return to portal')->assertDontSee('Sign in')
+        ->assertDontSee('href="'.route('filament.online.pages.dashboard').'"', false);
     $this->post(route('filament.online.auth.logout'))->assertRedirect();
     $this->assertGuest();
 });
