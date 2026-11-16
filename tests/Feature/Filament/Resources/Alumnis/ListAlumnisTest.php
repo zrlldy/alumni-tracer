@@ -1,16 +1,41 @@
 <?php
 
+use App\Filament\Pages\Dashboard;
+use App\Filament\Resources\Alumnis\AlumniResource;
 use App\Filament\Resources\Alumnis\Pages\ListAlumnis;
 use App\Models\Alumni;
+use App\Models\Campus;
 use App\Models\Program;
+use App\Models\Role;
+use App\Models\User;
+use App\Models\UserAllocation;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
+function createAlumniDirectoryStaff(): User
+{
+    $role = Role::query()->create([
+        'name' => 'Directory Staff',
+        'action' => ['view'],
+        'access_page' => [AlumniResource::getSlug(), Dashboard::getSlug()],
+        'access_subpage' => [],
+        'access_widget' => [],
+    ]);
+    $allocation = UserAllocation::query()->create([
+        'role_id' => $role->id,
+        'management_scope' => 'all_program',
+        'max_users' => 10,
+    ]);
+
+    return User::factory()->create(['user_allocation_id' => $allocation->id]);
+}
+
 it('shows alumni in a compact summary table', function () {
-    $program = Program::query()->create([
+    $staff = createAlumniDirectoryStaff();
+    $program = Program::factory()->for(Campus::factory())->create([
         'program_name' => 'Bachelor of Science in Information Technology',
         'is_active' => true,
     ]);
@@ -27,7 +52,8 @@ it('shows alumni in a compact summary table', function () {
 
     Filament::setCurrentPanel('online');
 
-    Livewire::test(ListAlumnis::class)
+    Livewire::actingAs($staff)
+        ->test(ListAlumnis::class)
         ->assertCanSeeTableRecords([$alumni])
         ->assertCanRenderTableColumn('student_number')
         ->assertCanRenderTableColumn('name')
@@ -43,4 +69,23 @@ it('shows alumni in a compact summary table', function () {
         ->assertSee('Open a record for complete information, or use search and filters to narrow the directory.')
         ->assertSee('maria.cruz@example.test')
         ->assertSee('Admin User');
+});
+
+it('does not repeat the middle name when it is already at the end of the first name', function () {
+    $staff = createAlumniDirectoryStaff();
+    $program = Program::factory()->for(Campus::factory())->create([
+        'program_name' => 'Bachelor of Science in Information Technology',
+        'is_active' => true,
+    ]);
+    $alumni = Alumni::factory()->for($program)->create([
+        'first_name' => 'Maria Santos',
+        'middle_name' => 'Santos',
+        'last_name' => 'Cruz',
+    ]);
+
+    Filament::setCurrentPanel('online');
+
+    Livewire::actingAs($staff)
+        ->test(ListAlumnis::class)
+        ->assertTableColumnStateSet('name', 'Maria Santos Cruz', $alumni);
 });
