@@ -150,9 +150,24 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
                                 Hidden::make('id')->nullable()->rules(['integer']),
                                 TextInput::make('instituion')->label('Institution')->required()->maxLength(255),
                                 TextInput::make('program')->label('Program or course')->required()->maxLength(255),
-                                TextInput::make('degree_level')->label('Degree level')->required()->maxLength(255),
+                                Select::make('degree_level')->label('Degree level')->required()
+                                    ->options(fn (): array => $this->educationOptions('degree_level', [
+                                        'Certificate' => 'Certificate',
+                                        'Diploma' => 'Diploma',
+                                        'Associate' => 'Associate degree',
+                                        'Bachelor' => 'Bachelor’s degree',
+                                        'Masters' => 'Master’s degree',
+                                        'Doctorate' => 'Doctorate',
+                                        'Other' => 'Other',
+                                    ])),
                                 TextInput::make('units_completed')->numeric()->integer()->minValue(0)->maxValue(4294967295)->required(),
-                                TextInput::make('status')->label('Study status')->required()->maxLength(255),
+                                Select::make('status')->label('Study status')->required()
+                                    ->options(fn (): array => $this->educationOptions('status', [
+                                        'Enrolled' => 'Enrolled',
+                                        'Completed' => 'Completed',
+                                        'On leave' => 'On leave',
+                                        'Discontinued' => 'Discontinued',
+                                    ])),
                                 DatePicker::make('started_at')->label('Start date')->required(),
                                 DatePicker::make('ended_at')->label('End date')->required()->afterOrEqual('started_at')
                                     ->helperText('An end date is required. Leave ongoing studies out until an end date is known.'),
@@ -297,6 +312,19 @@ class AlumniInformationForm extends Component implements HasActions, HasSchemas
 
         $this->cacheSchema('form', null);
         $this->form->fill($data);
+    }
+
+    /**
+     * @param  array<string, string>  $options
+     * @return array<string, string>
+     */
+    protected function educationOptions(string $field, array $options): array
+    {
+        return $options + collect($this->overview['education'] ?? [])
+            ->pluck($field)
+            ->filter(fn (?string $value): bool => filled($value))
+            ->mapWithKeys(fn (string $value): array => [$value => $value])
+            ->all();
     }
 
     protected function historyRepeater(string $name): Repeater
