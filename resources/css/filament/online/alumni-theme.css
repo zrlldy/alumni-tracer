@@ -270,7 +270,21 @@ html.dark .fi-body[class*='fi-panel-']:has(.fi-layout) {
 }
 
 /* 8. Keyboard, scrollbars, motion and print ----------------------------- */
-.fi-body[class*='fi-panel-']:has(.fi-layout) :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+/* Filament's rounded input wrapper owns the field focus indicator.
+ * An outline on the inner input creates a second square around its text area.
+ * Native fields outside a Filament wrapper keep a visible keyboard outline.
+ */
+.fi-body[class*='fi-panel-']:has(.fi-layout) :is(input, select, textarea):not(.fi-input-wrp *):focus-visible {
+    outline: 2px solid var(--ap-focus);
+    outline-offset: 3px;
+}
+
+.fi-body[class*='fi-panel-']:has(.fi-layout) .fi-input-wrp :is(input, select, textarea):focus-visible {
+    outline: none;
+    outline-offset: 0;
+}
+
+.fi-body[class*='fi-panel-']:has(.fi-layout) :is(a, button, [tabindex]):not(input):not(select):not(textarea):focus-visible {
     outline: 2px solid var(--ap-focus);
     outline-offset: 3px;
 }
