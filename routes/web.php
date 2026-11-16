@@ -31,3 +31,17 @@ Route::prefix('passkeys')->group(function () {
 Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('auth/google/relink', [GoogleAuthController::class, 'relink'])->name('auth.google.relink')->middleware('auth');
 Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+
+// Public Terms and Conditions for Google registration.
+Route::get('/terms/google-signup', [TermsController::class, 'googleSignup'])
+    ->name('terms.google-signup');
+
+Route::post('/terms/google-signup', [TermsController::class, 'acceptGoogleSignup'])
+    ->middleware('throttle:10,1')
+    ->name('terms.google-signup.accept');
+
+// Google registration redirect.
+Route::get('/auth/google/signup/redirect', [
+    GoogleAuthController::class,
+    'signupRedirect',
+])->name('auth.google.signup.redirect');

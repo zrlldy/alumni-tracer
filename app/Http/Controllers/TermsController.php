@@ -14,8 +14,13 @@ class TermsController extends Controller
 {
     public function show(): View
     {
-        return view('legal.terms', ['document' => Terms::document(), 'acceptance' => false]);
+        return view('legal.terms', [
+            'document' => Terms::document(),
+            'acceptance' => false,
+            'googleSignup' => false,
+        ]);
     }
+
 
     public function edit(Request $request): View|RedirectResponse
     {
@@ -23,7 +28,11 @@ class TermsController extends Controller
             return redirect(Filament::getUrl());
         }
 
-        return view('legal.terms', ['document' => Terms::document(), 'acceptance' => true]);
+        return view('legal.terms', [
+            'document' => Terms::document(),
+            'acceptance' => true,
+            'googleSignup' => false,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -42,5 +51,32 @@ class TermsController extends Controller
         $user->acceptCurrentTerms();
 
         return redirect(Filament::getUrl());
+    }
+
+    public function googleSignup(): View
+    {
+        return view('legal.terms', [
+            'document' => Terms::document(),
+            'acceptance' => true,
+            'googleSignup' => true,
+        ]);
+    }
+
+    public function acceptGoogleSignup(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'terms' => ['accepted'],
+            'version' => ['required', Rule::in([Terms::VERSION])],
+        ], [
+            'terms.accepted' => 'Please agree to the Terms and Conditions before continuing with Google.',
+            'version.in' => 'The Terms and Conditions have changed. Please review the latest version.',
+        ]);
+
+        session([
+            'google_signup_terms_version' => Terms::VERSION,
+            'google_auth_intent' => 'signup',
+        ]);
+
+        return redirect()->route('auth.google.signup.redirect');
     }
 }
