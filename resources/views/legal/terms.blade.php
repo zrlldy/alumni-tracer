@@ -14,7 +14,9 @@
         <a href="#terms-content" class="terms-skip">Skip to terms</a>
         <header class="terms-header">
             <a href="{{ route('welcome') }}" class="terms-brand">Alumni Tracer</a>
-            <a href="{{ auth()->check() ? route('filament.online.pages.dashboard') : route('filament.online.auth.login') }}">{{ auth()->check() ? 'Return to portal' : 'Sign in' }}</a>
+            @guest
+                <a href="{{ route('filament.online.auth.login') }}">Sign in</a>
+            @endguest
         </header>
         <main id="terms-content" class="terms-layout" tabindex="-1">
             <aside class="terms-index">
