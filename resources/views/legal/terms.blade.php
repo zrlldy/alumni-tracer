@@ -51,22 +51,76 @@
                 @endforeach
                 @if ($acceptance)
                     <section class="terms-acceptance" aria-labelledby="acceptance-heading">
+
                         <h2 id="acceptance-heading">Your agreement</h2>
-                        <form method="POST" action="{{ route('terms.store') }}">
+
+                        <form
+                            method="POST"
+                            action="{{ $googleSignup
+                                ? route('terms.google-signup.accept')
+                                : route('terms.store') }}"
+                        >
                             @csrf
-                            <input type="hidden" name="version" value="{{ \App\Support\Terms::VERSION }}">
+
+                            <input
+                                type="hidden"
+                                name="version"
+                                value="{{ \App\Support\Terms::VERSION }}"
+                            >
+
                             <label class="terms-checkbox" for="terms">
-                                <input id="terms" name="terms" type="checkbox" value="1" required @if($errors->has('terms')) aria-invalid="true" aria-describedby="terms-error" @endif>
-                                <span>I agree to the Terms and Conditions.</span>
+                                <input
+                                    id="terms"
+                                    name="terms"
+                                    type="checkbox"
+                                    value="1"
+                                    required
+                                    @checked(old('terms'))
+                                    @if($errors->has('terms'))
+                                        aria-invalid="true"
+                                        aria-describedby="terms-error"
+                                    @endif
+                                >
+
+                                <span>
+                                    I have read, understood, and agree to the
+                                    <strong>Terms and Conditions</strong>.
+                                </span>
                             </label>
-                            @error('terms')<p id="terms-error" class="terms-error" role="alert">{{ $message }}</p>@enderror
-                            @error('version')<p class="terms-error" role="alert">{{ $message }}</p>@enderror
-                            <button class="terms-button" type="submit">Agree and continue</button>
+
+                            @error('terms')
+                                <p id="terms-error" class="terms-error" role="alert">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+
+                            @error('version')
+                                <p class="terms-error" role="alert">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+
+                            <button class="terms-button" type="submit">
+                                {{ $googleSignup
+                                    ? 'Agree and continue with Google'
+                                    : 'Agree and continue' }}
+                            </button>
                         </form>
-                        <form method="POST" action="{{ route('filament.online.auth.logout') }}">
-                            @csrf
-                            <button class="terms-signout" type="submit">Sign out</button>
-                        </form>
+
+                        @if (! $googleSignup)
+                            <form method="POST" action="{{ route('filament.online.auth.logout') }}">
+                                @csrf
+
+                                <button class="terms-signout" type="submit">
+                                    Sign out
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('welcome') }}" class="terms-signout">
+                                Cancel Google registration
+                            </a>
+                        @endif
+
                     </section>
                 @endif
                 <footer class="terms-footer">

@@ -9,7 +9,7 @@
     </div>
 
     
-    <a  href="{{ route('auth.google.redirect') }}"
+    <a  href="{{ route('terms.google-signup') }}"
         class="group inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md active:scale-[0.97]"
     >
         <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24">
