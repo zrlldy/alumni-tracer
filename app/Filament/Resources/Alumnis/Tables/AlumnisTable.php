@@ -391,11 +391,26 @@ class AlumnisTable
                     ->values();
                 $details = $failures
                     ->flatMap(fn (Failure $failure): array => $failure->errors())
-                    ->map(fn (string $message): ?string => match (true) {
-                        str_contains($message, 'already exists') => 'Student number already exists in the system.',
-                        str_contains($message, 'appears more than once') => 'Student number is repeated in this file.',
-                        str_contains($message, 'must belong to the selected campus') => 'Department must match the selected campus.',
-                        default => null,
+                    ->map(function (string $message) use ($failures): ?string {
+                        if (str_contains($message, 'must belong to the selected campus')) {
+                            $values = $failures->first()->values();
+                            $campus = Str::limit(Str::squish((string) ($values['campus'] ?? '')), 80);
+                            $department = Str::limit(Str::squish((string) ($values['department'] ?? '')), 80);
+
+                            if ($campus === '' && $department === '') {
+                                return 'Department must match the selected campus.';
+                            }
+
+                            return 'Department “'.($department !== '' ? $department : '(blank)')
+                                .'” does not uniquely match Campus “'.($campus !== '' ? $campus : '(blank)')
+                                .'” in the active records.';
+                        }
+
+                        return match (true) {
+                            str_contains($message, 'already exists') => 'Student number already exists in the system.',
+                            str_contains($message, 'appears more than once') => 'Student number is repeated in this file.',
+                            default => null,
+                        };
                     })
                     ->filter()
                     ->unique()

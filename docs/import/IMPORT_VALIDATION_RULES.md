@@ -4,7 +4,7 @@ Date: 2026-11-01. The rules below describe the staged AT-I01 target contract, se
 
 ## Current direct template import — 2026-11-14
 
-This section records the current direct importer; it does not change the staged AT-I01 contract below. The generated template contains one Alumni worksheet with a valid sample row that remains visible as a guide. Its remarks marker is skipped before validation, so it is not saved as an Alumni record. The previous `SAMPLE DATA - DELETE THIS ROW BEFORE IMPORTING` marker is also skipped for older downloaded templates. Generation requires an active campus/department name pair that resolves to exactly one program. The importer also supports optional named Education and Employment worksheets when they are present. Required columns are:
+This section records the current direct importer; it does not change the staged AT-I01 contract below. The generated template contains one visible Alumni worksheet and a hidden `_Lists` worksheet that supplies dependent Campus and Department dropdowns. Employment Status has the existing `employed`, `unemployed`, and `untraced` values; blank remains allowed and unknown. The Alumni sheet has a valid sample row that remains visible as a guide. Its remarks marker is skipped before validation, so it is not saved as an Alumni record. The previous `SAMPLE DATA - DELETE THIS ROW BEFORE IMPORTING` marker is also skipped for older downloaded templates. Generation requires an active campus/department name pair that resolves to exactly one program. The importer also supports optional named Education and Employment worksheets when they are present. Required columns are:
 
 | Worksheet | Required columns | Conditional columns |
 | --- | --- | --- |

@@ -12,7 +12,10 @@ use App\Models\Program;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Excel as ExcelWriter;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException as ExcelValidationException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -55,6 +58,66 @@ it('does not choose between duplicate campus and department matches', function (
     ], 2);
 
     expect($row['program_id'])->toBeNull();
+});
+
+it('does not resolve inactive campuses or departments', function () {
+    $activeCampus = Campus::factory()->create(['name' => 'North Campus', 'is_active' => true]);
+    $inactiveCampus = Campus::factory()->create(['name' => 'Closed Campus', 'is_active' => false]);
+    Program::factory()->for($activeCampus)->create(['program_name' => 'Inactive Nursing', 'is_active' => false]);
+    Program::factory()->for($inactiveCampus)->create(['program_name' => 'Closed Nursing', 'is_active' => true]);
+    $importer = new AlumniImporter;
+
+    $inactiveDepartment = $importer->prepareForValidation([
+        'campus' => 'North Campus',
+        'department' => 'Inactive Nursing',
+    ], 2);
+    $inactiveCampusRow = $importer->prepareForValidation([
+        'campus' => 'Closed Campus',
+        'department' => 'Closed Nursing',
+    ], 3);
+
+    expect($inactiveDepartment['program_id'])->toBeNull()
+        ->and($inactiveCampusRow['program_id'])->toBeNull();
+});
+
+it('rejects pasted campus and department values that do not match during import', function () {
+    $northCampus = Campus::factory()->create(['name' => 'North Campus']);
+    $southCampus = Campus::factory()->create(['name' => 'South Campus']);
+    Program::factory()->for($northCampus)->create(['program_name' => 'Nursing', 'is_active' => true]);
+    Program::factory()->for($southCampus)->create(['program_name' => 'Education', 'is_active' => true]);
+    $path = sys_get_temp_dir().'/alumni-import-mismatch-'.Str::uuid().'.xlsx';
+    $spreadsheet = null;
+
+    try {
+        file_put_contents($path, Excel::raw(new AlumniImportTemplateExport, ExcelWriter::XLSX));
+        $spreadsheet = IOFactory::load($path);
+        $spreadsheet->getSheetByName('Alumni')->fromArray([[
+            200002, 'Taylor', '', 'Example', '', '', '', 'North Campus', 'Education',
+            ExcelDate::PHPToExcel(new DateTimeImmutable('2021-06-01')), '', '', '', '',
+        ]], null, 'A3');
+        (new Xlsx($spreadsheet))->save($path);
+        $spreadsheet->disconnectWorksheets();
+        $spreadsheet = null;
+        $failure = null;
+
+        try {
+            Excel::import(new AlumniImporter, $path);
+        } catch (ExcelValidationException $exception) {
+            $failure = $exception;
+        }
+    } finally {
+        $spreadsheet?->disconnectWorksheets();
+
+        if (is_file($path)) {
+            unlink($path);
+        }
+    }
+
+    expect($failure)->toBeInstanceOf(ExcelValidationException::class)
+        ->and($failure->failures()[0]->row())->toBe(3)
+        ->and($failure->failures()[0]->values()['campus'])->toBe('North Campus')
+        ->and($failure->failures()[0]->values()['department'])->toBe('Education')
+        ->and(Alumni::query()->where('student_number', 200002)->exists())->toBeFalse();
 });
 
 it('skips current and previous sample rows while importing real rows and optional details', function () {

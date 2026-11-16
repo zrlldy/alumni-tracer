@@ -16,7 +16,7 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
 {
     /**
      * @param  array<string>  $headings
-     * @param  array<array{heading: string, options: array<string>, label: string, allow_blank?: bool}>  $dropdowns
+     * @param  array<array{heading: string, label: string, options?: array<string>, formula?: string, allow_blank?: bool}>  $dropdowns
      * @param  array<array<mixed>>  $rows
      */
     public function __construct(
@@ -78,7 +78,7 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
         }
 
         foreach ($this->dropdowns as $dropdown) {
-            if ($dropdown['options'] === []) {
+            if (($dropdown['formula'] ?? null) === null && ($dropdown['options'] ?? []) === []) {
                 continue;
             }
 
@@ -103,7 +103,7 @@ class AlumniImportTemplateSheetExport implements FromArray, ShouldAutoSize, With
                 ->setPrompt('Choose a '.$dropdown['label'].' from the dropdown.')
                 ->setErrorTitle("Invalid {$dropdown['label']}")
                 ->setError('Please select a '.$dropdown['label'].' from the list.')
-                ->setFormula1('"'.str_replace('"', '""', implode(',', $dropdown['options'])).'"')
+                ->setFormula1($dropdown['formula'] ?? '"'.str_replace('"', '""', implode(',', $dropdown['options'])).'"')
                 ->setSqref($range);
 
             $sheet->setDataValidation($range, $validation);
