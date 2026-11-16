@@ -1,6 +1,6 @@
 # Alumni-Tracer task tracker
 
-Updated: 2026-11-14. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
+Updated: 2026-11-16. Baseline `5615c84` / branch `jerold`. Preserve pre-existing dirty `app/Filament/Pages/AlumniDataReport.php`. No prior tracker/completion records existed at audit start.
 
 Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED COMPLETED. A plan/document completion is not a feature completion. Workbook absence does not become a successful analysis.
 
@@ -42,6 +42,7 @@ Statuses: PLANNED, IN PROGRESS, BLOCKED, IMPLEMENTED BUT UNVERIFIED, VERIFIED CO
 | AT-UI01 | Landing page mobile navigation and placement | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI01.md). Focused tests/build and closed 390px render passed; static open-panel render inspected. Live menu interaction remains unverified. |
 | AT-UI02 | Signed-in email verification prompt redesign | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI02.md). Eight isolated tests/34 assertions pass; desktop/tablet/long-email phone renders inspected; synthetic performance has 0 failures/7 warnings. Live keyboard/screen-reader and inbox acceptance remain unverified. Existing signed-link and resend limits are preserved. |
 | AT-UI03 | Roleless Get Started orientation | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-UI03.md). Alumni/staff guidance, system administrator contact, 30-day notice and generated Dashboard redirect. Focused auth/onboarding tests 14/56 plus two roleless cases 2/9 pass; synthetic desktop/phone/tablet inspected. Live accessibility, broader directory-navigation failure and deletion enforcement remain separate. |
+| AT-UI04 | Prevent repeated middle name in Alumni Directory | VERIFIED COMPLETED | [Record](completed/AT-UI04.md). Directory name formatter omits the middle-name field when it is already the final part of `first_name`; regression test passes. |
 | AT-O01 | Deployment/privacy/end-to-end readiness | PLANNED | Applicable implemented modules and school policy approvals |
 | AT-LEGAL01 | Supplied terms page and recorded account acceptance | IMPLEMENTED BUT UNVERIFIED | [Record](completed/AT-LEGAL01.md). Exact DOCX text, public page, password/Google/existing-account acceptance, persistent Livewire guard and permanent links. Isolated terms/email checks pass 27/188; build and Pint pass. Local SQLite schema initialized; owner then retained MariaDB. Private backup completed and the single terms migration applied to MariaDB (batch 2); both nullable fields verified. Latest focused suite 19/154; live acceptance remains pending. |
 
@@ -392,3 +393,10 @@ Runtime-error follow-up, 2026-11-15: POST terms acceptance still reaches MariaDB
 ## Latest handoff — MariaDB terms migration repaired, 2026-11-15
 
 Owner chose to keep MariaDB. Verified the local runtime target and pending single migration, created a private Git-ignored transactional backup (details in AT-LEGAL01), then applied only the terms acceptance migration. It ran in **batch 2**; both nullable users columns are verified through the unchanged default MariaDB connection. No `.env`, grants, accounts, other migrations or seed data changed. Focused isolated terms tests pass **19 / 154**. The missing-column cause is repaired; user should retry Agree and continue. Actual user acceptance and broader live accessibility checks remain pending; AT-LEGAL01 remains IMPLEMENTED BUT UNVERIFIED for those checks.
+
+## Latest handoff — AT-UI04 Alumni Directory name display, 2026-11-16
+
+1. Completed: the Alumni Directory name formatter no longer appends `middle_name` when it already appears as the final name component in `first_name`. Normal first/middle/last display remains unchanged. No stored records are edited.
+2. Verified: the focused regression passed **1 test / 3 assertions**. Pint and `git diff --check` passed.
+3. The full `ListAlumnisTest.php` file had **1 pass / 1 failure**: the original test's later `AlumniStats` markup assertion failed; its name-format assertion passed. The new duplicate-middle-name regression passed.
+4. No database, security, route, or permission impact. Exact next step: none for this fix; investigate the unrelated widget assertion separately if needed.
