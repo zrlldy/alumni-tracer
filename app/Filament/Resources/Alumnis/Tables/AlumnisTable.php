@@ -143,11 +143,19 @@ class AlumnisTable
                 TextColumn::make('name')
                     ->label('Alumni')
                     ->icon('heroicon-m-user')
-                    ->state(fn (Alumni $record): string => collect([
-                        $record->first_name,
-                        $record->middle_name,
-                        $record->last_name,
-                    ])->filter()->implode(' '))
+                    ->state(function (Alumni $record): string {
+                        $firstName = trim($record->first_name);
+                        $middleName = trim($record->middle_name ?? '');
+                        $lastName = trim($record->last_name);
+                        $middleNameIsAlreadyInFirstName = $middleName !== ''
+                            && preg_match('/(?:^|\s)'.preg_quote($middleName, '/').'$/iu', $firstName) === 1;
+
+                        return collect([
+                            $firstName,
+                            $middleNameIsAlreadyInFirstName ? null : $middleName,
+                            $lastName,
+                        ])->filter()->implode(' ');
+                    })
                     ->description(fn (Alumni $record): ?string => $record->email)
                     ->searchable(['first_name', 'middle_name', 'last_name', 'email', 'phone_number'])
                     ->sortable(['first_name', 'last_name'])
