@@ -5,42 +5,41 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Support\SystemSecurity;
 use Illuminate\Console\Command;
+use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use RuntimeException;
 use Throwable;
 
 class PurgeUnassignedUsers extends Command
 {
     protected $signature = 'users:purge-unassigned
                             {--days=30 : Number of days before permanent deletion}
-                            {--dry-run : Preview eligible accounts without deleting them}';
+                            {--minutes= : Use this many minutes instead of days}
+                            {--dry-run : Preview eligible accounts without deleting them or sending emails}';
 
-    protected $description = 'Permanently delete users without an allocation after the specified number of days';
+    protected $description = 'Permanently delete users without an allocation after the specified retention period';
 
     public function handle(): int
     {
-        $days = filter_var(
-            $this->option('days'),
+        $minutes = $this->option('minutes');
+        $useMinutes = $minutes !== null || $this->input->hasParameterOption('--minutes', true);
+        $unit = $useMinutes ? 'minutes' : 'days';
+        $retention = filter_var(
+            $useMinutes ? $minutes : $this->option('days'),
             FILTER_VALIDATE_INT
         );
 
-        if ($days === false || $days < 1) {
-            $this->error('The number of days must be a positive integer.');
+        if ($retention === false || $retention < 1) {
+            $this->error("The number of {$unit} must be a positive integer.");
 
             return self::INVALID;
         }
 
-        $cutoff = now()->subDays($days);
+        $cutoff = $useMinutes ? now()->subMinutes($retention) : now()->subDays($retention);
+        $retentionLabel = $retention === 1 ? rtrim($unit, 's') : $unit;
 
-        /*
-         * Protected accounts:
-         *
-         * 1. All configured Super Admin emails.
-         * 2. All configured developer emails.
-         *
-         * These accounts are exempt regardless of their
-         * user_allocation_id or registration date.
-         */
         $excludedEmails = collect(SystemSecurity::superAdminEmails())
             ->merge(User::developerEmails())
             ->map(fn ($email): string => mb_strtolower(trim((string) $email)))
@@ -49,16 +48,7 @@ class PurgeUnassignedUsers extends Command
             ->values()
             ->all();
 
-        /*
-         * Eligible accounts:
-         *
-         * 1. user_allocation_id IS NULL
-         * 2. Registration date is at least the configured age.
-         * 3. Email is not protected.
-         *
-         * Soft-deleted accounts are excluded by default
-         * because this uses User::query().
-         */
+        // The default User scope excludes soft-deleted accounts.
         $query = User::query()
             ->whereNull('user_allocation_id')
             ->where('created_at', '<=', $cutoff);
@@ -75,15 +65,11 @@ class PurgeUnassignedUsers extends Command
         $this->newLine();
         $this->info('UNASSIGNED USER CLEANUP');
         $this->line('Registration cutoff: ' . $cutoff->toDateTimeString());
-        $this->line('Retention period: ' . $days . ' days');
+        $this->line("Retention period: {$retention} {$retentionLabel}");
         $this->line('Protected email addresses: ' . count($excludedEmails));
         $this->line('Eligible accounts: ' . $total);
         $this->newLine();
 
-        /*
-         * Preview mode.
-         * No database records will be deleted.
-         */
         if ($this->option('dry-run')) {
             $users = (clone $query)
                 ->orderBy('id')
@@ -97,13 +83,7 @@ class PurgeUnassignedUsers extends Command
                 ]);
 
             $this->table(
-                [
-                    'ID',
-                    'Name',
-                    'Email',
-                    'Allocation ID',
-                    'Registered',
-                ],
+                ['ID', 'Name', 'Email', 'Allocation ID', 'Registered'],
                 $users->map(fn (User $user): array => [
                     $user->id,
                     $user->name,
@@ -117,7 +97,7 @@ class PurgeUnassignedUsers extends Command
                 $this->warn("Showing 50 of {$total} eligible accounts.");
             }
 
-            $this->info('Dry run completed. No accounts were deleted.');
+            $this->info('Dry run completed. No accounts were deleted or emailed.');
 
             return self::SUCCESS;
         }
@@ -125,10 +105,9 @@ class PurgeUnassignedUsers extends Command
         $deleted = 0;
         $skipped = 0;
         $failed = 0;
+        $emailsSent = 0;
+        $emailsFailed = 0;
 
-        /*
-         * Process in batches to avoid loading every account into memory.
-         */
         $query->orderBy('id')->chunkById(
             100,
             function ($users) use (
@@ -136,90 +115,83 @@ class PurgeUnassignedUsers extends Command
                 $excludedEmails,
                 &$deleted,
                 &$skipped,
-                &$failed
+                &$failed,
+                &$emailsSent,
+                &$emailsFailed
             ): void {
                 foreach ($users as $candidate) {
                     try {
-                        $wasDeleted = DB::transaction(
+                        $recipient = DB::transaction(
                             function () use (
                                 $candidate,
                                 $cutoff,
                                 $excludedEmails
-                            ): bool {
-                                /*
-                                 * Lock the account and reload it.
-                                 * This protects against concurrent
-                                 * allocation changes.
-                                 */
+                            ): ?string {
+                                // Recheck the latest account state while holding the row lock.
                                 $user = User::query()
                                     ->whereKey($candidate->id)
                                     ->lockForUpdate()
                                     ->first();
 
                                 if ($user === null) {
-                                    return false;
+                                    return null;
                                 }
 
-                                $email = mb_strtolower(
-                                    trim((string) $user->email)
-                                );
+                                $recipient = trim((string) $user->email);
+                                $normalizedEmail = mb_strtolower($recipient);
 
-                                /*
-                                 * Never delete protected administrators
-                                 * or developers, regardless of allocation.
-                                 */
                                 if (
-                                    in_array(
-                                        $email,
-                                        $excludedEmails,
-                                        true
-                                    )
+                                    in_array($normalizedEmail, $excludedEmails, true)
                                     || SystemSecurity::isBootstrapSuperAdmin($user)
                                 ) {
-                                    return false;
+                                    return null;
                                 }
 
-                                /*
-                                 * Recheck eligibility immediately before
-                                 * permanent deletion.
-                                 */
                                 if (
                                     $user->user_allocation_id !== null
                                     || $user->created_at === null
                                     || $user->created_at->gt($cutoff)
                                 ) {
-                                    return false;
+                                    return null;
                                 }
 
-                                /*
-                                 * Permanent physical deletion.
-                                 *
-                                 * Existing User model forceDeleting
-                                 * protection remains active.
-                                 */
-                                return (bool) $user->forceDelete();
+                                return $user->forceDelete() ? $recipient : null;
                             }
                         );
-
-                        if ($wasDeleted) {
-                            $deleted++;
-                        } else {
-                            $skipped++;
-                        }
                     } catch (Throwable $exception) {
                         $failed++;
 
-                        Log::error(
-                            'Permanent deletion of unassigned user failed.',
-                            [
-                                'user_id' => $candidate->id,
-                                'error' => $exception->getMessage(),
-                            ]
-                        );
+                        Log::error('Permanent deletion of unassigned user failed.', [
+                            'user_id' => $candidate->id,
+                            'error' => $exception->getMessage(),
+                        ]);
 
-                        $this->error(
-                            "Failed to delete user ID {$candidate->id}."
-                        );
+                        $this->error("Failed to delete user ID {$candidate->id}.");
+
+                        continue;
+                    }
+
+                    if ($recipient === null) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $deleted++;
+
+                    // Send after the transaction commits and releases the row lock.
+                    try {
+                        $this->sendDeletionEmail($recipient);
+                        $emailsSent++;
+                    } catch (Throwable $exception) {
+                        $emailsFailed++;
+
+                        Log::error('Account deletion email failed.', [
+                            'user_id' => $candidate->id,
+                            'error' => $exception->getMessage(),
+                        ]);
+
+                        $this->warn("Account deleted, but email failed for user ID {$candidate->id}.");
                     }
                 }
             }
@@ -230,19 +202,47 @@ class PurgeUnassignedUsers extends Command
         $this->info('USER CLEANUP RESULTS');
         $this->line("Permanently deleted: {$deleted}");
         $this->line("Skipped: {$skipped}");
-        $this->line("Failed: {$failed}");
+        $this->line("Deletion failures: {$failed}");
+        $this->line("Deletion emails sent: {$emailsSent}");
+        $this->line("Deletion email failures: {$emailsFailed}");
 
         Log::info('Unassigned user cleanup completed.', [
-            'retention_days' => $days,
+            'retention_' . $unit => $retention,
             'cutoff' => $cutoff->toDateTimeString(),
             'eligible' => $total,
             'deleted' => $deleted,
             'skipped' => $skipped,
             'failed' => $failed,
+            'emails_sent' => $emailsSent,
+            'emails_failed' => $emailsFailed,
         ]);
 
-        return $failed > 0
+        return ($failed > 0 || $emailsFailed > 0)
             ? self::FAILURE
             : self::SUCCESS;
+    }
+
+    private function sendDeletionEmail(string $recipient): void
+    {
+        $appName = config('app.name');
+
+        $body = <<<TEXT
+        Hello,
+
+        Your {$appName} account was permanently deleted because it had no assigned role.
+
+        You can create a new account. After registering, please contact your administrator for help getting the role you need.
+
+        Thank you,
+        The {$appName} team
+        TEXT;
+
+        $sentMessage = Mail::raw($body, function (Message $message) use ($recipient, $appName): void {
+            $message->to($recipient)->subject("Your {$appName} account was deleted");
+        });
+
+        if ($sentMessage === null) {
+            throw new RuntimeException('The mailer did not send the account deletion email.');
+        }
     }
 }
