@@ -9,6 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('users:purge-unassigned --days=30')
-    ->dailyAt('02:00')
+    ->dailyAt('00:00')
     ->timezone('Asia/Manila')
     ->withoutOverlapping();
